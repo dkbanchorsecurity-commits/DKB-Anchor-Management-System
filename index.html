@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>DKB Anchor Security Management System</title>
+    <meta name="description" content="DKB Anchor Security Services Management Portal. Official system for guard deployment, payroll, incidents, and client invoicing.">
+    <meta name="robots" content="index, follow">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A2540">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192/051424/D4AF37?text=DKB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0A2540;   
+            --secondary-color: #051424; 
+            --accent-color: #D4AF37;    
+            --text-light: #FFFFFF;      
+            --bg-light: #F4F6F8;        
+            --panel-bg: #FFFFFF;        
+            --text-dark: #2D3748;       
+            --border-color: #E2E8F0;
+            --danger-color: #E53E3E;    
+            --success-color: #38A169;
+            --warning-color: #D4AF37;   
+            --gray-color: #718096;
+            --info-color: #3182CE;
+        }
+
+        body.dark-theme {
+            --bg-light: #1A202C; --panel-bg: #2D3748; --text-dark: #E2E8F0; --border-color: #4A5568; --primary-color: #0d2b4a;  --secondary-color: #0a1b2e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
+        
+        /* LOGIN CONTAINER STYLES */
+        #login-container { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)); justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.3s ease; }
+        .login-box { background: var(--panel-bg); padding: 40px; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 90%; max-width: 400px; text-align: center; border-top: 5px solid var(--accent-color); animation: fadeIn 0.5s ease-out; }
+        body.dark-theme .login-box { background: var(--secondary-color); border: 1px solid var(--border-color); border-top: 5px solid var(--accent-color); }
+
+        /* APP CONTAINER */
+        .app-container { display: none; height: 100vh; width: 100vw; overflow: hidden; animation: fadeIn 0.4s ease-out; }
+
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 998; opacity: 0; transition: opacity 0.3s; backdrop-filter: blur(2px); }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        .sidebar { width: 260px; background-color: var(--primary-color); color: var(--text-light); display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); flex-shrink: 0; transition: all 0.3s ease; z-index: 999; height: 100vh; }
+        .sidebar-header { padding: 25px 20px; background-color: var(--secondary-color); text-align: center; border-bottom: 2px solid var(--accent-color); transition: background-color 0.3s; }
+        .brand-logo { max-width: 120px; max-height: 80px; object-fit: contain; margin-bottom: 15px; border-radius: 4px; display: inline-block; background: #fff; padding: 5px; }
+        .sidebar-header h2 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-color); line-height: 1.2; }
+        .sidebar-header p { font-size: 0.8rem; color: var(--text-light); opacity: 0.8; margin-top: 5px; }
+        .nav-links { list-style: none; padding: 20px 0; overflow-y: auto; flex: 1; }
+        .nav-links li a { display: flex; align-items: center; padding: 12px 25px; color: var(--text-light); text-decoration: none; transition: all 0.3s ease; border-left: 4px solid transparent; font-size: 0.95rem; }
+        .nav-links li a i { margin-right: 15px; width: 20px; text-align: center; transition: color 0.3s ease; }
+        .nav-links li a:hover, .nav-links li a.active { background-color: rgba(212, 175, 55, 0.1); border-left: 4px solid var(--accent-color); color: var(--accent-color); }
+        
+        .nav-badge { background-color: var(--danger-color); color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; font-weight: bold; margin-left: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: none; }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 25px 30px; height: 100vh; position: relative; width: calc(100vw - 260px); }
+        .mobile-menu-btn { display: none; background: transparent; border: none; font-size: 1.5rem; color: var(--primary-color); cursor: pointer; padding: 5px; }
+        body.dark-theme .mobile-menu-btn { color: var(--text-light); }
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 15px; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        header h1 { color: var(--danger-color); font-size: 1.6rem; font-weight: bold; }
+        .live-clock { font-family: 'Courier New', Courier, monospace; font-size: 1rem; font-weight: bold; color: var(--accent-color); background-color: var(--primary-color); padding: 5px 10px; border-radius: 4px; letter-spacing: 1px; white-space: nowrap; }
+        .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .year-selector { padding: 6px 12px; border: 1px solid var(--accent-color); border-radius: 4px; background-color: var(--panel-bg); color: var(--primary-color); font-weight: bold; font-size: 0.9rem; cursor: pointer; outline: none; transition: all 0.3s; }
+        .user-profile { text-align: right; line-height: 1.2; font-weight: bold; color: var(--primary-color); background: var(--panel-bg); padding: 6px 15px; border-radius: 20px; border: 1px solid var(--accent-color); font-size: 0.9rem; white-space: nowrap; }
+        
+        .content-section { animation: fadeIn 0.3s ease-in-out; }
+        .hidden { display: none; }
+
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { background: var(--panel-bg); padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid var(--accent-color); transition: background-color 0.3s; }
+        .card h3 { font-size: 0.85rem; color: var(--text-dark); opacity: 0.8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card .stat { font-size: 1.6rem; font-weight: bold; color: var(--primary-color); }
+        .card .stat.alert { color: var(--danger-color); }
+        .card .stat.warning { color: var(--warning-color); }
+        .card .stat.success { color: var(--success-color); }
+
+        .charts-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: var(--panel-bg); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); display: flex; flex-direction: column; transition: background-color 0.3s, border-color 0.3s; overflow: hidden; }
+        .chart-card.wide { grid-column: 1 / -1; }
+        .chart-card h3 { color: var(--primary-color); font-size: 1.1rem; margin-bottom: 15px; text-align: center; }
+        .canvas-container { flex: 1; position: relative; min-height: 250px; width: 100%; }
+
+        /* RESPONSIVE CONTROL PANELS */
+        .panel { background: var(--panel-bg); padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: background-color 0.3s; margin-bottom: 20px; overflow: hidden; }
+        .controls-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; width: 100%; }
+        .controls-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .controls-desc { flex: 1; min-width: 250px; margin: 0; font-size: 0.9rem; }
+        
+        .search-container { display: flex; align-items: center; background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 15px; width: 100%; max-width: 320px; transition: all 0.3s ease; flex: 1; min-width: 200px; }
+        .search-container:focus-within { border-color: var(--accent-color); box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); background: var(--panel-bg); }
+        .search-container i { color: var(--primary-color); opacity: 0.7; font-size: 0.95rem; margin-right: 10px; }
+        .search-container input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.95rem; color: var(--text-dark); transition: color 0.3s; }
+        
+        .table-responsive { width: 100%; max-height: 55vh; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 4px; transition: border-color 0.3s; -webkit-overflow-scrolling: touch; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 800px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; transition: border-color 0.3s; }
+        .data-table th { background-color: var(--primary-color); color: var(--accent-color); font-weight: 600; white-space: nowrap; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .inline-input { width: 100px; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem; font-weight: bold; outline: none; background: var(--bg-light); color: var(--text-dark); }
+        
+        .inv-desc { min-width: 150px; }
+        .inv-qty { min-width: 70px; }
+        .inv-rate { min-width: 100px; }
+
+        .btn-primary { background-color: var(--primary-color); color: var(--text-light); border: 1px solid var(--primary-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; font-size: 0.9rem; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--accent-color); border-color: var(--accent-color); color: var(--primary-color); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary.alert-bg { background-color: var(--danger-color); border-color: var(--danger-color); }
+        .btn-primary.alert-bg:hover { background-color: #C53030; color: white; border-color: #C53030; }
+        .btn-primary.success-bg { background-color: var(--success-color); border-color: var(--success-color); }
+        .btn-secondary { background-color: #e2e8f0; color: #2D3748; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-small { background-color: transparent; color: var(--primary-color); border: 1px solid var(--accent-color); padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: all 0.2s ease; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+        .action-buttons { display: flex; gap: 12px; align-items: center; }
+        .btn-action { background: transparent; border: none; cursor: pointer; font-size: 1.1rem; transition: transform 0.2s ease; }
+        .btn-action.view { color: var(--primary-color); }
+        .btn-action.edit { color: var(--warning-color); }
+        .btn-action.delete { color: var(--danger-color); }
+
+        .badge { padding: 5px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
+        .active-badge { background-color: rgba(56, 161, 105, 0.1); color: var(--success-color); border: 1px solid var(--success-color); }
+        .night-badge { background-color: rgba(10, 37, 64, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .warning-badge { background-color: rgba(212, 175, 55, 0.1); color: var(--warning-color); border: 1px solid var(--warning-color); }
+        .success-badge { background-color: rgba(56, 161, 105, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .absent-badge { background-color: rgba(113, 128, 150, 0.1); color: var(--gray-color); border: 1px solid var(--gray-color); }
+        .info-badge { background-color: rgba(49, 130, 206, 0.1); color: var(--info-color); border: 1px solid var(--info-color); }
+        .module-badge { background-color: rgba(10, 37, 64, 0.05); border: 1px solid #E2E8F0; color: #4A5568; font-weight: 500; }
+        body.dark-theme .module-badge { border-color: var(--border-color); color: var(--text-dark); }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow-y: auto; background-color: rgba(10, 37, 64, 0.8); backdrop-filter: blur(4px); padding: 20px; }
+        .modal-content { background-color: var(--panel-bg); margin: 2% auto; padding: 25px; border-radius: 8px; width: 100%; max-width: 850px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-top: 5px solid var(--accent-color); position: relative; animation: fadeIn 0.3s ease-in-out; transition: background-color 0.3s; }
+        #addEmployeeModal .modal-content, #onboardClientModal .modal-content { max-width: 850px; }
+        #logIncidentModal .modal-content, #logObservationModal .modal-content, #logExpenditureModal .modal-content, #composeMessageModal .modal-content, #viewMessageModal .modal-content, #userAccountModal .modal-content { max-width: 550px; }
+        .close-modal { color: var(--text-dark); position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.3s; line-height: 1; }
+        .form-section { margin-bottom: 20px; padding: 15px; background-color: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--accent-color); }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color); font-size: 0.85rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.95rem; font-family: inherit; background-color: var(--panel-bg); color: var(--text-dark); }
+        .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color); flex-wrap: wrap; }
+
+        .settings-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; align-items: start; }
+        .settings-card { border: 1px solid var(--border-color); padding: 20px; border-radius: 6px; background: var(--bg-light); }
+        .switch-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--panel-bg); border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #viewEmployeeModal .modal-content { max-width: 850px; padding: 0; overflow: hidden; background: var(--bg-light); }
+        .profile-banner { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); height: 120px; position: relative; border-bottom: 3px solid var(--accent-color); }
+        .profile-header-content { padding: 0 30px 20px; display: flex; align-items: flex-end; gap: 20px; margin-top: -60px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); }
+        .profile-pic-wrapper { position: relative; width: 130px; height: 130px; border-radius: 50%; border: 5px solid var(--panel-bg); background: var(--bg-light); overflow: hidden; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .profile-pic-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .upload-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 0.8rem; text-align: center; padding: 6px 0; cursor: pointer; opacity: 0; transition: opacity 0.3s ease; }
+        .profile-pic-wrapper:hover .upload-overlay { opacity: 1; }
+        .profile-title-area { padding-bottom: 10px; flex: 1; }
+        .profile-title-area h2 { font-size: 1.8rem; color: var(--primary-color); margin-bottom: 8px; font-weight: 800; }
+        .profile-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+        .profile-body { padding: 25px 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .profile-section-card { background: var(--panel-bg); border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid var(--border-color); }
+        .profile-section-card h4 { color: var(--primary-color); border-bottom: 2px solid var(--bg-light); padding-bottom: 10px; margin-bottom: 15px; font-size: 1.05rem; display: flex; align-items: center; gap: 10px; }
+        .profile-section-card h4 i { color: var(--accent-color); }
+        .view-grid-new { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .view-item-new { display: flex; flex-direction: column; gap: 5px; }
+        .view-item-new label { font-size: 0.75rem; color: var(--gray-color); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        .view-item-new span { font-size: 0.95rem; color: var(--text-dark); font-weight: 500; }
+
+        /* MOBILE RESPONSIVENESS */
+        @media (max-width: 992px) { 
+            .settings-grid { grid-template-columns: 1fr; } 
+            .charts-wrapper { grid-template-columns: 1fr; } 
+        }
+
+        @media (max-width: 768px) { 
+            .sidebar { position: fixed; left: -260px; height: 100vh; z-index: 1000; } 
+            .sidebar.open { left: 0; } 
+            .sidebar-overlay { z-index: 999; }
+            .mobile-menu-btn { display: block; } 
+            .main-content { padding: 15px 10px; width: 100vw; }
+            
+            header { flex-direction: column; align-items: flex-start; gap: 15px; padding-bottom: 10px; } 
+            .header-left { width: 100%; }
+            .header-right { width: 100%; flex-direction: row; justify-content: space-between; }
+            header h1 { font-size: 1.4rem; } 
+            
+            .dashboard-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; } 
+            .card { padding: 12px; }
+            .card .stat { font-size: 1.3rem; }
+            
+            .form-grid, .view-grid-new { grid-template-columns: 1fr; } 
+            .form-group.full-width { grid-column: span 1; } 
+            
+            .controls-row { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 15px; }
+            .controls-group { flex-direction: column; align-items: stretch; width: 100%; gap: 10px; }
+            .controls-group > * { width: 100%; margin: 0; }
+            .search-container { max-width: 100%; } 
+            
+            .btn-primary, .btn-secondary { width: 100%; padding: 10px; font-size: 1rem; }
+            
+            .modal-content { padding: 15px; margin: 10px auto; width: 95%; max-height: 90vh; overflow-y: auto; } 
+            .close-modal { top: 5px; right: 15px; font-size: 32px; background: rgba(255,255,255,0.8); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 20; color: #0A2540;}
+            
+            .modal-footer { flex-direction: column; gap: 10px; } 
+            .modal-footer button { width: 100%; margin: 0; }
+            
+            .profile-body { grid-template-columns: 1fr; padding: 15px; gap: 15px; } 
+            .profile-header-content { flex-direction: column; align-items: center; text-align: center; margin-top: -65px; padding: 0 15px 15px; } 
+            .profile-badges { justify-content: center; margin-top: 5px; }
+            .profile-title-area h2 { font-size: 1.5rem; margin-top: 10px; }
+            
+            .data-table th, .data-table td { padding: 10px 8px; font-size: 0.85rem; }
+            .action-buttons { flex-wrap: nowrap; }
+            
+            .table-responsive { border-left: none; border-right: none; border-radius: 0; margin-left: -15px; margin-right: -15px; width: calc(100% + 30px); padding: 0 15px; }
+            .attendance-split { flex-direction: column; border-left: none !important; padding-left: 0 !important; border-top: 1px solid var(--border-color); padding-top: 10px; width: 100%; }
+        }
+        @media (max-width: 480px) { 
+            .dashboard-cards { grid-template-columns: 1fr; } 
+        }
+
+        #printContainer { display: none; }
+        @media print { body * { visibility: hidden !important; } #printContainer, #printContainer * { visibility: visible !important; } #printContainer { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; } }
+    </style>
+</head>
+<body>
+    
+    <!-- LOGIN SCREEN -->
+    <div id="login-container">
+        <div class="login-box">
+            <img src="logo.png" alt="DKB Logo" class="brand-logo" style="margin-bottom: 20px; background: white; padding: 10px;">
+            <h2 style="color: var(--primary-color); margin-bottom: 5px;">DKB ANCHOR</h2>
+            <p style="color: var(--gray-color); margin-bottom: 25px; font-size: 0.9rem;">Security Management Portal</p>
+            <form id="loginForm">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="color: var(--primary-color);">Email Address</label>
+                    <input type="email" id="loginEmail" required style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); margin-top: 5px;">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="color: var(--primary-color);">Password</label>
+                    <div style="position: relative; margin-top: 5px;">
+                        <input type="password" id="loginPassword" required style="width: 100%; padding: 10px; padding-right: 40px; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <i class="fa-solid fa-eye" id="toggleLoginPassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--gray-color);"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 15px;" id="loginBtn">Secure Login</button>
+                <div id="loginError" style="color: var(--danger-color); font-size: 0.85rem; display: none; background: rgba(229, 62, 62, 0.1); padding: 10px; border-radius: 4px; border: 1px solid var(--danger-color);">Invalid credentials.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="mainSidebar">
+            <div class="sidebar-header">
+                <img src="logo.png" alt="Company Logo" class="brand-logo" id="sidebarLogo">
+                <h2 id="sidebarCompanyName">DKB ANCHOR</h2>
+                <p>Security Services Ltd.</p>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item-dashboard"><a href="#" class="active" data-target="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                <li class="nav-item-employee-management"><a href="#" data-target="employee-management"><i class="fa-solid fa-users"></i> Employee Mgt</a></li>
+                <li class="nav-item-clients"><a href="#" data-target="clients"><i class="fa-solid fa-handshake"></i> Clients</a></li>
+                <li class="nav-item-payroll"><a href="#" data-target="payroll"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a></li>
+                <li class="nav-item-expenditure"><a href="#" data-target="expenditure"><i class="fa-solid fa-file-invoice-dollar"></i> Expenditure</a></li>
+                <li class="nav-item-invoices"><a href="#" data-target="invoices"><i class="fa-solid fa-file-signature"></i> Invoices</a></li>
+                <li class="nav-item-guard-deployment"><a href="#" data-target="guard-deployment"><i class="fa-solid fa-shield-halved"></i> Deployment</a></li>
+                <li class="nav-item-incident-reporting"><a href="#" data-target="incident-reporting"><i class="fa-solid fa-triangle-exclamation"></i> Incidents <span id="incCounter" class="nav-badge" style="display: none;">0</span></a></li>
+                <li class="nav-item-observations"><a href="#" data-target="observations"><i class="fa-solid fa-binoculars"></i> Observations <span id="obsCounter" class="nav-badge" style="display: none;">0</span></a></li>
+                <li class="nav-item-attendance"><a href="#" data-target="attendance"><i class="fa-solid fa-clipboard-user"></i> Attendance</a></li>
+                <li class="nav-item-messages"><a href="#" data-target="messages"><i class="fa-solid fa-envelope"></i> Messages <span id="msgCounter" class="nav-badge">0</span></a></li>
+                <li class="nav-item-audit-trail"><a href="#" data-target="audit-trail"><i class="fa-solid fa-list-check"></i> Audit Trail</a></li>
+                <li class="nav-item-settings"><a href="#" data-target="settings"><i class="fa-solid fa-gear"></i> Settings</a></li>
+                <li style="margin-top: 20px;"><a href="#" id="navLogoutBtn" style="color: var(--danger-color); border-top: 1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-right-from-bracket"></i> Secure Logout</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <section id="dashboard" class="content-section active">
+                <header>
+                    <div class="header-left">
+                        <button id="mobileMenuBtn" class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+                        <h1>Interactive Dashboard</h1>
+                        <div id="live-clock" class="live-clock">00:00:00</div>
+                    </div>
+                    <div class="header-right">
+                        <select id="year-filter" class="year-selector"></select>
+                        <div class="user-profile" id="displayUserName">Authenticating...</div>
+                    </div>
+                </header>
+                
+                <div class="dashboard-cards">
+                    <div class="card"><h3>Total Employees</h3><p class="stat" id="dashTotalEmp">0</p></div>
+                    <div class="card"><h3>Active Guards</h3><p class="stat" id="dashActiveGuards">0</p></div>
+                    <div class="card"><h3>Total Incidents</h3><p class="stat alert" id="dashTotalInc">0</p></div>
+                    <div class="card"><h3>Total Observations</h3><p class="stat warning" id="dashTotalObs">0</p></div>
+                    <div class="card financial-element"><h3>Monthly Revenue</h3><p class="stat success" id="dashRevenue">GH₵ 0.00</p></div>
+                    <div class="card financial-element"><h3>Monthly Salaries</h3><p class="stat warning" id="dashSalaries">GH₵ 0.00</p></div>
+                    <div class="card financial-element"><h3>Total Expenses</h3><p class="stat alert" id="dashTotalExp">GH₵ 0.00</p></div>
+                    <div class="card financial-element"><h3>Live Profit Margin</h3><p class="stat success" id="dashTotalProfit">GH₵ 0.00</p></div>
+                </div>
+
+                <div class="charts-wrapper">
+                    <div class="chart-card"><h3>Monthly Deployment Trend</h3><div class="canvas-container"><canvas id="deploymentChart"></canvas></div></div>
+                    <div class="chart-card"><h3>Monthly Incidents</h3><div class="canvas-container"><canvas id="incidentChart"></canvas></div></div>
+                    <div class="chart-card"><h3>Observations Breakdown</h3><div class="canvas-container"><canvas id="observationsChart"></canvas></div></div>
+                    <div class="chart-card wide financial-element"><h3>Monthly Revenue vs Profit</h3><div class="canvas-container" style="min-height: 250px;"><canvas id="financeChart"></canvas></div></div>
+                </div>
+            </section>
+
+            <!-- Employee Management View -->
+            <section id="employee-management" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Employee Management</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openAddEmployeeModal" class="btn-primary"><i class="fa-solid fa-plus"></i> Add New Employee</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="employeeSearchInput" placeholder="Search by ID, Name..."></div>
+                            <button id="exportEmployeesBtn" class="btn-primary"><i class="fa-solid fa-file-csv"></i> Download CSV</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive"> 
+                        <table class="data-table" id="employeeTable">
+                            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Duty Post</th><th>Shift</th><th>Basic Salary</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Client Management View -->
+            <section id="clients" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Client Management</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openOnboardClientBtn" class="btn-primary"><i class="fa-solid fa-plus"></i> Onboard New Client</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="clientSearchInput" placeholder="Search clients..."></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="clientTable">
+                            <thead><tr><th>Client ID</th><th>Company Name</th><th>Contact Person</th><th>Phone</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payroll View -->
+            <section id="payroll" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Payroll Management</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <p class="controls-desc">Process and review employee payments. You can adjust Overtime and Bonus manually before processing payment.</p>
+                        <div class="controls-group">
+                            <select id="payrollMonth" class="year-selector">
+                                <option value="January">January</option><option value="February">February</option><option value="March">March</option>
+                                <option value="April">April</option><option value="May">May</option><option value="June">June</option>
+                                <option value="July">July</option><option value="August">August</option><option value="September">September</option>
+                                <option value="October">October</option><option value="November">November</option><option value="December">December</option>
+                            </select>
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="payrollSearchInput" placeholder="Search by ID, Name..."></div>
+                            <button id="exportPayrollBtn" class="btn-primary"><i class="fa-solid fa-file-csv"></i> Export Payroll</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive"> 
+                        <table class="data-table" id="payrollTable">
+                            <thead><tr><th>Emp ID</th><th>Name</th><th>Role</th><th>Basic Salary</th><th>Overtime (GH₵)</th><th>Bonus (GH₵)</th><th>SSNIT (5.5%)</th><th>PAYE</th><th>Net Pay</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expenditure View -->
+            <section id="expenditure" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Expenditure Management</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openLogExpenditureBtn" class="btn-primary"><i class="fa-solid fa-plus"></i> Log New Expense</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="expenditureSearchInput" placeholder="Search expenses..."></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="expenditureTable">
+                            <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount (GH₵)</th><th>Logged By</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Invoices View -->
+            <section id="invoices" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Invoice Generation</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openCreateInvoiceBtn" class="btn-primary"><i class="fa-solid fa-plus"></i> Create New Invoice</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="invoiceSearchInput" placeholder="Search client, invoice ID..."></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="invoiceTable">
+                            <thead><tr><th>Invoice ID</th><th>Date</th><th>Client Name</th><th>Total (GH₵)</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Guard Deployment View -->
+            <section id="guard-deployment" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Guard Deployment</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <p class="controls-desc">Overview of active guard assignments across all client locations.</p>
+                        <div class="controls-group">
+                            <select id="deploymentClientFilter" class="year-selector" style="max-width: 250px;">
+                                <option value="All">All Locations / Clients</option>
+                            </select>
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="deploymentSearchInput" placeholder="Search by ID, Name, Duty Post..."></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive"> 
+                        <table class="data-table" id="deploymentTable">
+                            <thead><tr><th>Emp ID</th><th>Guard Name</th><th>Role</th><th>Assigned Duty Post</th><th>Shift</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Incident Reporting View -->
+            <section id="incident-reporting" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Incident Reporting</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openLogIncidentBtn" class="btn-primary alert-bg"><i class="fa-solid fa-plus"></i> Log New Incident</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="incidentSearchInput" placeholder="Search locations, categories..."></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="incidentTable">
+                            <thead><tr><th>Date & Time</th><th>Location</th><th>Category</th><th>Reported By</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Observations View -->
+            <section id="observations" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Field Observations</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openLogObservationBtn" class="btn-primary"><i class="fa-solid fa-plus"></i> Log New Observation</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="observationSearchInput" placeholder="Search site, observer..."></div>
+                            <button id="exportObservationsBtn" class="btn-primary"><i class="fa-solid fa-download"></i> Download CSV</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="observationTable">
+                            <thead><tr><th>Date & Time</th><th>Site / Location</th><th>Observer</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Attendance Register View -->
+            <section id="attendance" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Attendance Register</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <p class="controls-desc">Daily clock-in and clock-out registry.</p>
+                        <div class="controls-group">
+                            <div style="display: flex; align-items: center; gap: 5px; width: 100%;">
+                                <label style="font-size: 0.8rem; color: var(--gray-color); white-space: nowrap;">Daily View:</label>
+                                <input type="date" id="attendanceDateFilter" class="year-selector" style="width: 100%;">
+                            </div>
+                            
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="attendanceSearchInput" placeholder="Search by ID, Name..."></div>
+                            
+                            <div class="attendance-split" style="display: flex; align-items: center; gap: 5px; border-left: 2px solid var(--border-color); padding-left: 15px;">
+                                <input type="month" id="attendanceMonthExport" class="year-selector" style="width: 100%;">
+                                <button id="exportAttendanceBtn" class="btn-primary" style="width: 100%;"><i class="fa-solid fa-file-csv"></i> Download Monthly</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive"> 
+                        <table class="data-table" id="attendanceTable">
+                            <thead><tr><th>Emp ID</th><th>Name</th><th>Duty Post</th><th>Shift</th><th>Clock In Time</th><th>Clock Out Time</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages View -->
+            <section id="messages" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Internal Communications</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <button id="openComposeMsgBtn" class="btn-primary"><i class="fa-solid fa-pen-to-square"></i> Compose Message</button>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="messageSearchInput" placeholder="Search subject, recipient..."></div>
+                        </div>
+                    </div>
+                    <div class="table-responsive"> 
+                        <table class="data-table" id="messagesTable">
+                            <thead><tr><th>Date & Time</th><th>From</th><th>To</th><th>Subject</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audit Trail View -->
+            <section id="audit-trail" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Audit Trail & System Logs</h1></div></header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <div class="controls-group">
+                            <select id="auditModuleFilter" class="year-selector">
+                                <option value="All">All Modules</option><option value="Authentication">Authentication</option>
+                                <option value="Employee Management">Employee Management</option><option value="Payroll">Payroll</option>
+                                <option value="Expenditure">Expenditure</option><option value="Incidents">Incidents</option>
+                                <option value="Observations">Observations</option><option value="Attendance">Attendance</option>
+                                <option value="Messages">Messages</option><option value="Settings">Settings</option>
+                            </select>
+                        </div>
+                        <div class="controls-group">
+                            <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="auditSearchInput" placeholder="Search logs..."></div>
+                            <button id="exportAuditBtn" class="btn-primary"><i class="fa-solid fa-download"></i> Export Logs</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="auditTable">
+                            <thead><tr><th>Date & Time</th><th>User</th><th>Module</th><th>Action Performed</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings" class="content-section hidden">
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>System Settings</h1></div></header>
+                <div class="settings-grid">
+                    <div class="panel">
+                        <div class="settings-card">
+                            <h3>Branding & Preferences</h3>
+                            <div class="switch-wrapper"><span>Dark Mode</span><label class="switch"><input type="checkbox" id="themeToggleBtn"><span class="slider"></span></label></div>
+                            <form id="brandingForm" style="margin-top: 20px;">
+                                <div class="form-group"><label>Company Name</label><input type="text" id="settingCompanyName" value="DKB ANCHOR" required></div>
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label>Company Logo</label>
+                                    <div style="display: flex; gap: 15px; align-items: center; background: var(--bg-light); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                        <img id="settingLogoPreview" src="https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO" alt="Logo Preview" style="max-height: 40px; background: #fff; padding: 2px; border-radius: 4px;">
+                                        <input type="file" id="settingLogoUpload" accept="image/*" style="flex: 1; border: none; padding: 0;">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Save Branding</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-controls controls-row">
+                            <h3 style="color: var(--primary-color); margin: 0; font-size: 1.1rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 5px;">User Management</h3>
+                            <button id="openUserModalBtn" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="usersTable">
+                                <thead><tr><th>User ID</th><th>Full Name</th><th>Email / Username</th><th>Access Role</th><th>Action</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODALS SECTION -->
+    
+    <!-- Onboard Client Modal -->
+    <div id="onboardClientModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="clientModalTitle">Onboard New Client</h2>
+            <form id="clientForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group full-width"><label>Company / Client Name</label><input type="text" id="clName" required></div>
+                    <div class="form-group"><label>Contact Person</label><input type="text" id="clContactPerson" required></div>
+                    <div class="form-group"><label>Phone Number</label><input type="tel" id="clPhone" required></div>
+                    <div class="form-group"><label>Email Address</label><input type="email" id="clEmail"></div>
+                    <div class="form-group"><label>Contract Start Date</label><input type="date" id="clStartDate" required></div>
+                    <div class="form-group full-width"><label>Physical Address</label><input type="text" id="clAddress" required></div>
+                    <div class="form-group"><label>Service Status</label><select id="clStatus" required><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Pending">Pending</option></select></div>
+                    <div class="form-group financial-element"><label>Monthly Rate (GH₵)</label><input type="number" id="clRate" step="0.01"></div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelClientBtn">Cancel</button><button type="submit" class="btn-primary" id="saveClientBtn">Save Client</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Account Modal -->
+    <div id="userAccountModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="userModalTitle">Create User Account</h2>
+            <form id="userAccountForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group full-width"><label>Full Name</label><input type="text" id="uName" required></div>
+                    <div class="form-group"><label>Email / Username</label><input type="text" id="uEmail" required></div>
+                    <div class="form-group"><label>System Access Role</label>
+                        <select id="uRole" required>
+                            <option value="" disabled selected>Select Role</option>
+                            <option value="Super Admin">Super Admin</option>
+                            <option value="Operations Manager">Operations Manager</option>
+                            <option value="Finance Manager">Finance Manager</option>
+                            <option value="Standard User">Standard User</option>
+                            <option value="Client">Client Portal Access</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width" id="pwdGroup">
+                        <label>Temporary Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="uPassword" required style="padding-right: 40px; width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.95rem; background-color: var(--panel-bg); color: var(--text-dark);">
+                            <i class="fa-solid fa-eye" id="toggleUPassword" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--gray-color);"></i>
+                        </div>
+                    </div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelUserBtn">Cancel</button><button type="submit" class="btn-primary" id="saveUserBtn">Create Account</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log Expenditure Modal -->
+    <div id="logExpenditureModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log New Expenditure</h2>
+            <form id="expenditureForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group"><label>Date</label><input type="date" id="expDate" required></div>
+                    <div class="form-group"><label>Amount (GH₵)</label><input type="number" id="expAmount" step="0.01" required></div>
+                    <div class="form-group full-width"><label>Category</label><select id="expCategory" required><option value="" disabled selected>Select Category</option><option value="Fuel & Transportation">Fuel & Transportation</option><option value="Office Supplies">Office Supplies</option><option value="Equipment & Gear">Equipment & Gear</option><option value="Maintenance">Maintenance</option><option value="Utilities">Utilities</option><option value="Miscellaneous">Miscellaneous</option></select></div>
+                    <div class="form-group full-width"><label>Description</label><input type="text" id="expDescription" required></div>
+                    <div class="form-group full-width"><label>Logged By</label><input type="text" id="expLoggedBy" value="Admin User" readonly style="background-color: var(--bg-light); cursor: not-allowed;"></div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelExpenditureBtn">Cancel</button><button type="submit" class="btn-primary">Save Expenditure</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Invoice Modal -->
+    <div id="createInvoiceModal" class="modal">
+        <div class="modal-content" style="max-width: 850px;"><span class="close-modal">&times;</span><h2 class="modal-header">Create Invoice</h2>
+            <form id="invoiceForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group"><label>Client Name</label><input type="text" id="invClientName" required></div>
+                    <div class="form-group"><label>Invoice Date</label><input type="date" id="invDate" required></div>
+                    <div class="form-group"><label>Billing Month</label><input type="month" id="invBillingMonth" required></div>
+                    <div class="form-group"><label>Client Address</label><input type="text" id="invClientAddress" required></div>
+                </div></div>
+                
+                <div class="form-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3>Line Items</h3>
+                        <button type="button" class="btn-small" id="addInvoiceItemBtn"><i class="fa-solid fa-plus"></i> Add Item</button>
+                    </div>
+                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto; border-bottom: 2px solid var(--border-color);">
+                        <table class="data-table" id="invoiceItemsTable" style="min-width: 100%;">
+                            <thead style="position: sticky; top: 0; z-index: 5;"><tr><th>Description</th><th style="width: 100px;">Qty</th><th style="width: 150px;">Rate (GH₵)</th><th style="width: 150px;">Amount (GH₵)</th><th style="width: 50px;"></th></tr></thead>
+                            <tbody id="invoiceItemsBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                        <table style="width: 320px; text-align: right; border-collapse: collapse; font-size: 0.95rem; color: var(--text-dark);">
+                            <tr><td style="padding: 6px;">Subtotal:</td><td style="padding: 6px; font-weight: bold;">GH₵ <span id="invSubtotalText">0.00</span></td></tr>
+                            <tr style="color: var(--gray-color);"><td style="padding: 6px;">GETFund (2.5%):</td><td style="padding: 6px;">GH₵ <span id="invGeflText">0.00</span></td></tr>
+                            <tr style="color: var(--gray-color);"><td style="padding: 6px;">NHIL (2.5%):</td><td style="padding: 6px;">GH₵ <span id="invNhilText">0.00</span></td></tr>
+                            <tr style="color: var(--gray-color); border-bottom: 1px solid var(--border-color);"><td style="padding: 6px;">VAT (15%):</td><td style="padding: 6px;">GH₵ <span id="invVatText">0.00</span></td></tr>
+                            <tr><td style="padding: 15px 6px 6px; font-size: 1.2rem; color: var(--primary-color);"><strong>Total:</strong></td><td style="padding: 15px 6px 6px; font-size: 1.2rem; color: var(--primary-color);"><strong>GH₵ <span id="invTotalText">0.00</span></strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="cancelInvoiceBtn">Cancel</button>
+                    <button type="submit" class="btn-primary" id="saveInvoiceActionBtn" disabled>Save Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log Incident Modal -->
+    <div id="logIncidentModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log Incident Report</h2>
+            <form id="incidentForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group"><label>Date & Time</label><input type="datetime-local" id="incDate" required></div>
+                    <div class="form-group"><label>Location / Site</label><input type="text" id="incLocation" required></div>
+                    <div class="form-group"><label>Category</label><select id="incCategory" required><option value="" disabled selected>Select Category</option><option value="Theft">Theft</option><option value="Vandalism">Vandalism / Damage</option><option value="Intrusion">Unauthorized Intrusion</option><option value="Assault">Assault / Altercation</option><option value="Medical">Medical Emergency</option><option value="Other">Other</option></select></div>
+                    <div class="form-group"><label>Reported By</label><input type="text" id="incReporter" required></div>
+                    <div class="form-group full-width"><label>Detailed Description</label><textarea id="incDescription" rows="4" required></textarea></div>
+                    <div class="form-group full-width"><label>Current Status</label><select id="incStatus" required><option value="Pending">Pending</option><option value="Investigating">Investigating</option><option value="Closed">Closed</option></select></div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelIncidentBtn">Cancel</button><button type="submit" class="btn-primary alert-bg">Submit Incident Report</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log Observation Modal -->
+    <div id="logObservationModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log Field Observation</h2>
+            <form id="observationForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group"><label>Date & Time</label><input type="datetime-local" id="obsDate" required></div>
+                    <div class="form-group"><label>Location / Site</label><input type="text" id="obsSite" required></div>
+                    <div class="form-group"><label>Observer Name</label><input type="text" id="obsObserver" required></div>
+                    <div class="form-group"><label>Current Status</label><select id="obsStatus" required><option value="Pending Review">Pending Review</option><option value="Reviewed">Reviewed</option><option value="Addressed">Addressed</option></select></div>
+                    <div class="form-group full-width"><label>Observation Description</label><textarea id="obsDescription" rows="4" required></textarea></div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelObservationBtn">Cancel</button><button type="submit" class="btn-primary">Submit Observation</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Compose Message Modal -->
+    <div id="composeMessageModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Compose Message</h2>
+            <form id="composeMsgForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group full-width"><label>To / Recipient</label><select id="msgRecipient" required><option value="" disabled selected>Select Audience</option><option value="All Employees">Broadcast: All Employees</option><option value="All Guards">Broadcast: All Guards</option><option value="Management Team">Management Team</option><option value="Supervisors">Supervisors Only</option></select></div>
+                    <div class="form-group full-width"><label>Subject</label><input type="text" id="msgSubject" required></div>
+                    <div class="form-group full-width"><label>Message</label><textarea id="msgBody" rows="6" required></textarea></div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelComposeMsgBtn">Cancel</button><button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Message</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Message Modal -->
+    <div id="viewMessageModal" class="modal">
+        <div class="modal-content"><span class="close-modal" onclick="document.getElementById('viewMessageModal').style.display='none'">&times;</span>
+            <div class="message-reader-header" style="border-bottom: 2px solid var(--accent-color); padding-bottom: 15px; margin-bottom: 15px;"><div class="message-reader-subject" id="readerSubject" style="font-size: 1.3rem; font-weight: bold; color: var(--primary-color);">Subject</div><div class="message-reader-meta" style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9rem; color: var(--gray-color);"><div><strong>From:</strong> <span id="readerSender">Admin</span> &nbsp;|&nbsp; <strong>To:</strong> <span id="readerRecipient">All</span></div><div id="readerDate">Date</div></div></div>
+            <div class="message-reader-body" id="readerBody" style="min-height: 100px; line-height: 1.6; color: var(--text-dark);">Body</div>
+            <div class="modal-footer"><button type="button" class="btn-secondary" id="closeViewMsgBtn" onclick="document.getElementById('viewMessageModal').style.display='none'">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="addEmployeeModal" class="modal">
+        <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="modalTitle">Add New Employee Profile</h2>
+            <form id="addEmployeeForm">
+                <div class="form-section"><h3>1. Personal Details</h3><div class="form-grid">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="empName" required></div>
+                    <div class="form-group"><label>Ghana Card ID</label><input type="text" id="empGhanaCard" required></div>
+                    <div class="form-group"><label>Phone Number</label><input type="tel" id="empPhone" required></div>
+                    <div class="form-group"><label>Ghana Post GPS</label><input type="text" id="empGPS" required></div>
+                    <div class="form-group full-width"><label>Residential Address</label><input type="text" id="empAddress" required></div>
+                </div></div>
+                <div class="form-section"><h3>2. Employment Details</h3><div class="form-grid">
+                    <div class="form-group"><label>Role</label><select id="empRole" required><option value="" disabled selected>Select Role</option><option value="Admin">Admin</option><option value="Operations Manager">Operations Manager</option><option value="Finance Manager">Finance Manager</option><option value="Safety Manager">Safety Manager</option><option value="Marketing Manager">Marketing Manager</option><option value="IT Manager">IT Manager</option><option value="Supervisor">Supervisor</option><option value="Guard">Guard</option></select></div>
+                    <div class="form-group"><label>Duty Post</label><select id="empDutyPost" required><option value="" disabled selected>Select Duty Post</option></select></div>
+                    <div class="form-group"><label>Assigned Shift</label><select id="empShift" required><option value="" disabled selected>Select Shift</option><option value="Day">Day</option><option value="Night">Night</option></select></div>
+                    <div class="form-group"><label>Client Billing Rate (GH₵)</label><input type="number" id="empClientRate" required></div>
+                    <div class="form-group"><label>Basic Salary (GH₵)</label><input type="number" id="empBasicSalary" required></div>
+                </div></div>
+                <div class="form-section"><h3>3. Guarantor Information</h3><div class="form-grid">
+                    <div class="form-group"><label>Guarantor Name</label><input type="text" id="guarName" required></div>
+                    <div class="form-group"><label>Guarantor ID (Ghana Card)</label><input type="text" id="guarID" required></div>
+                    <div class="form-group"><label>Guarantor Phone Number</label><input type="tel" id="guarPhone" required></div>
+                    <div class="form-group"><label>Guarantor Profession</label><input type="text" id="guarProfession" required></div>
+                    <div class="form-group"><label>Guarantor GPS</label><input type="text" id="guarGPS" required></div>
+                    <div class="form-group full-width"><label>Guarantor Address</label><input type="text" id="guarAddress" required></div>
+                </div></div>
+                <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelEmployeeBtn">Cancel</button><button type="submit" class="btn-primary" id="saveEmployeeBtn">Save Profile</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Employee Modal -->
+    <div id="viewEmployeeModal" class="modal">
+        <div class="modal-content"><span class="close-modal" style="color: white; position: absolute; z-index: 10; top: 15px; right: 20px;" onclick="document.getElementById('viewEmployeeModal').style.display='none'">&times;</span>
+            <div class="profile-banner"></div>
+            <div class="profile-header-content">
+                <div class="profile-pic-wrapper"><img id="viewProfilePic" src="https://via.placeholder.com/150/F4F6F8/0A2540?text=User" alt="Profile"><label for="imageUpload" class="upload-overlay"><i class="fa-solid fa-camera"></i> Change</label><input type="file" id="imageUpload" accept="image/*" style="display:none;"></div>
+                <div class="profile-title-area">
+                    <h2 id="viewName">Employee Name</h2>
+                    <div class="profile-badges"><span class="badge module-badge" id="viewId"><i class="fa-solid fa-id-badge"></i> ID</span><span class="badge info-badge" id="viewRole"><i class="fa-solid fa-user-shield"></i> Role</span><span class="badge" id="v_shiftBadge"><i class="fa-solid fa-clock"></i> Shift</span></div>
+                </div>
+            </div>
+            <div class="profile-body">
+                <div class="profile-column">
+                    <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-address-card"></i> Personal Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Ghana Card ID</label><span id="v_ghanaCard">-</span></div><div class="view-item-new"><label>Phone Number</label><span id="v_phone">-</span></div><div class="view-item-new"><label>Ghana Post GPS</label><span id="v_gps">-</span></div><div class="view-item-new"><label>Residential Address</label><span id="v_address">-</span></div></div></div>
+                    <div class="profile-section-card"><h4><i class="fa-solid fa-briefcase"></i> Employment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Duty Post</label><span id="v_dutyPost">-</span></div><div class="view-item-new"><label>Basic Salary</label><span id="v_salary">-</span></div><div class="view-item-new"><label>Client Billing Rate</label><span id="v_rate">-</span></div></div></div>
+                </div>
+                <div class="profile-column"><div class="profile-section-card" style="height: 100%;"><h4><i class="fa-solid fa-users-line"></i> Guarantor Information</h4><div class="view-grid-new"><div class="view-item-new"><label>Guarantor Name</label><span id="v_gName">-</span></div><div class="view-item-new"><label>Guarantor ID</label><span id="v_gId">-</span></div><div class="view-item-new"><label>Guarantor Phone</label><span id="v_gPhone">-</span></div><div class="view-item-new"><label>Guarantor Profession</label><span id="v_gProf">-</span></div><div class="view-item-new"><label>Guarantor GPS</label><span id="v_gGps">-</span></div><div class="view-item-new"><label>Guarantor Address</label><span id="v_gAddress">-</span></div></div></div></div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 30px; background: var(--panel-bg); margin: 0; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn-secondary" id="closeViewBtn" onclick="document.getElementById('viewEmployeeModal').style.display='none'">Close</button>
+                <button type="button" class="btn-primary" id="downloadEmployeeProfileBtn"><i class="fa-solid fa-download"></i> Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Container -->
+    <div id="printContainer"></div>
+
+    <!-- MAIN APP SCRIPT WITH FIREBASE MODULAR (v12) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, getDoc, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7cUX5DXzGhktfRItpdXJ45TrYH9KlVm4",
+            authDomain: "dkb-anchor-management-system.firebaseapp.com",
+            projectId: "dkb-anchor-management-system",
+            storageBucket: "dkb-anchor-management-system.firebasestorage.app",
+            messagingSenderId: "424257722432",
+            appId: "1:424257722432:web:2f8c1a1cc7a69df4b0a7a5",
+            measurementId: "G-H8KFSQ8ZCD"
+        };
+
+        let firestore;
+        let app;
+        try {
+            app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            
+            firestore = initializeFirestore(app, {
+                localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+            });
+        } catch (e) { 
+            console.warn("Firebase config missing or invalid.", e); 
+        }
+
+        let secondaryApp;
+        try {
+            secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+        } catch(e) {}
+        const secondaryAuth = getAuth(secondaryApp);
+
+        window.memoryDb = { employees: [], clients: [], incidents: [], observations: [], expenditures: [], invoices: [], attendance: [], messages: [], users: [], audit: [], settings: {} };
+
+        const notifySound = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+        let previousUnreadCount = 0; let previousIncCount = 0; let previousObsCount = 0;
+        const INC_TIME_KEY = "lastViewedIncidents"; const OBS_TIME_KEY = "lastViewedObservations";
+
+        window.currentUserRole = null;
+        
+        const RBAC_CONFIG = {
+            "Super Admin": ["dashboard", "employee-management", "clients", "payroll", "expenditure", "invoices", "guard-deployment", "incident-reporting", "observations", "attendance", "messages", "audit-trail", "settings"],
+            "Operations Manager": ["dashboard", "employee-management", "clients", "guard-deployment", "incident-reporting", "observations", "attendance", "messages"],
+            "Finance Manager": ["dashboard", "clients", "payroll", "expenditure", "invoices", "messages"],
+            "Standard User": ["dashboard", "incident-reporting", "observations", "attendance", "messages"],
+            "Client": ["dashboard", "messages"]
+        };
+
+        function applyRBAC(role, displayName) {
+            document.getElementById('displayUserName').innerHTML = `${displayName}<br><span style="font-size:0.75rem; color:var(--accent-color);">${role}</span>`;
+            const allowed = RBAC_CONFIG[role] || RBAC_CONFIG["Standard User"];
+            
+            document.querySelectorAll('.nav-links a[data-target]').forEach(link => {
+                const target = link.getAttribute('data-target');
+                if (allowed.includes(target)) { link.parentElement.style.display = 'block'; } 
+                else { link.parentElement.style.display = 'none'; }
+            });
+
+            document.querySelectorAll('.financial-element').forEach(el => {
+                if (role === "Operations Manager" || role === "Standard User" || role === "Client") { el.style.display = 'none'; } 
+                else { el.style.display = ''; }
+            });
+
+            const currentSection = document.querySelector('.content-section.active');
+            if (currentSection && !allowed.includes(currentSection.id)) {
+                const firstAllowed = document.querySelector(`.nav-links a[data-target="${allowed[0]}"]`);
+                if (firstAllowed) firstAllowed.click();
+            }
+        }
+
+        document.getElementById('toggleLoginPassword')?.addEventListener('click', function() {
+            const pwdInput = document.getElementById('loginPassword');
+            const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            pwdInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+        });
+
+        document.getElementById('toggleUPassword')?.addEventListener('click', function() {
+            const pwdInput = document.getElementById('uPassword');
+            const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            pwdInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+        });
+
+        function startRealTimeSync() {
+            if (!firestore) return;
+            const syncModules = [
+                { col: "attendance", render: () => renderAttendanceTable() },
+                { col: "observations", render: () => { renderObservationTable(); renderDashboard(); } },
+                { col: "incidents", render: () => { renderIncidentTable(); renderDashboard(); } },
+                { col: "employees", render: () => { renderTable(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); } },
+                { col: "clients", render: () => renderClientTable() },
+                { col: "expenditures", render: () => { renderExpenditureTable(); renderDashboard(); } },
+                { col: "invoices", render: () => renderInvoiceTable() },
+                { col: "messages", render: () => renderMessageTable() },
+                { col: "audit", render: () => renderAuditTable() },
+                { col: "users", render: () => renderUsersTable() }
+            ];
+
+            syncModules.forEach(module => {
+                onSnapshot(collection(firestore, module.col), (snapshot) => {
+                    window.memoryDb[module.col] = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                    module.render();
+                }, (error) => console.warn(`Sync error on ${module.col}:`, error));
+            });
+            
+            onSnapshot(doc(firestore, "settings", "system"), (docSnap) => {
+                if(docSnap.exists()) {
+                    window.memoryDb.settings.system = docSnap.data();
+                    applySystemSettings(window.memoryDb.settings.system);
+                }
+            });
+        }
+
+        window.viewGuardPhoto = function(imgData) { 
+            const w = window.open("", "_blank", "width=400,height=500"); 
+            w.document.write(`<div style="display:flex; justify-content:center; align-items:center; height:100%; background:#051424; margin:0;"><img src="${imgData}" style="max-width: 100%; max-height: 100%; border: 4px solid #D4AF37; border-radius: 8px;"></div>`); 
+        };
+
+        const sidebar = document.getElementById('mainSidebar'), overlay = document.getElementById('sidebarOverlay'), mobileBtns = document.querySelectorAll('.mobile-menu-btn');
+        function toggleSidebar() { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); }
+        mobileBtns.forEach(btn => btn.addEventListener('click', toggleSidebar)); overlay.addEventListener('click', toggleSidebar);
+        document.querySelectorAll(".nav-links a").forEach(link => { link.addEventListener("click", function(e) { if(window.innerWidth <= 768 && this.id !== 'navLogoutBtn') toggleSidebar(); }); });
+
+        setInterval(() => { const clockEl = document.getElementById('live-clock'); if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('en-US', { hour12: true }); }, 1000);
+
+        const yearFilter = document.getElementById('year-filter'); 
+        for (let y = Math.max(2026, new Date().getFullYear()); y >= 2026; y--) yearFilter.appendChild(new Option(y, y));
+        
+        const monthSelector = document.getElementById("payrollMonth"); 
+        if (monthSelector) monthSelector.value = new Date().toLocaleString('default', { month: 'long' });
+        
+        document.getElementById("payrollMonth").addEventListener("change", renderPayrollTable); 
+        document.getElementById("year-filter").addEventListener("change", renderPayrollTable);
+        
+        const attDateFilter = document.getElementById("attendanceDateFilter"); 
+        if (attDateFilter) { attDateFilter.value = new Date().toISOString().split('T')[0]; attDateFilter.addEventListener('change', renderAttendanceTable); }
+        
+        const attMonthExport = document.getElementById("attendanceMonthExport"); 
+        if (attMonthExport) attMonthExport.value = new Date().toISOString().slice(0, 7);
+        
+        document.getElementById("auditModuleFilter")?.addEventListener("change", renderAuditTable);
+        window.dashboardCharts = { dep: null, inc: null, obs: null, fin: null };
+
+        function getAllEmployees() { return Promise.resolve(window.memoryDb.employees || []); }
+        function getEmployee(id) { return Promise.resolve(window.memoryDb.employees.find(e => e.id === id)); }
+        function saveEmployee(emp) { return setDoc(doc(firestore, "employees", emp.id), emp, { merge: true }); }
+        function deleteEmployee(id) { return deleteDoc(doc(firestore, "employees", id)); }
+        function getAllClients() { return Promise.resolve(window.memoryDb.clients || []); }
+        function getClient(id) { return Promise.resolve(window.memoryDb.clients.find(e => e.id === id)); }
+        function saveClient(cl) { return setDoc(doc(firestore, "clients", cl.id), cl, { merge: true }); }
+        function deleteClient(id) { return deleteDoc(doc(firestore, "clients", id)); }
+        function getAllIncidents() { return Promise.resolve(window.memoryDb.incidents || []); }
+        function getIncident(id) { return Promise.resolve(window.memoryDb.incidents.find(x => x.id === id)); }
+        function saveIncident(inc) { return setDoc(doc(firestore, "incidents", inc.id), inc, { merge: true }); }
+        function deleteIncident(id) { return deleteDoc(doc(firestore, "incidents", id)); }
+        function getAllObservations() { return Promise.resolve(window.memoryDb.observations || []); }
+        function getObservation(id) { return Promise.resolve(window.memoryDb.observations.find(x => x.id === id)); }
+        function saveObservation(obs) { return setDoc(doc(firestore, "observations", obs.id), obs, { merge: true }); }
+        function deleteObservation(id) { return deleteDoc(doc(firestore, "observations", id)); }
+        function getAllExpenditures() { return Promise.resolve(window.memoryDb.expenditures || []); }
+        function getExpenditure(id) { return Promise.resolve(window.memoryDb.expenditures.find(x => x.id === id)); }
+        function saveExpenditure(exp) { return setDoc(doc(firestore, "expenditures", exp.id), exp, { merge: true }); }
+        function deleteExpenditure(id) { return deleteDoc(doc(firestore, "expenditures", id)); }
+        function getAllInvoices() { return Promise.resolve(window.memoryDb.invoices || []); }
+        function getInvoice(id) { return Promise.resolve(window.memoryDb.invoices.find(x => x.id === id)); }
+        function saveInvoice(inv) { return setDoc(doc(firestore, "invoices", inv.id), inv, { merge: true }); }
+        function deleteInvoice(id) { return deleteDoc(doc(firestore, "invoices", id)); }
+        function getAllAttendance() { return Promise.resolve(window.memoryDb.attendance || []); }
+        function getAttendanceRecord(id) { return Promise.resolve(window.memoryDb.attendance.find(x => x.id === id)); }
+        function saveAttendanceRecord(record) { return setDoc(doc(firestore, "attendance", record.id), record, { merge: true }); }
+        function getAllMessages() { return Promise.resolve(window.memoryDb.messages || []); }
+        function getMessage(id) { return Promise.resolve(window.memoryDb.messages.find(x => x.id === id)); }
+        function saveMessage(msg) { return setDoc(doc(firestore, "messages", msg.id), msg, { merge: true }); }
+        function deleteMessage(id) { return deleteDoc(doc(firestore, "messages", id)); }
+        function getSetting(id) { return Promise.resolve(window.memoryDb.settings[id]); }
+        function saveSetting(setting) { return setDoc(doc(firestore, "settings", setting.id), setting, { merge: true }); }
+        function getAllUsers() { return Promise.resolve(window.memoryDb.users || []); }
+        function getUser(id) { return Promise.resolve(window.memoryDb.users.find(x => x.id === id)); }
+        function saveUser(user) { return setDoc(doc(firestore, "users", user.id), user, { merge: true }); }
+        function deleteUser(id) { return deleteDoc(doc(firestore, "users", id)); }
+        function getAllAuditLogs() { return Promise.resolve(window.memoryDb.audit || []); }
+        function logAction(module, actionDesc) {
+            const userDisp = document.getElementById('displayUserName').innerText.split('\n')[0] || "Unknown User";
+            const log = { id: "LOG-" + new Date().getTime().toString().slice(-6), module: module, action: actionDesc, user: userDisp, timestamp: new Date().getTime() };
+            setDoc(doc(firestore, "audit", log.id), log);
+        }
+
+        document.getElementById("downloadEmployeeProfileBtn")?.addEventListener("click", function() {
+            const modalContent = document.querySelector("#viewEmployeeModal .modal-content");
+            const footer = modalContent.querySelector(".modal-footer");
+            const closeBtn = modalContent.querySelector(".close-modal");
+            const overlay = modalContent.querySelector(".upload-overlay");
+
+            if (footer) footer.style.display = "none";
+            if (closeBtn) closeBtn.style.display = "none";
+            if (overlay) overlay.style.display = "none";
+
+            const empName = document.getElementById("viewName").innerText || "Employee";
+
+            html2pdf().set({ margin: 0, filename: `DKB_Profile_${empName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F4F6F8' }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(modalContent).save().then(() => {
+                if (footer) footer.style.display = "flex";
+                if (closeBtn) closeBtn.style.display = "block";
+                if (overlay) overlay.style.display = "";
+            });
+        });
+
+        document.getElementById("exportEmployeesBtn")?.addEventListener("click", function() {
+            getAllEmployees().then(emps => {
+                let csv = "Emp ID,Name,Role,Duty Post,Shift,Ghana Card,Phone,Basic Salary (GH₵),Client Rate (GH₵)\n";
+                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.ghanaCard}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)}\n`; });
+                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = `DKB_Employee_Directory.csv`; link.click();
+                logAction("Employee Management", "Exported Employee Directory");
+            });
+        });
+
+        function updateMessageNotification(msgs) {
+            const currentUserDisp = document.getElementById('displayUserName').innerText.split('\n')[0];
+            const unreadMsgs = msgs.filter(m => m.status === "Unread" && m.sender !== currentUserDisp);
+            const currentUnreadCount = unreadMsgs.length;
+            const counterEl = document.getElementById("msgCounter");
+            if (counterEl) {
+                if (currentUnreadCount > 0) {
+                    counterEl.textContent = currentUnreadCount; counterEl.style.display = "inline-block";
+                    if (currentUnreadCount > previousUnreadCount) notifySound.play().catch(e => console.warn("Waiting for user interaction."));
+                } else { counterEl.style.display = "none"; }
+            }
+            previousUnreadCount = currentUnreadCount;
+        }
+
+        function renderDashboard() {
+            Promise.all([ getAllEmployees(), getAllIncidents(), getAllObservations(), getAllExpenditures(), getAllClients() ]).then(([employees, incidents, observations, expenditures, clients]) => {
+                const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
+                const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
+                const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
+                const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+                const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
+
+                document.getElementById('dashTotalEmp').innerText = employees.length; document.getElementById('dashActiveGuards').innerText = activeGuards; document.getElementById('dashTotalInc').innerText = incidents.length; document.getElementById('dashTotalObs').innerText = observations.length; document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
+
+                const currentMonth = new Date().getMonth(); const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(Math.max(0, currentMonth - 5), currentMonth + 1);
+                let incData = new Array(monthLabels.length).fill(0); incidents.forEach(inc => { const diff = currentMonth - new Date(inc.date).getMonth(); if (diff >= 0 && diff < monthLabels.length) incData[monthLabels.length - 1 - diff]++; });
+                let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 }; observations.forEach(obs => { if(obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
+                let revData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? monthlyRevenue : Math.floor(monthlyRevenue * (0.9 + Math.random()*0.2))); let profData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? liveProfit : Math.floor(liveProfit * (0.8 + Math.random()*0.4))); let depData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? activeGuards : Math.floor(activeGuards * (0.95 + Math.random()*0.05)));
+
+                const cDB = window.dashboardCharts;
+                if(cDB.dep) cDB.dep.destroy(); cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), { type: 'line', data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+                if(cDB.inc) cDB.inc.destroy(); cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+                if(cDB.obs) cDB.obs.destroy(); cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
+                if(cDB.fin) cDB.fin.destroy(); cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+            });
+        }
+
+        function applySystemSettings(data = null) {
+            if(!data) return;
+            document.getElementById("sidebarLogo").src = data.logo; document.getElementById("sidebarCompanyName").innerText = data.companyName; document.getElementById("settingLogoPreview").src = data.logo; document.getElementById("settingCompanyName").value = data.companyName;
+            let link = document.querySelector("link[rel~='icon']"); if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); } link.href = data.logo;
+            const themeToggle = document.getElementById("themeToggleBtn");
+            if (data.theme === "dark") { document.body.classList.add("dark-theme"); themeToggle.checked = true; } else { document.body.classList.remove("dark-theme"); themeToggle.checked = false; }
+        }
+
+        document.getElementById("brandingForm").addEventListener("submit", function(e) { e.preventDefault(); getSetting("system").then(data => { data.companyName = document.getElementById("settingCompanyName").value; data.logo = document.getElementById("settingLogoPreview").src; saveSetting(data).then(() => { applySystemSettings(data); logAction("Settings", "Updated Company Branding"); alert("Branding Settings Saved!"); }); }); });
+        document.getElementById("themeToggleBtn").addEventListener("change", function(e) { const newTheme = e.target.checked ? "dark" : "light"; if (e.target.checked) document.body.classList.add("dark-theme"); else document.body.classList.remove("dark-theme"); getSetting("system").then(data => { data.theme = newTheme; saveSetting(data).then(() => logAction("Settings", `Toggled theme to ${newTheme}`)); }); });
+        document.getElementById("settingLogoUpload").addEventListener("change", function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(event) { document.getElementById("settingLogoPreview").src = event.target.result; }; reader.readAsDataURL(file); } });
+
+        function calculateFinancials(emp, overtimeVal = 0, bonusVal = 0) {
+            const basic = parseFloat(emp.basicSalary) || 0; 
+            if (basic === 0) return { basic: 0, overtime: 0, bonus: 0, grossPay: 0, ssnitDeduction: 0, payeDeduction: 0, totalDeductions: 0, netPay: 0 };
+            const overtime = parseFloat(overtimeVal) || 0; const bonus = parseFloat(bonusVal) || 0; const grossPay = basic + overtime + bonus; const ssnitDeduction = basic * 0.055; const taxableIncome = grossPay - ssnitDeduction;
+            let tax = 0, rem = taxableIncome; 
+            if (rem > 490) { rem -= 490; let a = Math.min(rem, 110); tax += a*0.05; rem -= a; if (rem > 0) { a = Math.min(rem, 130); tax += a*0.10; rem -= a; if (rem > 0) { a = Math.min(rem, 3166.67); tax += a*0.175; rem -= a; if (rem > 0) { a = Math.min(rem, 16000); tax += a*0.25; rem -= a; if (rem > 0) { a = Math.min(rem, 30520); tax += a*0.30; rem -= a; if (rem > 0) tax += rem*0.35; }}}}}
+            return { basic, overtime, bonus, grossPay, ssnitDeduction, payeDeduction: tax, totalDeductions: ssnitDeduction + tax, netPay: grossPay - (ssnitDeduction + tax) };
+        }
+
+        function generatePayslipHTML(emp, fin, companyName, logoSrc, payPeriod) {
+            const fmt = (num) => `GH₵ ${num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            return `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"><div style="text-align: center; border-bottom: 2px solid #0A2540; padding-bottom: 15px; margin-bottom: 20px;"><img src="${logoSrc}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"><h2 style="color: #0A2540; font-size: 1.8rem; margin: 0 0 5px 0; text-transform: uppercase;">${companyName}</h2><p style="color: #2D3748; margin: 0;">Official Employee Payslip</p></div><div style="display: flex; justify-content: space-between; margin-bottom: 25px; background: #F4F6F8; padding: 15px; border-radius: 6px; border-left: 4px solid #D4AF37;"><div style="flex: 1;"><p style="margin: 0 0 5px 0;"><strong style="color: #0A2540; display: inline-block; width: 130px;">Employee Name:</strong> ${emp.name}</p><p style="margin: 0 0 5px 0;"><strong style="color: #0A2540; display: inline-block; width: 130px;">Employee ID:</strong> ${emp.id}</p><p style="margin: 0;"><strong style="color: #0A2540; display: inline-block; width: 130px;">Role:</strong> ${emp.role}</p></div><div style="flex: 1;"><p style="margin: 0 0 5px 0;"><strong style="color: #0A2540; display: inline-block; width: 130px;">Pay Period:</strong> ${payPeriod}</p><p style="margin: 0 0 5px 0;"><strong style="color: #0A2540; display: inline-block; width: 130px;">Duty Post:</strong> ${emp.dutyPost}</p><p style="margin: 0;"><strong style="color: #0A2540; display: inline-block; width: 130px;">Status:</strong> <span style="color: #38A169; font-weight: bold;">Paid</span></p></div></div><div style="display: flex; gap: 20px; margin-bottom: 25px;"><div style="flex: 1; border: 1px solid #E2E8F0; border-radius: 4px;"><h4 style="background: #0A2540; color: #FFFFFF; padding: 8px 12px; margin: 0;">Earnings</h4><table style="width: 100%; border-collapse: collapse;"><tbody><tr><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0;">Basic Salary</td><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(fin.basic)}</td></tr><tr><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0;">Overtime</td><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(fin.overtime)}</td></tr><tr><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0;">Bonus</td><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(fin.bonus)}</td></tr><tr style="background: #F4F6F8;"><td style="padding: 10px 12px; font-weight: bold;">Gross Earnings</td><td style="padding: 10px 12px; text-align: right; font-weight: bold;">${fmt(fin.grossPay)}</td></tr></tbody></table></div><div style="flex: 1; border: 1px solid #E2E8F0; border-radius: 4px;"><h4 style="background: #0A2540; color: #FFFFFF; padding: 8px 12px; margin: 0;">Deductions</h4><table style="width: 100%; border-collapse: collapse;"><tbody><tr><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0;">SSNIT (5.5%)</td><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold; color: #E53E3E;">- ${fmt(fin.ssnitDeduction)}</td></tr><tr><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0;">PAYE</td><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold; color: #E53E3E;">- ${fmt(fin.payeDeduction)}</td></tr><tr><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0;">Other</td><td style="padding: 10px 12px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold; color: #E53E3E;">GH₵ 0.00</td></tr><tr style="background: #F4F6F8;"><td style="padding: 10px 12px; font-weight: bold;">Total Deductions</td><td style="padding: 10px 12px; text-align: right; font-weight: bold;">${fmt(fin.totalDeductions)}</td></tr></tbody></table></div></div><div style="background: #0A2540; text-align: center; padding: 20px; border-radius: 6px; margin-bottom: 20px;"><h3 style="margin: 0 0 5px 0; color: #D4AF37;">Net Pay</h3><div style="font-size: 2.2rem; font-weight: bold; color: #FFFFFF;">${fmt(fin.netPay)}</div></div></div>`;
+        }
+
+        function renderTable() {
+            getAllEmployees().then(employees => {
+                const tbody = document.querySelector("#employeeTable tbody"); tbody.innerHTML = ''; 
+                const canDelete = window.currentUserRole === "Super Admin";
+                employees.forEach(emp => {
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${emp.id}"><i class="fa-solid fa-trash"></i></button>` : '';
+                    newRow.innerHTML = `<td>${emp.id}</td><td>${emp.name}</td><td>${emp.role}</td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td>GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}</td><td class="action-buttons"><button class="btn-action view" data-id="${emp.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${emp.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderClientTable() {
+            getAllClients().then(clients => {
+                const tbody = document.querySelector("#clientTable tbody"); tbody.innerHTML = '';
+                const canDelete = window.currentUserRole === "Super Admin";
+                const dutyPostSelect = document.getElementById("empDutyPost");
+                if (dutyPostSelect) {
+                    const currentVal = dutyPostSelect.value;
+                    dutyPostSelect.innerHTML = '<option value="" disabled selected>Select Duty Post</option>';
+                    clients.forEach(cl => { const opt = document.createElement("option"); opt.value = cl.name; opt.innerText = cl.name; dutyPostSelect.appendChild(opt); });
+                    if (currentVal && Array.from(dutyPostSelect.options).some(o => o.value === currentVal)) { dutyPostSelect.value = currentVal; }
+                }
+
+                clients.forEach(cl => {
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${cl.id}"><i class="fa-solid fa-trash"></i></button>` : '';
+                    let statusClass = cl.status === 'Active' ? 'success-badge' : (cl.status === 'Inactive' ? 'absent-badge' : 'warning-badge');
+                    newRow.innerHTML = `<td><strong>${cl.id}</strong></td><td>${cl.name}</td><td>${cl.contactPerson}</td><td>${cl.phone}</td><td><span class="badge ${statusClass}">${cl.status}</span></td><td class="action-buttons"><button class="btn-action view btn-view-client-guards" data-name="${cl.name}" title="View Deployed Guards"><i class="fa-solid fa-users"></i></button><button class="btn-action edit" data-id="${cl.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderPayrollTable() {
+            getAllEmployees().then(employees => {
+                const tbody = document.querySelector("#payrollTable tbody"); tbody.innerHTML = ''; const periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`;
+                employees.forEach(emp => {
+                    if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { overtime: 0, bonus: 0, status: "Pending" };
+                    const record = emp.payrollData[periodKey]; const fin = calculateFinancials(emp, record.overtime, record.bonus); const isPaid = record.status === "Paid";
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `<td>${emp.id}</td><td>${emp.name}</td><td>${emp.role}</td><td>GH₵ ${fin.basic.toLocaleString()}</td><td>${isPaid ? `GH₵ ${fin.overtime.toLocaleString()}` : `<input type="number" class="inline-input update-fin" data-type="overtime" data-id="${emp.id}" value="${record.overtime}" min="0">`}</td><td>${isPaid ? `GH₵ ${fin.bonus.toLocaleString()}` : `<input type="number" class="inline-input update-fin" data-type="bonus" data-id="${emp.id}" value="${record.bonus}" min="0">`}</td><td style="color: var(--danger-color);">- GH₵ ${fin.ssnitDeduction.toFixed(2)}</td><td style="color: var(--danger-color);">- GH₵ ${fin.payeDeduction.toFixed(2)}</td><td style="font-weight: bold; color: var(--primary-color);">GH₵ ${fin.netPay.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td><td>${isPaid ? `<span class="badge success-badge"><i class="fa-solid fa-check"></i> Paid</span>` : `<span class="badge warning-badge">Pending</span>`}</td><td>${isPaid ? `<div class="action-buttons"><button class="btn-action view btn-print-ps" data-id="${emp.id}"><i class="fa-solid fa-print"></i></button><button class="btn-action edit btn-download-ps" data-id="${emp.id}"><i class="fa-solid fa-file-pdf"></i></button></div>` : `<button class="btn-small btn-pay" data-id="${emp.id}"><i class="fa-solid fa-file-invoice-dollar"></i> Pay</button>`}</td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderExpenditureTable() {
+            getAllExpenditures().then(expenses => {
+                const tbody = document.querySelector("#expenditureTable tbody"); tbody.innerHTML = '';
+                const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
+                expenses.sort((a, b) => b.timestamp - a.timestamp).forEach(exp => {
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${exp.id}"><i class="fa-solid fa-trash"></i></button>` : '';
+                    newRow.innerHTML = `<td>${new Date(exp.date).toLocaleDateString()}</td><td>${exp.category}</td><td>${exp.description}</td><td style="font-weight: bold; color: var(--danger-color);">GH₵ ${parseFloat(exp.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td>${exp.loggedBy}</td><td><div class="action-buttons"><button class="btn-action view" data-id="${exp.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${exp.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderInvoiceTable() {
+            getAllInvoices().then(invoices => {
+                const tbody = document.querySelector("#invoiceTable tbody"); tbody.innerHTML = '';
+                const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
+                invoices.sort((a, b) => b.timestamp - a.timestamp).forEach(inv => {
+                    let displayMonth = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'short', year: 'numeric' }) : "-";
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete btn-del-inv" data-id="${inv.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>` : '';
+                    newRow.innerHTML = `<td><strong>${inv.id}</strong><br><span style="font-size: 0.75rem; color: var(--accent-color); font-weight: bold;">${displayMonth}</span></td><td>${new Date(inv.date).toLocaleDateString()}</td><td>${inv.clientName}</td><td style="font-weight: bold; color: var(--primary-color);">GH₵ ${parseFloat(inv.total).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td><select class="inline-input update-inv-status" data-id="${inv.id}" style="width: 100px; padding: 5px;"><option value="Draft" ${inv.status === 'Draft' ? 'selected' : ''}>Draft</option><option value="Sent" ${inv.status === 'Sent' ? 'selected' : ''}>Sent</option><option value="Paid" ${inv.status === 'Paid' ? 'selected' : ''}>Paid</option></select></td><td><div class="action-buttons"><button class="btn-action view btn-print-inv" data-id="${inv.id}" title="Print"><i class="fa-solid fa-print"></i></button><button class="btn-action edit btn-download-inv" data-id="${inv.id}" title="Download PDF"><i class="fa-solid fa-file-pdf"></i></button>${deleteHtml}</div></td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderDeploymentTable() {
+            Promise.all([getAllEmployees(), getAllClients()]).then(([employees, clients]) => {
+                const filterDropdown = document.getElementById("deploymentClientFilter");
+                const currentFilter = filterDropdown.value;
+                
+                filterDropdown.innerHTML = '<option value="All">All Locations / Clients</option>';
+                const existingPosts = new Set();
+                
+                clients.forEach(c => {
+                    existingPosts.add(c.name);
+                    const opt = document.createElement("option"); opt.value = c.name; opt.innerText = c.name;
+                    if(c.name === currentFilter) opt.selected = true;
+                    filterDropdown.appendChild(opt);
+                });
+                
+                employees.filter(emp => emp.role && emp.role.toLowerCase().includes("guard")).forEach(emp => {
+                    if(emp.dutyPost && !existingPosts.has(emp.dutyPost)) {
+                        existingPosts.add(emp.dutyPost);
+                        const opt = document.createElement("option"); opt.value = emp.dutyPost; opt.innerText = emp.dutyPost + " (Unregistered)";
+                        if(emp.dutyPost === currentFilter) opt.selected = true;
+                        filterDropdown.appendChild(opt);
+                    }
+                });
+
+                const tbody = document.querySelector("#deploymentTable tbody"); tbody.innerHTML = '';
+                
+                let filteredGuards = employees.filter(emp => emp.role && emp.role.toLowerCase().includes("guard"));
+                if(filterDropdown.value !== "All") filteredGuards = filteredGuards.filter(emp => emp.dutyPost === filterDropdown.value);
+
+                filteredGuards.forEach(emp => {
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.role}</td><td style="color: var(--primary-color);"><i class="fa-solid fa-map-pin" style="color: var(--danger-color); font-size: 0.8rem; margin-right: 5px;"></i> ${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td class="action-buttons"><button class="btn-action edit btn-reassign" data-id="${emp.id}"><i class="fa-solid fa-location-arrow"></i> Reassign</button></td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+        
+        document.getElementById("deploymentClientFilter")?.addEventListener("change", renderDeploymentTable);
+
+        function renderAttendanceTable() {
+            const selectedDate = document.getElementById("attendanceDateFilter").value; if (!selectedDate) return;
+            Promise.all([getAllEmployees(), getAllAttendance()]).then(([employees, attendanceLogs]) => {
+                const tbody = document.querySelector("#attendanceTable tbody"); tbody.innerHTML = '';
+                const todaysLogs = attendanceLogs.filter(log => log.date === selectedDate);
+                employees.forEach(emp => {
+                    const logId = `${emp.id}_${selectedDate}`; const record = todaysLogs.find(log => log.id === logId);
+                    let timeIn = "-", timeOut = "-", statusBadge = `<span class="badge absent-badge">Absent</span>`, actionHtml = `<button class="btn-primary btn-clock-in" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock In</button>`, photoInHtml = "", photoOutHtml = "";
+                    if (record) { 
+                        timeIn = record.clockIn; if(record.photoIn) photoInHtml = `<br><span onclick="viewGuardPhoto('${record.photoIn}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Photo</span>`;
+                        if (record.clockOut) { 
+                            timeOut = record.clockOut; if(record.photoOut) photoOutHtml = `<br><span onclick="viewGuardPhoto('${record.photoOut}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Photo</span>`;
+                            statusBadge = `<span class="badge success-badge"><i class="fa-solid fa-check"></i> Completed</span>`; actionHtml = `<span style="color: var(--success-color); font-weight: bold; font-size: 0.85rem;">Shift Done</span>`; 
+                        } else { statusBadge = `<span class="badge warning-badge"><i class="fa-solid fa-spinner"></i> On Duty</span>`; actionHtml = `<button class="btn-primary alert-bg btn-clock-out" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock Out</button>`; } 
+                    }
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td style="font-family: monospace; font-weight: bold; color: var(--primary-color);">${timeIn}${photoInHtml}</td><td style="font-family: monospace; font-weight: bold; color: var(--danger-color);">${timeOut}${photoOutHtml}</td><td>${statusBadge}</td><td>${actionHtml}</td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderObservationTable() {
+            getAllObservations().then(observations => {
+                const obsTabActive = document.getElementById("observations").classList.contains("active");
+                if (obsTabActive) { localStorage.setItem(OBS_TIME_KEY, Date.now()); if(document.getElementById("obsCounter")) document.getElementById("obsCounter").style.display = "none"; previousObsCount = 0; } 
+                else {
+                    const lastViewed = parseInt(localStorage.getItem(OBS_TIME_KEY) || 0); const newCount = observations.filter(obs => obs.timestamp > lastViewed).length; const badge = document.getElementById("obsCounter");
+                    if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? "inline-block" : "none"; if (newCount > previousObsCount) { if (["Super Admin", "Operations Manager"].includes(window.currentUserRole)) { notifySound.play().catch(e => console.warn("Waiting for interaction.")); } } previousObsCount = newCount; }
+                }
+
+                const tbody = document.querySelector("#observationTable tbody"); tbody.innerHTML = '';
+                const canDelete = ["Super Admin", "Operations Manager"].includes(window.currentUserRole);
+                observations.sort((a, b) => b.timestamp - a.timestamp).forEach(obs => {
+                    let selectColor = obs.status === 'Addressed' ? 'var(--success-color)' : (obs.status === 'Reviewed' ? 'var(--primary-color)' : 'var(--warning-color)');
+                    const d = new Date(obs.date); let photoHtml = obs.photo ? `<br><span onclick="viewGuardPhoto('${obs.photo}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;"><i class="fa-solid fa-image"></i> View Photo</span>` : "";
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${obs.id}"><i class="fa-solid fa-trash"></i></button>` : '';
+                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${obs.site}</strong></td><td>${obs.observer}</td><td style="max-width: 300px;"><div title="${obs.description}">${obs.description.length > 50 ? obs.description.substring(0, 50) + '...' : obs.description}</div>${photoHtml}</td><td><select class="inline-input update-obs-status" data-id="${obs.id}" style="width: 140px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending Review" ${obs.status === 'Pending Review' ? 'selected' : ''}>Pending Review</option><option value="Reviewed" ${obs.status === 'Reviewed' ? 'selected' : ''}>Reviewed</option><option value="Addressed" ${obs.status === 'Addressed' ? 'selected' : ''}>Addressed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${obs.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${obs.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderIncidentTable() {
+            getAllIncidents().then(incidents => {
+                const incTabActive = document.getElementById("incident-reporting").classList.contains("active");
+                if (incTabActive) { localStorage.setItem(INC_TIME_KEY, Date.now()); if(document.getElementById("incCounter")) document.getElementById("incCounter").style.display = "none"; previousIncCount = 0; } 
+                else {
+                    const lastViewed = parseInt(localStorage.getItem(INC_TIME_KEY) || 0); const newCount = incidents.filter(inc => inc.timestamp > lastViewed).length; const badge = document.getElementById("incCounter");
+                    if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? "inline-block" : "none"; if (newCount > previousIncCount) { if (["Super Admin", "Operations Manager"].includes(window.currentUserRole)) { notifySound.play().catch(e => console.warn("Waiting for interaction.")); } } previousIncCount = newCount; }
+                }
+
+                const tbody = document.querySelector("#incidentTable tbody"); tbody.innerHTML = '';
+                const canDelete = ["Super Admin", "Operations Manager"].includes(window.currentUserRole);
+                incidents.sort((a, b) => b.timestamp - a.timestamp).forEach(inc => {
+                    let selectColor = inc.status === 'Closed' ? 'var(--success-color)' : (inc.status === 'Investigating' ? 'var(--warning-color)' : 'var(--danger-color)');
+                    const d = new Date(inc.date); let photoHtml = inc.photo ? `<br><span onclick="viewGuardPhoto('${inc.photo}')" style="font-size: 0.75rem; color: var(--danger-color); font-weight: bold; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;"><i class="fa-solid fa-camera"></i> View Evidence</span>` : "";
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${inc.id}"><i class="fa-solid fa-trash"></i></button>` : '';
+                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${inc.location}</strong></td><td>${inc.category}${photoHtml}</td><td>${inc.reporter}</td><td><select class="inline-input update-inc-status" data-id="${inc.id}" style="width: 130px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending" ${inc.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Investigating" ${inc.status === 'Investigating' ? 'selected' : ''}>Investigating</option><option value="Closed" ${inc.status === 'Closed' ? 'selected' : ''}>Closed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${inc.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${inc.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderMessageTable() {
+            getAllMessages().then(msgs => {
+                updateMessageNotification(msgs);
+                const tbody = document.querySelector("#messagesTable tbody"); 
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    msgs.sort((a, b) => b.timestamp - a.timestamp).forEach(msg => {
+                        const newRow = document.createElement("tr");
+                        newRow.innerHTML = `<td>${new Date(msg.timestamp).toLocaleDateString()} ${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${msg.sender || "System"}</strong></td><td>${msg.recipient}</td><td>${msg.subject}</td><td>${msg.status === "Unread" ? `<span class="badge warning-badge">Unread</span>` : `<span class="badge info-badge">Read</span>`}</td><td><div class="action-buttons"><button class="btn-action view btn-read-msg" data-id="${msg.id}"><i class="fa-solid fa-envelope-open-text"></i></button><button class="btn-action delete btn-del-msg" data-id="${msg.id}"><i class="fa-solid fa-trash"></i></button></div></td>`;
+                        tbody.appendChild(newRow);
+                    });
+                }
+            });
+        }
+
+        function renderAuditTable() {
+            getAllAuditLogs().then(logs => {
+                const tbody = document.querySelector("#auditTable tbody"); tbody.innerHTML = ''; const sel = document.getElementById("auditModuleFilter").value;
+                let filtered = sel !== "All" ? logs.filter(log => log.module === sel) : logs;
+                filtered.sort((a, b) => b.timestamp - a.timestamp).forEach(log => {
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `<td style="font-family: monospace; font-size: 0.9rem;">${new Date(log.timestamp).toLocaleDateString()} ${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${log.user}</strong></td><td><span class="badge module-badge">${log.module}</span></td><td>${log.action}</td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        function renderUsersTable() {
+            getAllUsers().then(users => {
+                const tbody = document.querySelector("#usersTable tbody"); 
+                tbody.innerHTML = '';
+                users.forEach(user => {
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `
+                        <td style="font-weight:bold; color: var(--primary-color); font-family: monospace; font-size: 0.85rem;" title="${user.id}">${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <select class="inline-input update-user-role" data-id="${user.id}" style="width: 170px; padding: 5px; cursor: pointer;">
+                                <option value="Super Admin" ${user.role === 'Super Admin' ? 'selected' : ''}>Super Admin</option>
+                                <option value="Operations Manager" ${user.role === 'Operations Manager' ? 'selected' : ''}>Operations Manager</option>
+                                <option value="Finance Manager" ${user.role === 'Finance Manager' ? 'selected' : ''}>Finance Manager</option>
+                                <option value="Standard User" ${user.role === 'Standard User' ? 'selected' : ''}>Standard User</option>
+                                <option value="Client" ${user.role === 'Client' ? 'selected' : ''}>Client Portal Access</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action edit btn-edit-user" data-id="${user.id}"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-action delete btn-del-user" data-id="${user.id}"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(newRow);
+                });
+            });
+        }
+
+        // ==========================================
+        // AUTHENTICATION & BOOTSTRAP LOGIC
+        // ==========================================
+        
+        async function checkAndSeedInitialData(user) {
+            const usersSnap = await getDocs(collection(firestore, "users"));
+            if (usersSnap.empty) {
+                const adminUser = { id: user.uid, name: "Admin User", email: user.email, role: "Super Admin", created: new Date().getTime() };
+                await setDoc(doc(firestore, "users", user.uid), adminUser);
+                const sysSettings = { id: "system", companyName: "DKB ANCHOR", theme: "light", logo: "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO" };
+                await setDoc(doc(firestore, "settings", "system"), sysSettings);
+                logAction("Authentication", "Initial Database Seeded and Admin Created.");
+                return adminUser;
+            }
+            
+            const userDocSnap = await getDoc(doc(firestore, "users", user.uid));
+            if (userDocSnap.exists()) return { id: userDocSnap.id, ...userDocSnap.data() };
+            
+            const querySnapshot = await getDocs(query(collection(firestore, "users"), where("email", "==", user.email)));
+            if (!querySnapshot.empty) return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+            
+            return null;
+        }
+
+        const auth = getAuth(app);
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.querySelector('.app-container');
+        const displayUserName = document.getElementById('displayUserName');
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const loginBtn = document.getElementById('loginBtn');
+                if (loginBtn) { loginBtn.disabled = true; loginBtn.innerText = "Loading workspace..."; }
+                try {
+                    const dbUser = await checkAndSeedInitialData(user);
+                    if (dbUser) { window.currentUserRole = dbUser.role; applyRBAC(dbUser.role, dbUser.name); } 
+                    else { window.currentUserRole = "Standard User"; applyRBAC("Standard User", user.displayName || user.email); }
+                    
+                    loginContainer.style.opacity = '0';
+                    setTimeout(() => { loginContainer.style.display = 'none'; appContainer.style.display = 'flex'; }, 300);
+                    startRealTimeSync(); 
+                } catch (e) {
+                    console.error("Database connection error:", e);
+                    alert("Error establishing secure connection. Please check your internet or refresh the app.");
+                    loginContainer.style.display = 'flex'; appContainer.style.display = 'none';
+                    if (loginBtn) { loginBtn.disabled = false; loginBtn.innerText = "Secure Login"; }
+                }
+            } else {
+                loginContainer.style.opacity = '1'; loginContainer.style.display = 'flex'; appContainer.style.display = 'none'; window.currentUserRole = null;
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn'); const errDiv = document.getElementById('loginError');
+            btn.disabled = true; btn.innerText = "Authenticating..."; errDiv.style.display = 'none';
+            signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)
+                .catch(err => { btn.disabled = false; btn.innerText = "Secure Login"; errDiv.innerText = "Error: " + err.message; errDiv.style.display = 'block'; });
+        });
+
+        document.getElementById('navLogoutBtn').addEventListener('click', (e) => { e.preventDefault(); signOut(auth); });
+
+        // UI TABS
+        const navLinks = document.querySelectorAll(".nav-links a"), sections = document.querySelectorAll(".content-section");
+        navLinks.forEach(link => { link.addEventListener("click", function(e) { 
+            if(this.id === 'navLogoutBtn') return; e.preventDefault(); 
+            const targetId = this.getAttribute("data-target"); 
+            if (!window.currentUserRole) return;
+            const allowed = RBAC_CONFIG[window.currentUserRole] || RBAC_CONFIG["Standard User"];
+            if (!allowed.includes(targetId)) return alert("Access Denied: You do not have permission to view this module.");
+
+            navLinks.forEach(nav => nav.classList.remove("active")); this.classList.add("active"); 
+
+            if (targetId === "incident-reporting") { localStorage.setItem(INC_TIME_KEY, Date.now()); if(document.getElementById("incCounter")) document.getElementById("incCounter").style.display = "none"; previousIncCount = 0; }
+            if (targetId === "observations") { localStorage.setItem(OBS_TIME_KEY, Date.now()); if(document.getElementById("obsCounter")) document.getElementById("obsCounter").style.display = "none"; previousObsCount = 0; }
+
+            sections.forEach(section => { if (section.id === targetId) { section.classList.remove("hidden"); section.classList.add("active"); } else { section.classList.add("hidden"); section.classList.remove("active"); } }); 
+            
+            if(targetId === "dashboard") renderDashboard(); 
+            else if(targetId === "employee-management") renderTable();
+            else if(targetId === "clients") renderClientTable();
+            else if(targetId === "payroll") renderPayrollTable();
+            else if(targetId === "expenditure") renderExpenditureTable();
+            else if(targetId === "invoices") renderInvoiceTable();
+            else if(targetId === "guard-deployment") renderDeploymentTable();
+            else if(targetId === "incident-reporting") renderIncidentTable();
+            else if(targetId === "observations") renderObservationTable();
+            else if(targetId === "attendance") renderAttendanceTable();
+            else if(targetId === "messages") renderMessageTable();
+            else if(targetId === "audit-trail") renderAuditTable(); 
+            else if(targetId === "settings") { renderUsersTable(); getSetting("system").then(data => { if(data) applySystemSettings(data); }); } 
+        }); });
+
+        // SEARCH
+        function attachSearch(inputId, tableId) { const input = document.getElementById(inputId); if(input) { input.addEventListener("keyup", function() { const filter = this.value.toLowerCase(); document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => { row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none"; }); }); } }
+        attachSearch("employeeSearchInput", "employeeTable"); attachSearch("clientSearchInput", "clientTable"); attachSearch("payrollSearchInput", "payrollTable"); attachSearch("deploymentSearchInput", "deploymentTable"); attachSearch("incidentSearchInput", "incidentTable"); attachSearch("observationSearchInput", "observationTable"); attachSearch("expenditureSearchInput", "expenditureTable"); attachSearch("attendanceSearchInput", "attendanceTable"); attachSearch("messageSearchInput", "messagesTable"); attachSearch("auditSearchInput", "auditTable"); attachSearch("invoiceSearchInput", "invoiceTable");
+
+        // MODALS
+        const modals = [document.getElementById("addEmployeeModal"), document.getElementById("viewEmployeeModal"), document.getElementById("logIncidentModal"), document.getElementById("logObservationModal"), document.getElementById("logExpenditureModal"), document.getElementById("composeMessageModal"), document.getElementById("viewMessageModal"), document.getElementById("userAccountModal"), document.getElementById("createInvoiceModal"), document.getElementById("onboardClientModal")];
+        const forms = [document.getElementById("addEmployeeForm"), document.getElementById("incidentForm"), document.getElementById("observationForm"), document.getElementById("expenditureForm"), document.getElementById("composeMsgForm"), document.getElementById("userAccountForm"), document.getElementById("invoiceForm"), document.getElementById("clientForm")];
+        let editId = null, editIncId = null, editObsId = null, editExpId = null, editUserId = null, editClientId = null;
+
+        document.getElementById("openCreateInvoiceBtn").onclick = () => { document.getElementById("invoiceForm").reset(); document.getElementById("invoiceItemsBody").innerHTML = ''; document.getElementById("invDate").value = new Date().toISOString().split('T')[0]; const d = new Date(); document.getElementById("invBillingMonth").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; addInvoiceRow(); calculateInvoiceTotal(); document.getElementById("createInvoiceModal").style.display = "block"; };
+        document.getElementById("openAddEmployeeModal").onclick = () => { editId = null; document.getElementById("addEmployeeForm").reset(); document.getElementById("modalTitle").innerText = "Add New Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Save Profile"; modals[0].style.display = "block"; };
+        document.getElementById("openLogIncidentBtn").onclick = () => modals[2].style.display = "block";
+        document.getElementById("openLogObservationBtn").onclick = () => modals[3].style.display = "block";
+        document.getElementById("openLogExpenditureBtn").onclick = () => modals[4].style.display = "block";
+        document.getElementById("openComposeMsgBtn").onclick = () => modals[5].style.display = "block";
+        document.getElementById("openOnboardClientBtn").onclick = () => { editClientId = null; document.getElementById("clientForm").reset(); document.getElementById("clientModalTitle").innerText = "Onboard New Client"; document.getElementById("saveClientBtn").innerText = "Save Client"; document.getElementById("onboardClientModal").style.display = "block"; };
+        document.getElementById("openUserModalBtn").onclick = () => { editUserId = null; document.getElementById("userAccountForm").reset(); document.getElementById("userModalTitle").innerText = "Create User Account"; document.getElementById("saveUserBtn").innerText = "Create Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "Temporary Password"; document.getElementById("uPassword").required = true; modals[7].style.display = "block"; };
+        
+        function closeModals() { modals.forEach(m => m.style.display = "none"); forms.forEach(f => f.reset()); editId = editIncId = editObsId = editExpId = editUserId = editClientId = null; }
+        document.querySelectorAll(".close-modal, .btn-secondary").forEach(el => el.addEventListener('click', closeModals));
+        window.onclick = function(e) { if (modals.includes(e.target)) closeModals(); }
+
+        document.getElementById("clientForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const data = { name: document.getElementById("clName").value, contactPerson: document.getElementById("clContactPerson").value, phone: document.getElementById("clPhone").value, email: document.getElementById("clEmail").value, startDate: document.getElementById("clStartDate").value, address: document.getElementById("clAddress").value, status: document.getElementById("clStatus").value, rate: parseFloat(document.getElementById("clRate").value) || 0, timestamp: new Date().getTime() };
+            const submitBtn = document.getElementById("saveClientBtn"); const originalText = submitBtn.innerText; submitBtn.disabled = true; submitBtn.innerText = "Saving...";
+
+            if (editClientId) {
+                data.id = editClientId;
+                saveClient(data).then(() => { logAction("Clients", `Updated client ${data.name}`); renderClientTable(); closeModals(); }).catch(err => alert("Error: " + err.message)).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; });
+            } else {
+                getAllClients().then(clients => {
+                    data.id = "CLI-" + new Date().getTime().toString().slice(-6);
+                    saveClient(data).then(() => { logAction("Clients", `Onboarded client ${data.name}`); renderClientTable(); closeModals(); }).catch(err => alert("Error: " + err.message)).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; });
+                });
+            }
+        });
+
+        document.getElementById("clientTable").addEventListener("click", function(e) {
+            const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); 
+            if (btn.classList.contains('delete')) { if (confirm(`Delete client?`)) deleteClient(id).then(() => renderClientTable()); } 
+            else if (btn.classList.contains('edit')) { 
+                getClient(id).then(cl => { document.getElementById("clName").value = cl.name; document.getElementById("clContactPerson").value = cl.contactPerson; document.getElementById("clPhone").value = cl.phone; document.getElementById("clEmail").value = cl.email || ""; document.getElementById("clStartDate").value = cl.startDate; document.getElementById("clAddress").value = cl.address; document.getElementById("clStatus").value = cl.status; document.getElementById("clRate").value = cl.rate || ""; editClientId = id; document.getElementById("clientModalTitle").innerText = "Edit Client Details"; document.getElementById("saveClientBtn").innerText = "Update Client"; document.getElementById("onboardClientModal").style.display = "block"; }); 
+            } else if (btn.classList.contains('btn-view-client-guards')) {
+                const clientName = btn.getAttribute("data-name"); document.querySelector('.nav-links a[data-target="guard-deployment"]').click();
+                setTimeout(() => { const filterDropdown = document.getElementById("deploymentClientFilter"); if(!Array.from(filterDropdown.options).some(o => o.value === clientName)) { const opt = document.createElement("option"); opt.value = clientName; opt.innerText = clientName; filterDropdown.appendChild(opt); } filterDropdown.value = clientName; renderDeploymentTable(); }, 50);
+            }
+        });
+
+        // FIXED USER ACCOUNT SUBMISSION
+        document.getElementById("userAccountForm").addEventListener("submit", async function(e) { 
+            e.preventDefault(); 
+            const pwdInput = document.getElementById("uPassword").value.trim();
+            const data = { name: document.getElementById("uName").value, email: document.getElementById("uEmail").value, role: document.getElementById("uRole").value }; 
+            
+            const submitBtn = document.getElementById("saveUserBtn");
+            submitBtn.disabled = true; submitBtn.innerText = "Processing...";
+
+            try {
+                if (editUserId) { 
+                    const ex = await getUser(editUserId); 
+                    data.id = editUserId; data.password = pwdInput !== "" ? pwdInput : ex.password; data.created = ex.created; 
+                    await saveUser(data); logAction("Settings", `Updated user ${data.email}`); 
+                } else { 
+                    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, pwdInput);
+                    await signOut(secondaryAuth);
+                    data.id = userCredential.user.uid; data.password = pwdInput; data.created = new Date().getTime(); 
+                    await saveUser(data); logAction("Settings", `Created user ${data.email}`); 
+                }
+                renderUsersTable(); closeModals(); 
+            } catch (error) {
+                alert("Error saving account: " + error.message);
+            } finally {
+                submitBtn.disabled = false; submitBtn.innerText = editUserId ? "Update Account" : "Create Account";
+            }
+        });
+
+        document.getElementById("composeMsgForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { id: "MSG-" + new Date().getTime().toString().slice(-6), sender: loggedInUser, recipient: document.getElementById("msgRecipient").value, subject: document.getElementById("msgSubject").value, body: document.getElementById("msgBody").value, timestamp: new Date().getTime(), status: "Unread" }; saveMessage(data).then(() => { logAction("Messages", `Broadcast to ${data.recipient}`); renderMessageTable(); closeModals(); }); });
+        document.getElementById("expenditureForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { date: document.getElementById("expDate").value, amount: parseFloat(document.getElementById("expAmount").value), category: document.getElementById("expCategory").value, description: document.getElementById("expDescription").value, loggedBy: loggedInUser, timestamp: new Date().getTime() }; if (editExpId) { getExpenditure(editExpId).then(ex => { data.id = editExpId; data.timestamp = ex.timestamp; saveExpenditure(data).then(() => { logAction("Expenditure", `Updated record ${editExpId}`); renderExpenditureTable(); closeModals(); }); }); } else { data.id = "EXP-" + new Date().getTime().toString().slice(-6); saveExpenditure(data).then(() => { logAction("Expenditure", `Logged GH₵ ${data.amount}`); renderExpenditureTable(); closeModals(); }); } });
+        document.getElementById("observationForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("obsDate").value, site: document.getElementById("obsSite").value, observer: document.getElementById("obsObserver").value, description: document.getElementById("obsDescription").value, status: document.getElementById("obsStatus").value, timestamp: new Date().getTime() }; if (editObsId) { getObservation(editObsId).then(ex => { data.id = editObsId; data.timestamp = ex.timestamp; saveObservation(data).then(() => { logAction("Observations", `Updated observation ${editObsId}`); renderObservationTable(); closeModals(); }); }); } else { data.id = "OBS-" + new Date().getTime().toString().slice(-6); saveObservation(data).then(() => { logAction("Observations", `Logged observation at ${data.site}`); renderObservationTable(); closeModals(); }); } });
+        document.getElementById("incidentForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("incDate").value, location: document.getElementById("incLocation").value, category: document.getElementById("incCategory").value, reporter: document.getElementById("incReporter").value, description: document.getElementById("incDescription").value, status: document.getElementById("incStatus").value, timestamp: new Date().getTime() }; if (editIncId) { getIncident(editIncId).then(ex => { data.id = editIncId; data.timestamp = ex.timestamp; saveIncident(data).then(() => { logAction("Incidents", `Updated incident ${editIncId}`); renderIncidentTable(); closeModals(); }); }); } else { data.id = "INC-" + new Date().getTime().toString().slice(-6); saveIncident(data).then(() => { logAction("Incidents", `Logged incident at ${data.location}`); renderIncidentTable(); closeModals(); }); } });
+        
+        function openEditEmployeeModal(id) { getEmployee(id).then(emp => { document.getElementById("modalTitle").innerText = "Edit Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Update Employee"; document.getElementById("empName").value = emp.name; document.getElementById("empGhanaCard").value = emp.ghanaCard; document.getElementById("empPhone").value = emp.phone; document.getElementById("empGPS").value = emp.gps; document.getElementById("empAddress").value = emp.address; document.getElementById("empRole").value = emp.role; const dpSelect = document.getElementById("empDutyPost"); if(emp.dutyPost && !Array.from(dpSelect.options).some(o => o.value === emp.dutyPost)) { const opt = document.createElement("option"); opt.value = emp.dutyPost; opt.innerText = emp.dutyPost + " (Unregistered)"; dpSelect.appendChild(opt); } dpSelect.value = emp.dutyPost; document.getElementById("empShift").value = emp.shift; document.getElementById("empClientRate").value = emp.clientRate; document.getElementById("empBasicSalary").value = emp.basicSalary; document.getElementById("guarName").value = emp.guarName; document.getElementById("guarID").value = emp.guarID; document.getElementById("guarPhone").value = emp.guarPhone; document.getElementById("guarProfession").value = emp.guarProfession; document.getElementById("guarGPS").value = emp.guarGPS; document.getElementById("guarAddress").value = emp.guarAddress; editId = id; document.getElementById("addEmployeeModal").style.display = "block"; }); }
+        
+        document.getElementById("addEmployeeForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { name: document.getElementById("empName").value, ghanaCard: document.getElementById("empGhanaCard").value, phone: document.getElementById("empPhone").value, gps: document.getElementById("empGPS").value, address: document.getElementById("empAddress").value, role: document.getElementById("empRole").value, dutyPost: document.getElementById("empDutyPost").value, shift: document.getElementById("empShift").value, clientRate: document.getElementById("empClientRate").value, basicSalary: document.getElementById("empBasicSalary").value, guarName: document.getElementById("guarName").value, guarID: document.getElementById("guarID").value, guarPhone: document.getElementById("guarPhone").value, guarProfession: document.getElementById("guarProfession").value, guarGPS: document.getElementById("guarGPS").value, guarAddress: document.getElementById("guarAddress").value }; const submitBtn = document.getElementById("saveEmployeeBtn"); const originalText = submitBtn.innerText; submitBtn.disabled = true; submitBtn.innerText = "Saving..."; if (editId) { getEmployee(editId).then(ex => { data.id = editId; data.profilePic = ex.profilePic; data.payrollData = ex.payrollData || {}; saveEmployee(data).then(() => { logAction("Employee Management", `Updated ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); }); } else { getAllEmployees().then(emps => { let maxId = 0; emps.forEach(e => { const num = parseInt(e.id.split('-')[1]); if (num > maxId) maxId = num; }); data.id = `DKB-${(maxId + 1).toString().padStart(3, '0')}`; data.payrollData = {}; data.profilePic = `https://via.placeholder.com/150/F4F6F8/0A2540?text=${data.name.substring(0,2).toUpperCase()}`; saveEmployee(data).then(() => { logAction("Employee Management", `Created ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); }); } });
+
+        document.getElementById("usersTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-user-role")) { getUser(e.target.getAttribute("data-id")).then(user => { const oldRole = user.role; user.role = e.target.value; saveUser(user).then(() => { logAction("Settings", `Changed role for ${user.email} from ${oldRole} to ${user.role}`); renderUsersTable(); }); }); } });
+        document.getElementById("usersTable").addEventListener("click", function(e) { const editBtn = e.target.closest('.btn-edit-user'), delBtn = e.target.closest('.btn-del-user'); if (delBtn) { const id = delBtn.getAttribute("data-id"); if (id === "USR-001") return alert("Cannot delete Super Admin."); if (confirm(`Delete account?`)) { deleteUser(id).then(() => { logAction("Settings", `Deleted user ${id}`); renderUsersTable(); }); } } else if (editBtn) { const id = editBtn.getAttribute("data-id"); getUser(id).then(user => { document.getElementById("uName").value = user.name; document.getElementById("uEmail").value = user.email; document.getElementById("uRole").value = user.role; document.getElementById("uPassword").value = ""; document.getElementById("userModalTitle").innerText = "Edit User Account"; document.getElementById("saveUserBtn").innerText = "Update Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "New Password (leave blank to keep current)"; document.getElementById("uPassword").required = false; editUserId = id; document.getElementById("userAccountModal").style.display = "block"; }); } });
+        document.getElementById("messagesTable").addEventListener("click", function(e) { const readBtn = e.target.closest('.btn-read-msg'), delBtn = e.target.closest('.btn-del-msg'); if (delBtn) { if (confirm(`Delete message?`)) deleteMessage(delBtn.getAttribute("data-id")).then(() => { renderMessageTable(); }); } else if (readBtn) { getMessage(readBtn.getAttribute("data-id")).then(msg => { document.getElementById("readerSubject").innerText = msg.subject; document.getElementById("readerSender").innerText = msg.sender; document.getElementById("readerRecipient").innerText = msg.recipient; document.getElementById("readerDate").innerText = new Date(msg.timestamp).toLocaleString(); document.getElementById("readerBody").innerText = msg.body; document.getElementById("viewMessageModal").style.display = "block"; if (msg.status === "Unread") { msg.status = "Read"; saveMessage(msg).then(() => renderMessageTable()); } }); } });
+        document.getElementById("attendanceTable").addEventListener("click", function(e) { const inBtn = e.target.closest('.btn-clock-in'), outBtn = e.target.closest('.btn-clock-out'); if (inBtn) { saveAttendanceRecord({ id: `${inBtn.getAttribute("data-empid")}_${inBtn.getAttribute("data-date")}`, empId: inBtn.getAttribute("data-empid"), date: inBtn.getAttribute("data-date"), clockIn: new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }), clockOut: null }).then(() => { renderAttendanceTable(); }); } if (outBtn) { getAttendanceRecord(`${outBtn.getAttribute("data-empid")}_${outBtn.getAttribute("data-date")}`).then(rec => { if(rec) { rec.clockOut = new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }); saveAttendanceRecord(rec).then(() => renderAttendanceTable()); } }); } });
+        document.getElementById("expenditureTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteExpenditure(id).then(() => renderExpenditureTable()); } else if (btn.classList.contains('edit')) { getExpenditure(id).then(exp => { document.getElementById("expDate").value = exp.date; document.getElementById("expAmount").value = exp.amount; document.getElementById("expCategory").value = exp.category; document.getElementById("expDescription").value = exp.description; editExpId = id; document.getElementById("logExpenditureModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getExpenditure(id).then(exp => alert(`Amount: GH₵ ${exp.amount}\nCategory: ${exp.category}\nDesc: ${exp.description}`)); } });
+        document.getElementById("observationTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-obs-status")) { getObservation(e.target.getAttribute("data-id")).then(obs => { obs.status = e.target.value; saveObservation(obs).then(() => renderObservationTable()); }); } });
+        document.getElementById("observationTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteObservation(id).then(() => renderObservationTable()); } else if (btn.classList.contains('edit')) { getObservation(id).then(obs => { document.getElementById("obsDate").value = obs.date; document.getElementById("obsSite").value = obs.site; document.getElementById("obsObserver").value = obs.observer; document.getElementById("obsDescription").value = obs.description; document.getElementById("obsStatus").value = obs.status; editObsId = id; document.getElementById("logObservationModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getObservation(id).then(obs => alert(`Site: ${obs.site}\nObserver: ${obs.observer}\nDesc: ${obs.description}`)); } });
+        document.getElementById("incidentTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-inc-status")) { getIncident(e.target.getAttribute("data-id")).then(inc => { inc.status = e.target.value; saveIncident(inc).then(() => renderIncidentTable()); }); } });
+        document.getElementById("incidentTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteIncident(id).then(() => renderIncidentTable()); } else if (btn.classList.contains('edit')) { getIncident(id).then(inc => { document.getElementById("incDate").value = inc.date; document.getElementById("incLocation").value = inc.location; document.getElementById("incCategory").value = inc.category; document.getElementById("incReporter").value = inc.reporter; document.getElementById("incDescription").value = inc.description; document.getElementById("incStatus").value = inc.status; editIncId = id; document.getElementById("logIncidentModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getIncident(id).then(inc => alert(`Location: ${inc.location}\nCategory: ${inc.category}\nDesc: ${inc.description}`)); } });
+        document.getElementById("deploymentTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-reassign'); if (btn) openEditEmployeeModal(btn.getAttribute("data-id")); });
+        document.getElementById("employeeTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete employee ${id}?`)) deleteEmployee(id).then(() => renderTable()); } else if (btn.classList.contains('edit')) { openEditEmployeeModal(id); } else if (btn.classList.contains('view')) { getEmployee(id).then(emp => { document.getElementById("viewProfilePic").src = emp.profilePic; document.getElementById("viewProfilePic").dataset.currentId = emp.id; document.getElementById("viewName").innerText = emp.name; document.getElementById("viewId").innerHTML = `<i class="fa-solid fa-id-badge"></i> ${emp.id}`; document.getElementById("viewRole").innerHTML = `<i class="fa-solid fa-user-shield"></i> ${emp.role}`; document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; document.getElementById("v_phone").innerText = emp.phone; document.getElementById("v_gps").innerText = emp.gps; document.getElementById("v_address").innerText = emp.address; document.getElementById("v_dutyPost").innerText = emp.dutyPost; document.getElementById("v_salary").innerText = `GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}`; document.getElementById("v_rate").innerText = `GH₵ ${parseFloat(emp.clientRate || 0).toLocaleString()}`; document.getElementById("v_gName").innerText = emp.guarName; document.getElementById("v_gId").innerText = emp.guarID; document.getElementById("v_gPhone").innerText = emp.guarPhone; document.getElementById("v_gProf").innerText = emp.guarProfession; document.getElementById("v_gGps").innerText = emp.guarGPS; document.getElementById("v_gAddress").innerText = emp.guarAddress; document.getElementById("viewEmployeeModal").style.display = "block"; }); } });
+        document.getElementById("payrollTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-fin")) { const id = e.target.getAttribute("data-id"), type = e.target.getAttribute("data-type"), periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`; getEmployee(id).then(emp => { if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { status: "Pending", overtime: 0, bonus: 0 }; emp.payrollData[periodKey][type] = parseFloat(e.target.value) || 0; saveEmployee(emp).then(() => renderPayrollTable()); }); } });
+        document.getElementById("payrollTable").addEventListener("click", function(e) { const btnPay = e.target.closest('.btn-pay'), btnPrint = e.target.closest('.btn-print-ps'), btnDownload = e.target.closest('.btn-download-ps'); const periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`; if (btnPay) { const row = btnPay.closest('tr'), otInput = row.querySelector('.update-fin[data-type="overtime"]'), bonusInput = row.querySelector('.update-fin[data-type="bonus"]'); getEmployee(btnPay.getAttribute("data-id")).then(emp => { if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { status: "Pending", overtime: 0, bonus: 0 }; if(otInput) emp.payrollData[periodKey].overtime = parseFloat(otInput.value) || 0; if(bonusInput) emp.payrollData[periodKey].bonus = parseFloat(bonusInput.value) || 0; emp.payrollData[periodKey].status = "Paid"; saveEmployee(emp).then(() => renderPayrollTable()); }); } else if (btnPrint || btnDownload) { Promise.all([getEmployee((btnPrint || btnDownload).getAttribute("data-id")), getSetting("system")]).then(([emp, sys]) => { const record = emp.payrollData?.[periodKey] || { overtime: 0, bonus: 0 }; const html = generatePayslipHTML(emp, calculateFinancials(emp, record.overtime, record.bonus), sys ? sys.companyName : "DKB ANCHOR", sys ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO", document.getElementById("payrollMonth").value + " " + document.getElementById("year-filter").value); if (btnPrint) { document.getElementById("printContainer").innerHTML = html; window.print(); } else if (btnDownload) { html2pdf().set({ margin: 0.5, filename: `Payslip_${emp.name.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } }); } });
+        document.getElementById("imageUpload").addEventListener("change", function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(event) { document.getElementById("viewProfilePic").src = event.target.result; const id = document.getElementById("viewProfilePic").dataset.currentId; if(id) { getEmployee(id).then(emp => { emp.profilePic = event.target.result; saveEmployee(emp); }); } }; reader.readAsDataURL(file); } });
+
+        function addInvoiceRow() { const tr = document.createElement("tr"); tr.innerHTML = `<td><input type="text" class="inv-desc" placeholder="Service Description" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td><td><input type="number" class="inv-qty" value="1" min="1" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td><td><input type="number" class="inv-rate" step="0.01" value="0.00" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td><td class="inv-amt" style="font-weight: bold; padding: 12px 15px;">0.00</td><td><button type="button" class="btn-action delete remove-inv-row"><i class="fa-solid fa-trash"></i></button></td>`; document.getElementById("invoiceItemsBody").appendChild(tr); tr.querySelectorAll('input').forEach(input => input.addEventListener('input', calculateInvoiceTotal)); tr.querySelector('.remove-inv-row').addEventListener('click', function() { tr.remove(); calculateInvoiceTotal(); }); }
+        document.getElementById("addInvoiceItemBtn").addEventListener("click", addInvoiceRow);
+        function calculateInvoiceTotal() { let subtotal = 0; document.getElementById("invoiceItemsBody").querySelectorAll('tr').forEach(tr => { const qty = parseFloat(tr.querySelector('.inv-qty').value) || 0; const rate = parseFloat(tr.querySelector('.inv-rate').value) || 0; const amt = qty * rate; tr.querySelector('.inv-amt').innerText = amt.toFixed(2); subtotal += amt; }); const gefl = subtotal * 0.025; const nhil = subtotal * 0.025; const taxableValueForVat = subtotal + gefl + nhil; const vat = taxableValueForVat * 0.15; const total = subtotal + gefl + nhil + vat; document.getElementById("invSubtotalText").innerText = subtotal.toFixed(2); document.getElementById("invGeflText").innerText = gefl.toFixed(2); document.getElementById("invNhilText").innerText = nhil.toFixed(2); document.getElementById("invVatText").innerText = vat.toFixed(2); document.getElementById("invTotalText").innerText = total.toFixed(2); const saveBtn = document.getElementById("saveInvoiceActionBtn"); if (saveBtn) saveBtn.disabled = (total <= 0); }
+        document.getElementById("invoiceForm").addEventListener("submit", function(e) { e.preventDefault(); const items = []; document.getElementById("invoiceItemsBody").querySelectorAll('tr').forEach(tr => { items.push({ desc: tr.querySelector('.inv-desc').value, qty: parseFloat(tr.querySelector('.inv-qty').value), rate: parseFloat(tr.querySelector('.inv-rate').value), amt: parseFloat(tr.querySelector('.inv-amt').innerText) }); }); const subtotal = parseFloat(document.getElementById("invSubtotalText").innerText); const gefl = parseFloat(document.getElementById("invGeflText").innerText); const nhil = parseFloat(document.getElementById("invNhilText").innerText); const vat = parseFloat(document.getElementById("invVatText").innerText); const total = parseFloat(document.getElementById("invTotalText").innerText); const invId = "INV-" + new Date().getTime().toString().slice(-5); const invoiceData = { id: invId, date: document.getElementById("invDate").value, billingMonth: document.getElementById("invBillingMonth").value, clientName: document.getElementById("invClientName").value, clientAddress: document.getElementById("invClientAddress").value, items: items, subtotal: subtotal, gefl: gefl, nhil: nhil, vat: vat, total: total, status: "Draft", timestamp: new Date().getTime() }; saveInvoice(invoiceData).then(() => { logAction("Invoices", `Created Invoice ${invId} for ${invoiceData.clientName}`); renderInvoiceTable(); document.getElementById("createInvoiceModal").style.display = "none"; }); });
+        document.getElementById("invoiceTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-inv-status")) { getInvoice(e.target.getAttribute("data-id")).then(inv => { inv.status = e.target.value; saveInvoice(inv).then(() => renderInvoiceTable()); }); } });
+        document.getElementById("invoiceTable").addEventListener("click", function(e) { const printBtn = e.target.closest('.btn-print-inv'); const downloadBtn = e.target.closest('.btn-download-inv'); const delBtn = e.target.closest('.btn-del-inv'); if (delBtn) { if (confirm(`Delete Invoice?`)) deleteInvoice(delBtn.getAttribute("data-id")).then(() => renderInvoiceTable()); } else if (printBtn || downloadBtn) { const actionBtn = printBtn || downloadBtn; const isDownload = !!downloadBtn; Promise.all([getInvoice(actionBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { let itemsHtml = ""; inv.items.forEach(item => { itemsHtml += `<tr><td style="padding: 10px; border-bottom: 1px solid #E2E8F0;">${item.desc}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${item.qty}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.rate.toFixed(2)}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.amt.toFixed(2)}</td></tr>`; }); let billingMonthDisplay = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' }) : "-"; const html = `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"> <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0A2540; padding-bottom: 20px; margin-bottom: 30px;"> <div> <img src="${sys ? sys.logo : ''}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"> <h2 style="color: #0A2540; margin: 0; font-size: 1.5rem;">${sys ? sys.companyName : 'DKB ANCHOR'}</h2> <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #4A5568; max-width: 350px; line-height: 1.4;">Mile 7 Opposite Ruttchen Trucks Gh. Ltd,<br>Near Mile 7 police Station Accra Ghana.</p> <p style="margin: 3px 0 0 0; font-size: 0.9rem; color: #4A5568;"><strong>Contacts:</strong> 0557150062 / 0207816778</p> </div> <div style="text-align: right;"> <h1 style="color: #D4AF37; margin: 0; font-size: 2.5rem; text-transform: uppercase;">Invoice</h1> <p style="margin: 5px 0 0 0; font-size: 1.1rem; color: #718096;"><strong>#${inv.id}</strong></p> </div> </div> <div style="display: flex; justify-content: space-between; margin-bottom: 40px;"> <div> <h4 style="color: #718096; margin: 0 0 5px 0; text-transform: uppercase; font-size: 0.85rem;">Billed To:</h4> <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;">${inv.clientName}</p> <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> </div> <div style="text-align: right;"> <p style="margin: 0 0 5px 0;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> <p style="margin: 0 0 5px 0;"><strong>Billing Month:</strong> ${billingMonthDisplay}</p> <p style="margin: 0;"><strong>Status:</strong> ${inv.status}</p> </div> </div> <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;"> <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: center;">Qty</th><th style="padding: 12px 10px; text-align: right;">Rate (GH₵)</th><th style="padding: 12px 10px; text-align: right;">Amount (GH₵)</th></tr></thead> <tbody>${itemsHtml}</tbody> </table> <div style="display: flex; justify-content: flex-end;"> <div style="width: 320px;"> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;"><span>Subtotal:</span><strong>GH₵ ${inv.subtotal.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>GETFund Levy (2.5%):</span><strong>GH₵ ${inv.gefl.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>NHIL (2.5%):</span><strong>GH₵ ${inv.nhil.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>VAT (15%):</span><strong>GH₵ ${inv.vat.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> </div> </div> <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 0.9rem;"><p>Thank you for your business!</p></div> </div>`; if (isDownload) { html2pdf().set({ margin: 0.5, filename: `${inv.id}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } else { document.getElementById("printContainer").innerHTML = html; window.print(); } }); } });
+    </script>
+    <script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed: ', err)); }); }</script>
+</body>
+</html>

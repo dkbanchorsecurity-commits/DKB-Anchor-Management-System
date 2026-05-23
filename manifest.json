@@ -1,0 +1,21 @@
+{
+  "name": "DKB Anchor Security Management",
+  "short_name": "DKB Anchor",
+  "description": "Employee, Payroll, and Operations Management System",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F4F6F8",
+  "theme_color": "#0A2540",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
