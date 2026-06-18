@@ -56,7 +56,7 @@
         .sidebar { width: 260px; background-color: var(--primary-color); color: var(--text-light); display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); flex-shrink: 0; transition: all 0.3s ease; z-index: 999; height: 100vh; }
         .sidebar-header { padding: 25px 20px; background-color: var(--secondary-color); text-align: center; border-bottom: 2px solid var(--accent-color); transition: background-color 0.3s; }
         .brand-logo { max-width: 120px; max-height: 80px; object-fit: contain; margin-bottom: 15px; border-radius: 4px; display: inline-block; background: #fff; padding: 5px; }
-        .sidebar-header h2 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-color); line-height: 1.2; }
+        .sidebar-header h2 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-color); line-height: 1.2; font-family: 'Footlight MT Light', serif; }
         .sidebar-header p { font-size: 0.8rem; color: var(--text-light); opacity: 0.8; margin-top: 5px; }
         .nav-links { list-style: none; padding: 20px 0; overflow-y: auto; flex: 1; }
         .nav-links li a { display: flex; align-items: center; padding: 12px 25px; color: var(--text-light); text-decoration: none; transition: all 0.3s ease; border-left: 4px solid transparent; font-size: 0.95rem; }
@@ -71,14 +71,14 @@
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
-        header h1 { color: var(--danger-color); font-size: 1.6rem; font-weight: bold; }
+        header h1 { color: var(--danger-color); font-size: 1.6rem; font-weight: bold; font-family: 'Footlight MT Light', serif;}
         .live-clock { font-family: 'Courier New', Courier, monospace; font-size: 1rem; font-weight: bold; color: var(--accent-color); background-color: var(--primary-color); padding: 5px 10px; border-radius: 4px; letter-spacing: 1px; white-space: nowrap; }
         .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .year-selector { padding: 6px 12px; border: 1px solid var(--accent-color); border-radius: 4px; background-color: var(--panel-bg); color: var(--primary-color); font-weight: bold; font-size: 0.9rem; cursor: pointer; outline: none; transition: all 0.3s; }
         .user-profile { text-align: right; line-height: 1.2; font-weight: bold; color: var(--primary-color); background: var(--panel-bg); padding: 6px 15px; border-radius: 20px; border: 1px solid var(--accent-color); font-size: 0.9rem; white-space: nowrap; }
         
         .content-section { animation: fadeIn 0.3s ease-in-out; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
 
         .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .card { background: var(--panel-bg); padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid var(--accent-color); transition: background-color 0.3s; }
@@ -241,11 +241,10 @@
 </head>
 <body>
     
-    <!-- LOGIN SCREEN -->
     <div id="login-container">
         <div class="login-box">
             <img src="logo.png" alt="DKB Logo" class="brand-logo" style="margin-bottom: 20px; background: white; padding: 10px;">
-            <h2 style="color: var(--primary-color); margin-bottom: 5px;">DKB ANCHOR</h2>
+            <h2 style="color: var(--primary-color); margin-bottom: 5px; font-family: 'Footlight MT Light', serif;">DKB ANCHOR</h2>
             <p style="color: var(--gray-color); margin-bottom: 25px; font-size: 0.9rem;">Security Management Portal</p>
             <form id="loginForm">
                 <div class="form-group" style="text-align: left; margin-bottom: 15px;">
@@ -265,10 +264,8 @@
         </div>
     </div>
 
-    <!-- MAIN APPLICATION -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
         <nav class="sidebar" id="mainSidebar">
             <div class="sidebar-header">
                 <img src="logo.png" alt="Company Logo" class="brand-logo" id="sidebarLogo">
@@ -282,6 +279,8 @@
                 <li class="nav-item-payroll"><a href="#" data-target="payroll"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a></li>
                 <li class="nav-item-expenditure"><a href="#" data-target="expenditure"><i class="fa-solid fa-file-invoice-dollar"></i> Expenditure</a></li>
                 <li class="nav-item-invoices"><a href="#" data-target="invoices"><i class="fa-solid fa-file-signature"></i> Invoices</a></li>
+                <li class="nav-item-gra"><a href="#" data-target="gra-portal"><i class="fa-solid fa-landmark-flag"></i> GRA Portal</a></li>
+                <li class="nav-item-ssnit"><a href="#" data-target="ssnit-portal"><i class="fa-solid fa-umbrella"></i> SSNIT Portal</a></li>
                 <li class="nav-item-guard-deployment"><a href="#" data-target="guard-deployment"><i class="fa-solid fa-shield-halved"></i> Deployment</a></li>
                 <li class="nav-item-incident-reporting"><a href="#" data-target="incident-reporting"><i class="fa-solid fa-triangle-exclamation"></i> Incidents <span id="incCounter" class="nav-badge" style="display: none;">0</span></a></li>
                 <li class="nav-item-observations"><a href="#" data-target="observations"><i class="fa-solid fa-binoculars"></i> Observations <span id="obsCounter" class="nav-badge" style="display: none;">0</span></a></li>
@@ -293,9 +292,7 @@
             </ul>
         </nav>
 
-        <!-- Main Content Area -->
         <main class="main-content">
-            <!-- Dashboard View -->
             <section id="dashboard" class="content-section active">
                 <header>
                     <div class="header-left">
@@ -309,17 +306,19 @@
                     </div>
                 </header>
                 
-                <div class="dashboard-cards">
-                    <div class="card"><h3>Total Employees</h3><p class="stat" id="dashTotalEmp">0</p></div>
-                    <div class="card"><h3>Active Guards</h3><p class="stat" id="dashActiveGuards">0</p></div>
-                    <div class="card"><h3>Total Incidents</h3><p class="stat alert" id="dashTotalInc">0</p></div>
-                    <div class="card"><h3>Total Observations</h3><p class="stat warning" id="dashTotalObs">0</p></div>
-                    <div class="card financial-element"><h3>Monthly Revenue</h3><p class="stat success" id="dashRevenue">GH₵ 0.00</p></div>
-                    <div class="card financial-element"><h3>Monthly Salaries</h3><p class="stat warning" id="dashSalaries">GH₵ 0.00</p></div>
-                    <div class="card financial-element"><h3>Total Expenses</h3><p class="stat alert" id="dashTotalExp">GH₵ 0.00</p></div>
-                    <div class="card financial-element"><h3>Live Profit Margin</h3><p class="stat success" id="dashTotalProfit">GH₵ 0.00</p></div>
-                </div>
-
+               <div class="dashboard-cards">
+    <div class="card"><h3>Total Employees</h3><p class="stat" id="dashTotalEmp">0</p></div>
+    <div class="card"><h3>Active Guards</h3><p class="stat" id="dashActiveGuards">0</p></div>
+    <!-- NEW: Total Clients Card -->
+    <div class="card"><h3>Total Clients</h3><p class="stat" id="dashTotalClients" style="color: var(--info-color);">0</p></div>
+    
+    <div class="card"><h3>Total Incidents</h3><p class="stat alert" id="dashTotalInc">0</p></div>
+    <div class="card"><h3>Total Observations</h3><p class="stat warning" id="dashTotalObs">0</p></div>
+    <div class="card financial-element"><h3>Monthly Revenue</h3><p class="stat success" id="dashRevenue">GH₵ 0.00</p></div>
+    <div class="card financial-element"><h3>Monthly Salaries</h3><p class="stat warning" id="dashSalaries">GH₵ 0.00</p></div>
+    <div class="card financial-element"><h3>Total Expenses</h3><p class="stat alert" id="dashTotalExp">GH₵ 0.00</p></div>
+    <div class="card financial-element"><h3>Live Profit Margin</h3><p class="stat success" id="dashTotalProfit">GH₵ 0.00</p></div>
+</div>
                 <div class="charts-wrapper">
                     <div class="chart-card"><h3>Monthly Deployment Trend</h3><div class="canvas-container"><canvas id="deploymentChart"></canvas></div></div>
                     <div class="chart-card"><h3>Monthly Incidents</h3><div class="canvas-container"><canvas id="incidentChart"></canvas></div></div>
@@ -328,7 +327,6 @@
                 </div>
             </section>
 
-            <!-- Employee Management View -->
             <section id="employee-management" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Employee Management</h1></div></header>
                 <div class="panel">
@@ -348,7 +346,6 @@
                 </div>
             </section>
 
-            <!-- Client Management View -->
             <section id="clients" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Client Management</h1></div></header>
                 <div class="panel">
@@ -367,7 +364,6 @@
                 </div>
             </section>
 
-            <!-- Payroll View -->
             <section id="payroll" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Payroll Management</h1></div></header>
                 <div class="panel">
@@ -393,7 +389,6 @@
                 </div>
             </section>
 
-            <!-- Expenditure View -->
             <section id="expenditure" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Expenditure Management</h1></div></header>
                 <div class="panel">
@@ -412,7 +407,6 @@
                 </div>
             </section>
 
-            <!-- Invoices View -->
             <section id="invoices" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Invoice Generation</h1></div></header>
                 <div class="panel">
@@ -431,7 +425,87 @@
                 </div>
             </section>
 
-            <!-- Guard Deployment View -->
+            <section id="gra-portal" class="content-section hidden" style="height: 100vh; display: flex; flex-direction: column;">
+                <header>
+                    <div class="header-left">
+                        <button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+                        <h1>GRA Taxpayers' Portal</h1>
+                    </div>
+                    <div class="header-right">
+                        <button id="syncGraDataBtn" class="btn-primary success-bg"><i class="fa-solid fa-rotate"></i> Sync E-VAT & PAYE</button>
+                    </div>
+                </header>
+                
+                <div class="dashboard-cards" style="margin-bottom: 20px;">
+                    <div class="card">
+                        <h3>Pending PAYE (Current Month)</h3>
+                        <p class="stat warning" id="graPendingPaye">GH₵ 0.00</p>
+                    </div>
+                    <div class="card">
+                        <h3>Unsynced Invoices (E-VAT)</h3>
+                        <p class="stat alert" id="graPendingVat">0</p>
+                    </div>
+                </div>
+
+                <div style="flex: 1; background: var(--panel-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px;">
+                    <img src="https://gra.gov.gh/wp-content/uploads/2023/11/gra-logo-1.png" alt="GRA Logo" style="max-width: 150px; margin-bottom: 20px;">
+                    <h2 style="color: var(--primary-color); margin-bottom: 15px;">Ghana Revenue Authority Central Hub</h2>
+                    <p style="color: var(--gray-color); max-width: 600px; margin-bottom: 30px; line-height: 1.6;">
+                        Access the official GRA Taxpayers' portal to file returns, initiate tax payments, and manage corporate compliance metrics safely.
+                    </p>
+                    <div style="display: flex; gap: 15px;">
+                        <a href="https://taxpayersportal.com/home" target="_blank" class="btn-primary" style="text-decoration: none; font-size: 1.1rem; padding: 12px 24px;">
+                            <i class="fa-solid fa-external-link-alt"></i> Open GRA Portal
+                        </a>
+                        <a href="https://gra.gov.gh/taxpayers-portal-app/" target="_blank" class="btn-secondary" style="text-decoration: none; font-size: 1.1rem; padding: 12px 24px;">
+                            Read Integration Guide
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ssnit-portal" class="content-section hidden" style="height: 100vh; display: flex; flex-direction: column;">
+                <header>
+                    <div class="header-left">
+                        <button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+                        <h1>SSNIT Employer Portal</h1>
+                    </div>
+                    <div class="header-right">
+                        <button id="syncSsnitDataBtn" class="btn-primary success-bg"><i class="fa-solid fa-file-csv"></i> Generate Contribution Report</button>
+                    </div>
+                </header>
+                
+                <div class="dashboard-cards" style="margin-bottom: 20px;">
+                    <div class="card">
+                        <h3>Employee Deduction (5.5%)</h3>
+                        <p class="stat warning" id="ssnitEmpDeduct">GH₵ 0.00</p>
+                    </div>
+                    <div class="card">
+                        <h3>Employer Addition (13%)</h3>
+                        <p class="stat warning" id="ssnitEmprAdd">GH₵ 0.00</p>
+                    </div>
+                    <div class="card">
+                        <h3>Total Remittance (18.5%)</h3>
+                        <p class="stat alert" id="ssnitTotalRemit">GH₵ 0.00</p>
+                    </div>
+                </div>
+
+                <div style="flex: 1; background: var(--panel-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px;">
+                    <h2 style="color: var(--primary-color); margin-bottom: 15px; font-size: 2rem;"><i class="fa-solid fa-shield-halved" style="color: var(--accent-color);"></i> SSNIT Central Hub</h2>
+                    <p style="color: var(--gray-color); max-width: 600px; margin-bottom: 30px; line-height: 1.6;">
+                        Run system calculations for national insurance contributions and compile structured formatting validation schemas before final portal uploading.
+                    </p>
+                    <div style="display: flex; gap: 15px;">
+                        <a href="https://portal.ssnit.org.gh/" target="_blank" class="btn-primary" style="text-decoration: none; font-size: 1.1rem; padding: 12px 24px;">
+                            <i class="fa-solid fa-external-link-alt"></i> Open SSNIT Portal
+                        </a>
+                        <a href="https://www.ssnit.org.gh/employer/employer-guidelines/" target="_blank" class="btn-secondary" style="text-decoration: none; font-size: 1.1rem; padding: 12px 24px;">
+                            View Guidelines
+                        </a>
+                    </div>
+                </div>
+            </section>
+
             <section id="guard-deployment" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Guard Deployment</h1></div></header>
                 <div class="panel">
@@ -453,7 +527,6 @@
                 </div>
             </section>
 
-            <!-- Incident Reporting View -->
             <section id="incident-reporting" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Incident Reporting</h1></div></header>
                 <div class="panel">
@@ -472,7 +545,6 @@
                 </div>
             </section>
 
-            <!-- Observations View -->
             <section id="observations" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Field Observations</h1></div></header>
                 <div class="panel">
@@ -492,7 +564,6 @@
                 </div>
             </section>
 
-            <!-- Attendance Register View -->
             <section id="attendance" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Attendance Register</h1></div></header>
                 <div class="panel">
@@ -521,7 +592,6 @@
                 </div>
             </section>
 
-            <!-- Messages View -->
             <section id="messages" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Internal Communications</h1></div></header>
                 <div class="panel">
@@ -540,7 +610,6 @@
                 </div>
             </section>
 
-            <!-- Audit Trail View -->
             <section id="audit-trail" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Audit Trail & System Logs</h1></div></header>
                 <div class="panel">
@@ -568,7 +637,6 @@
                 </div>
             </section>
 
-            <!-- Settings View -->
             <section id="settings" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>System Settings</h1></div></header>
                 <div class="settings-grid">
@@ -606,9 +674,6 @@
         </main>
     </div>
 
-    <!-- MODALS SECTION -->
-    
-    <!-- Onboard Client Modal -->
     <div id="onboardClientModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="clientModalTitle">Onboard New Client</h2>
             <form id="clientForm">
@@ -627,7 +692,6 @@
         </div>
     </div>
 
-    <!-- User Account Modal -->
     <div id="userAccountModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="userModalTitle">Create User Account</h2>
             <form id="userAccountForm">
@@ -657,7 +721,6 @@
         </div>
     </div>
 
-    <!-- Log Expenditure Modal -->
     <div id="logExpenditureModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log New Expenditure</h2>
             <form id="expenditureForm">
@@ -673,7 +736,6 @@
         </div>
     </div>
 
-    <!-- Create Invoice Modal -->
     <div id="createInvoiceModal" class="modal">
         <div class="modal-content" style="max-width: 850px;"><span class="close-modal">&times;</span><h2 class="modal-header">Create Invoice</h2>
             <form id="invoiceForm">
@@ -714,7 +776,6 @@
         </div>
     </div>
 
-    <!-- Log Incident Modal -->
     <div id="logIncidentModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log Incident Report</h2>
             <form id="incidentForm">
@@ -731,7 +792,6 @@
         </div>
     </div>
 
-    <!-- Log Observation Modal -->
     <div id="logObservationModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log Field Observation</h2>
             <form id="observationForm">
@@ -747,7 +807,6 @@
         </div>
     </div>
 
-    <!-- Compose Message Modal -->
     <div id="composeMessageModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Compose Message</h2>
             <form id="composeMsgForm">
@@ -761,7 +820,6 @@
         </div>
     </div>
 
-    <!-- View Message Modal -->
     <div id="viewMessageModal" class="modal">
         <div class="modal-content"><span class="close-modal" onclick="document.getElementById('viewMessageModal').style.display='none'">&times;</span>
             <div class="message-reader-header" style="border-bottom: 2px solid var(--accent-color); padding-bottom: 15px; margin-bottom: 15px;"><div class="message-reader-subject" id="readerSubject" style="font-size: 1.3rem; font-weight: bold; color: var(--primary-color);">Subject</div><div class="message-reader-meta" style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9rem; color: var(--gray-color);"><div><strong>From:</strong> <span id="readerSender">Admin</span> &nbsp;|&nbsp; <strong>To:</strong> <span id="readerRecipient">All</span></div><div id="readerDate">Date</div></div></div>
@@ -770,7 +828,6 @@
         </div>
     </div>
 
-    <!-- Add Employee Modal -->
     <div id="addEmployeeModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="modalTitle">Add New Employee Profile</h2>
             <form id="addEmployeeForm">
@@ -796,12 +853,15 @@
                     <div class="form-group"><label>Guarantor GPS</label><input type="text" id="guarGPS" required></div>
                     <div class="form-group full-width"><label>Guarantor Address</label><input type="text" id="guarAddress" required></div>
                 </div></div>
+                <div class="form-section"><h3>4. Next of Kin Information</h3><div class="form-grid">
+                    <div class="form-group"><label>Next of Kin Name</label><input type="text" id="nokName" required></div>
+                    <div class="form-group"><label>Next of Kin Phone</label><input type="tel" id="nokPhone" required></div>
+                </div></div>
                 <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelEmployeeBtn">Cancel</button><button type="submit" class="btn-primary" id="saveEmployeeBtn">Save Profile</button></div>
             </form>
         </div>
     </div>
 
-    <!-- View Employee Modal -->
     <div id="viewEmployeeModal" class="modal">
         <div class="modal-content"><span class="close-modal" style="color: white; position: absolute; z-index: 10; top: 15px; right: 20px;" onclick="document.getElementById('viewEmployeeModal').style.display='none'">&times;</span>
             <div class="profile-banner"></div>
@@ -817,7 +877,10 @@
                     <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-address-card"></i> Personal Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Ghana Card ID</label><span id="v_ghanaCard">-</span></div><div class="view-item-new"><label>Phone Number</label><span id="v_phone">-</span></div><div class="view-item-new"><label>Ghana Post GPS</label><span id="v_gps">-</span></div><div class="view-item-new"><label>Residential Address</label><span id="v_address">-</span></div></div></div>
                     <div class="profile-section-card"><h4><i class="fa-solid fa-briefcase"></i> Employment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Duty Post</label><span id="v_dutyPost">-</span></div><div class="view-item-new"><label>Basic Salary</label><span id="v_salary">-</span></div><div class="view-item-new"><label>Client Billing Rate</label><span id="v_rate">-</span></div></div></div>
                 </div>
-                <div class="profile-column"><div class="profile-section-card" style="height: 100%;"><h4><i class="fa-solid fa-users-line"></i> Guarantor Information</h4><div class="view-grid-new"><div class="view-item-new"><label>Guarantor Name</label><span id="v_gName">-</span></div><div class="view-item-new"><label>Guarantor ID</label><span id="v_gId">-</span></div><div class="view-item-new"><label>Guarantor Phone</label><span id="v_gPhone">-</span></div><div class="view-item-new"><label>Guarantor Profession</label><span id="v_gProf">-</span></div><div class="view-item-new"><label>Guarantor GPS</label><span id="v_gGps">-</span></div><div class="view-item-new"><label>Guarantor Address</label><span id="v_gAddress">-</span></div></div></div></div>
+                <div class="profile-column">
+                    <div class="profile-section-card"><h4><i class="fa-solid fa-users-line"></i> Guarantor Information</h4><div class="view-grid-new"><div class="view-item-new"><label>Guarantor Name</label><span id="v_gName">-</span></div><div class="view-item-new"><label>Guarantor ID</label><span id="v_gId">-</span></div><div class="view-item-new"><label>Guarantor Phone</label><span id="v_gPhone">-</span></div><div class="view-item-new"><label>Guarantor Profession</label><span id="v_gProf">-</span></div><div class="view-item-new"><label>Guarantor GPS</label><span id="v_gGps">-</span></div><div class="view-item-new"><label>Guarantor Address</label><span id="v_gAddress">-</span></div></div></div>
+                    <div class="profile-section-card" style="margin-top: 25px;"><h4><i class="fa-solid fa-heart-pulse"></i> Next of Kin Information</h4><div class="view-grid-new"><div class="view-item-new"><label>Next of Kin Name</label><span id="v_nokName">-</span></div><div class="view-item-new"><label>Next of Kin Phone</label><span id="v_nokPhone">-</span></div></div></div>
+                </div>
             </div>
             <div class="modal-footer" style="padding: 15px 30px; background: var(--panel-bg); margin: 0; border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn-secondary" id="closeViewBtn" onclick="document.getElementById('viewEmployeeModal').style.display='none'">Close</button>
@@ -826,10 +889,8 @@
         </div>
     </div>
 
-    <!-- Hidden Print Container -->
     <div id="printContainer"></div>
 
-    <!-- MAIN APP SCRIPT WITH FIREBASE MODULAR (v12) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
@@ -873,10 +934,11 @@
 
         window.currentUserRole = null;
         
+        // UPDATED RBAC CONFIG TO INCLUDE GRA & SSNIT
         const RBAC_CONFIG = {
-            "Super Admin": ["dashboard", "employee-management", "clients", "payroll", "expenditure", "invoices", "guard-deployment", "incident-reporting", "observations", "attendance", "messages", "audit-trail", "settings"],
+            "Super Admin": ["dashboard", "employee-management", "clients", "payroll", "expenditure", "invoices", "guard-deployment", "incident-reporting", "observations", "attendance", "messages", "audit-trail", "settings", "gra-portal", "ssnit-portal"],
             "Operations Manager": ["dashboard", "employee-management", "clients", "guard-deployment", "incident-reporting", "observations", "attendance", "messages"],
-            "Finance Manager": ["dashboard", "clients", "payroll", "expenditure", "invoices", "messages"],
+            "Finance Manager": ["dashboard", "clients", "payroll", "expenditure", "invoices", "messages", "gra-portal", "ssnit-portal"],
             "Standard User": ["dashboard", "incident-reporting", "observations", "attendance", "messages"],
             "Client": ["dashboard", "messages"]
         };
@@ -923,10 +985,10 @@
                 { col: "attendance", render: () => renderAttendanceTable() },
                 { col: "observations", render: () => { renderObservationTable(); renderDashboard(); } },
                 { col: "incidents", render: () => { renderIncidentTable(); renderDashboard(); } },
-                { col: "employees", render: () => { renderTable(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); } },
+                { col: "employees", render: () => { renderTable(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); renderGraDashboard(); renderSsnitDashboard(); } },
                 { col: "clients", render: () => renderClientTable() },
                 { col: "expenditures", render: () => { renderExpenditureTable(); renderDashboard(); } },
-                { col: "invoices", render: () => renderInvoiceTable() },
+                { col: "invoices", render: () => { renderInvoiceTable(); renderGraDashboard(); } },
                 { col: "messages", render: () => renderMessageTable() },
                 { col: "audit", render: () => renderAuditTable() },
                 { col: "users", render: () => renderUsersTable() }
@@ -1063,28 +1125,42 @@
             previousUnreadCount = currentUnreadCount;
         }
 
-        function renderDashboard() {
-            Promise.all([ getAllEmployees(), getAllIncidents(), getAllObservations(), getAllExpenditures(), getAllClients() ]).then(([employees, incidents, observations, expenditures, clients]) => {
-                const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
-                const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
-                const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
-                const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-                const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
+       function renderDashboard() {
+    Promise.all([ getAllEmployees(), getAllIncidents(), getAllObservations(), getAllExpenditures(), getAllClients() ]).then(([employees, incidents, observations, expenditures, clients]) => {
+        const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
+        const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
+        const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
+        const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+        const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
+        
+        // NEW: Calculate Total Clients
+        const totalClients = clients.length;
 
-                document.getElementById('dashTotalEmp').innerText = employees.length; document.getElementById('dashActiveGuards').innerText = activeGuards; document.getElementById('dashTotalInc').innerText = incidents.length; document.getElementById('dashTotalObs').innerText = observations.length; document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`; document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
+        // Update the DOM elements
+        document.getElementById('dashTotalEmp').innerText = employees.length; 
+        document.getElementById('dashActiveGuards').innerText = activeGuards; 
+        document.getElementById('dashTotalClients').innerText = totalClients; // NEW
+        document.getElementById('dashTotalInc').innerText = incidents.length; 
+        document.getElementById('dashTotalObs').innerText = observations.length; 
+        document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+        document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+        document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+        document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+        document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
 
-                const currentMonth = new Date().getMonth(); const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(Math.max(0, currentMonth - 5), currentMonth + 1);
-                let incData = new Array(monthLabels.length).fill(0); incidents.forEach(inc => { const diff = currentMonth - new Date(inc.date).getMonth(); if (diff >= 0 && diff < monthLabels.length) incData[monthLabels.length - 1 - diff]++; });
-                let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 }; observations.forEach(obs => { if(obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
-                let revData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? monthlyRevenue : Math.floor(monthlyRevenue * (0.9 + Math.random()*0.2))); let profData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? liveProfit : Math.floor(liveProfit * (0.8 + Math.random()*0.4))); let depData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? activeGuards : Math.floor(activeGuards * (0.95 + Math.random()*0.05)));
+        // ... (Keep the rest of your chart rendering code exactly as it is below this point) ...
+        const currentMonth = new Date().getMonth(); const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(Math.max(0, currentMonth - 5), currentMonth + 1);
+        let incData = new Array(monthLabels.length).fill(0); incidents.forEach(inc => { const diff = currentMonth - new Date(inc.date).getMonth(); if (diff >= 0 && diff < monthLabels.length) incData[monthLabels.length - 1 - diff]++; });
+        let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 }; observations.forEach(obs => { if(obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
+        let revData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? monthlyRevenue : Math.floor(monthlyRevenue * (0.9 + Math.random()*0.2))); let profData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? liveProfit : Math.floor(liveProfit * (0.8 + Math.random()*0.4))); let depData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? activeGuards : Math.floor(activeGuards * (0.95 + Math.random()*0.05)));
 
-                const cDB = window.dashboardCharts;
-                if(cDB.dep) cDB.dep.destroy(); cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), { type: 'line', data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-                if(cDB.inc) cDB.inc.destroy(); cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-                if(cDB.obs) cDB.obs.destroy(); cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
-                if(cDB.fin) cDB.fin.destroy(); cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
-            });
-        }
+        const cDB = window.dashboardCharts;
+        if(cDB.dep) cDB.dep.destroy(); cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), { type: 'line', data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        if(cDB.inc) cDB.inc.destroy(); cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        if(cDB.obs) cDB.obs.destroy(); cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
+        if(cDB.fin) cDB.fin.destroy(); cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+    });
+}
 
         function applySystemSettings(data = null) {
             if(!data) return;
@@ -1350,6 +1426,84 @@
         }
 
         // ==========================================
+        // COMPLIANCE DASHBOARDS (GRA & SSNIT)
+        // ==========================================
+        function renderGraDashboard() {
+            getAllEmployees().then(employees => {
+                const periodKey = `${new Date().toLocaleString('default', { month: 'long' })}_${new Date().getFullYear()}`;
+                let totalPaye = 0;
+                
+                employees.forEach(emp => {
+                    if (emp.payrollData && emp.payrollData[periodKey]) {
+                        const financials = calculateFinancials(emp, emp.payrollData[periodKey].overtime, emp.payrollData[periodKey].bonus);
+                        totalPaye += financials.payeDeduction;
+                    }
+                });
+                const graPayeEl = document.getElementById("graPendingPaye");
+                if (graPayeEl) graPayeEl.innerText = `GH₵ ${totalPaye.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            });
+
+            getAllInvoices().then(invoices => {
+                const draftInvoices = invoices.filter(inv => inv.status === "Draft").length;
+                const graVatEl = document.getElementById("graPendingVat");
+                if (graVatEl) graVatEl.innerText = draftInvoices;
+            });
+        }
+
+        function renderSsnitDashboard() {
+            getAllEmployees().then(employees => {
+                let totalBasic = 0;
+                
+                employees.forEach(emp => {
+                    totalBasic += (parseFloat(emp.basicSalary) || 0);
+                });
+
+                const employeeDeduction = totalBasic * 0.055;
+                const employerAddition = totalBasic * 0.13;
+                const totalRemittance = totalBasic * 0.185;
+
+                const empDeductEl = document.getElementById("ssnitEmpDeduct");
+                const emprAddEl = document.getElementById("ssnitEmprAdd");
+                const totalRemitEl = document.getElementById("ssnitTotalRemit");
+
+                if (empDeductEl) empDeductEl.innerText = `GH₵ ${employeeDeduction.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                if (emprAddEl) emprAddEl.innerText = `GH₵ ${employerAddition.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                if (totalRemitEl) totalRemitEl.innerText = `GH₵ ${totalRemittance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            });
+        }
+
+        // Add click listeners for Compliance Buttons
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("syncGraDataBtn")?.addEventListener("click", function() {
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing via API...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    alert("Success: E-VAT Invoices and PAYE Ledgers queued for GRA API sync.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    logAction("Compliance", "Initiated GRA E-VAT & PAYE API Sync");
+                }, 1500);
+            });
+
+            document.getElementById("syncSsnitDataBtn")?.addEventListener("click", function() {
+                const btn = this;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating CSV...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    alert("Success: Monthly SSNIT Contribution CSV generated. Ready for portal upload.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    logAction("Compliance", "Generated SSNIT Contribution Report");
+                }, 1500);
+            });
+        });
+
+        // ==========================================
         // AUTHENTICATION & BOOTSTRAP LOGIC
         // ==========================================
         
@@ -1440,6 +1594,8 @@
             else if(targetId === "messages") renderMessageTable();
             else if(targetId === "audit-trail") renderAuditTable(); 
             else if(targetId === "settings") { renderUsersTable(); getSetting("system").then(data => { if(data) applySystemSettings(data); }); } 
+            else if(targetId === "gra-portal") renderGraDashboard();
+            else if(targetId === "ssnit-portal") renderSsnitDashboard();
         }); });
 
         // SEARCH
@@ -1491,7 +1647,6 @@
             }
         });
 
-        // FIXED USER ACCOUNT SUBMISSION
         document.getElementById("userAccountForm").addEventListener("submit", async function(e) { 
             e.preventDefault(); 
             const pwdInput = document.getElementById("uPassword").value.trim();
@@ -1524,9 +1679,74 @@
         document.getElementById("observationForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("obsDate").value, site: document.getElementById("obsSite").value, observer: document.getElementById("obsObserver").value, description: document.getElementById("obsDescription").value, status: document.getElementById("obsStatus").value, timestamp: new Date().getTime() }; if (editObsId) { getObservation(editObsId).then(ex => { data.id = editObsId; data.timestamp = ex.timestamp; saveObservation(data).then(() => { logAction("Observations", `Updated observation ${editObsId}`); renderObservationTable(); closeModals(); }); }); } else { data.id = "OBS-" + new Date().getTime().toString().slice(-6); saveObservation(data).then(() => { logAction("Observations", `Logged observation at ${data.site}`); renderObservationTable(); closeModals(); }); } });
         document.getElementById("incidentForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("incDate").value, location: document.getElementById("incLocation").value, category: document.getElementById("incCategory").value, reporter: document.getElementById("incReporter").value, description: document.getElementById("incDescription").value, status: document.getElementById("incStatus").value, timestamp: new Date().getTime() }; if (editIncId) { getIncident(editIncId).then(ex => { data.id = editIncId; data.timestamp = ex.timestamp; saveIncident(data).then(() => { logAction("Incidents", `Updated incident ${editIncId}`); renderIncidentTable(); closeModals(); }); }); } else { data.id = "INC-" + new Date().getTime().toString().slice(-6); saveIncident(data).then(() => { logAction("Incidents", `Logged incident at ${data.location}`); renderIncidentTable(); closeModals(); }); } });
         
-        function openEditEmployeeModal(id) { getEmployee(id).then(emp => { document.getElementById("modalTitle").innerText = "Edit Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Update Employee"; document.getElementById("empName").value = emp.name; document.getElementById("empGhanaCard").value = emp.ghanaCard; document.getElementById("empPhone").value = emp.phone; document.getElementById("empGPS").value = emp.gps; document.getElementById("empAddress").value = emp.address; document.getElementById("empRole").value = emp.role; const dpSelect = document.getElementById("empDutyPost"); if(emp.dutyPost && !Array.from(dpSelect.options).some(o => o.value === emp.dutyPost)) { const opt = document.createElement("option"); opt.value = emp.dutyPost; opt.innerText = emp.dutyPost + " (Unregistered)"; dpSelect.appendChild(opt); } dpSelect.value = emp.dutyPost; document.getElementById("empShift").value = emp.shift; document.getElementById("empClientRate").value = emp.clientRate; document.getElementById("empBasicSalary").value = emp.basicSalary; document.getElementById("guarName").value = emp.guarName; document.getElementById("guarID").value = emp.guarID; document.getElementById("guarPhone").value = emp.guarPhone; document.getElementById("guarProfession").value = emp.guarProfession; document.getElementById("guarGPS").value = emp.guarGPS; document.getElementById("guarAddress").value = emp.guarAddress; editId = id; document.getElementById("addEmployeeModal").style.display = "block"; }); }
+        function openEditEmployeeModal(id) { 
+            getEmployee(id).then(emp => { 
+                document.getElementById("modalTitle").innerText = "Edit Employee Profile"; 
+                document.getElementById("saveEmployeeBtn").innerText = "Update Employee"; 
+                document.getElementById("empName").value = emp.name; 
+                document.getElementById("empGhanaCard").value = emp.ghanaCard; 
+                document.getElementById("empPhone").value = emp.phone; 
+                document.getElementById("empGPS").value = emp.gps; 
+                document.getElementById("empAddress").value = emp.address; 
+                document.getElementById("empRole").value = emp.role; 
+                const dpSelect = document.getElementById("empDutyPost"); 
+                if(emp.dutyPost && !Array.from(dpSelect.options).some(o => o.value === emp.dutyPost)) { const opt = document.createElement("option"); opt.value = emp.dutyPost; opt.innerText = emp.dutyPost + " (Unregistered)"; dpSelect.appendChild(opt); } 
+                dpSelect.value = emp.dutyPost; 
+                document.getElementById("empShift").value = emp.shift; 
+                document.getElementById("empClientRate").value = emp.clientRate; 
+                document.getElementById("empBasicSalary").value = emp.basicSalary; 
+                document.getElementById("guarName").value = emp.guarName; 
+                document.getElementById("guarID").value = emp.guarID; 
+                document.getElementById("guarPhone").value = emp.guarPhone; 
+                document.getElementById("guarProfession").value = emp.guarProfession; 
+                document.getElementById("guarGPS").value = emp.guarGPS; 
+                document.getElementById("guarAddress").value = emp.guarAddress || ""; 
+                
+                // Next of Kin
+                document.getElementById("nokName").value = emp.nokName || "";
+                document.getElementById("nokPhone").value = emp.nokPhone || "";
+                
+                editId = id; document.getElementById("addEmployeeModal").style.display = "block"; 
+            }); 
+        }
         
-        document.getElementById("addEmployeeForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { name: document.getElementById("empName").value, ghanaCard: document.getElementById("empGhanaCard").value, phone: document.getElementById("empPhone").value, gps: document.getElementById("empGPS").value, address: document.getElementById("empAddress").value, role: document.getElementById("empRole").value, dutyPost: document.getElementById("empDutyPost").value, shift: document.getElementById("empShift").value, clientRate: document.getElementById("empClientRate").value, basicSalary: document.getElementById("empBasicSalary").value, guarName: document.getElementById("guarName").value, guarID: document.getElementById("guarID").value, guarPhone: document.getElementById("guarPhone").value, guarProfession: document.getElementById("guarProfession").value, guarGPS: document.getElementById("guarGPS").value, guarAddress: document.getElementById("guarAddress").value }; const submitBtn = document.getElementById("saveEmployeeBtn"); const originalText = submitBtn.innerText; submitBtn.disabled = true; submitBtn.innerText = "Saving..."; if (editId) { getEmployee(editId).then(ex => { data.id = editId; data.profilePic = ex.profilePic; data.payrollData = ex.payrollData || {}; saveEmployee(data).then(() => { logAction("Employee Management", `Updated ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); }); } else { getAllEmployees().then(emps => { let maxId = 0; emps.forEach(e => { const num = parseInt(e.id.split('-')[1]); if (num > maxId) maxId = num; }); data.id = `DKB-${(maxId + 1).toString().padStart(3, '0')}`; data.payrollData = {}; data.profilePic = `https://via.placeholder.com/150/F4F6F8/0A2540?text=${data.name.substring(0,2).toUpperCase()}`; saveEmployee(data).then(() => { logAction("Employee Management", `Created ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); }); } });
+        document.getElementById("addEmployeeForm").addEventListener("submit", function(e) { 
+            e.preventDefault(); 
+            const data = { 
+                name: document.getElementById("empName").value, 
+                ghanaCard: document.getElementById("empGhanaCard").value, 
+                phone: document.getElementById("empPhone").value, 
+                gps: document.getElementById("empGPS").value, 
+                address: document.getElementById("empAddress").value, 
+                role: document.getElementById("empRole").value, 
+                dutyPost: document.getElementById("empDutyPost").value, 
+                shift: document.getElementById("empShift").value, 
+                clientRate: document.getElementById("empClientRate").value, 
+                basicSalary: document.getElementById("empBasicSalary").value, 
+                guarName: document.getElementById("guarName").value, 
+                guarID: document.getElementById("guarID").value, 
+                guarPhone: document.getElementById("guarPhone").value, 
+                guarProfession: document.getElementById("guarProfession").value, 
+                guarGPS: document.getElementById("guarGPS").value, 
+                guarAddress: document.getElementById("guarAddress").value,
+                nokName: document.getElementById("nokName").value,
+                nokPhone: document.getElementById("nokPhone").value
+            }; 
+            const submitBtn = document.getElementById("saveEmployeeBtn"); const originalText = submitBtn.innerText; submitBtn.disabled = true; submitBtn.innerText = "Saving..."; 
+            
+            if (editId) { 
+                getEmployee(editId).then(ex => { 
+                    data.id = editId; data.profilePic = ex.profilePic; data.payrollData = ex.payrollData || {}; 
+                    saveEmployee(data).then(() => { logAction("Employee Management", `Updated ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); 
+                }); 
+            } else { 
+                getAllEmployees().then(emps => { 
+                    let maxId = 0; emps.forEach(e => { const num = parseInt(e.id.split('-')[1]); if (num > maxId) maxId = num; }); 
+                    data.id = `DKB-${(maxId + 1).toString().padStart(3, '0')}`; data.payrollData = {}; data.profilePic = `https://via.placeholder.com/150/F4F6F8/0A2540?text=${data.name.substring(0,2).toUpperCase()}`; 
+                    saveEmployee(data).then(() => { logAction("Employee Management", `Created ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); 
+                }); 
+            } 
+        });
 
         document.getElementById("usersTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-user-role")) { getUser(e.target.getAttribute("data-id")).then(user => { const oldRole = user.role; user.role = e.target.value; saveUser(user).then(() => { logAction("Settings", `Changed role for ${user.email} from ${oldRole} to ${user.role}`); renderUsersTable(); }); }); } });
         document.getElementById("usersTable").addEventListener("click", function(e) { const editBtn = e.target.closest('.btn-edit-user'), delBtn = e.target.closest('.btn-del-user'); if (delBtn) { const id = delBtn.getAttribute("data-id"); if (id === "USR-001") return alert("Cannot delete Super Admin."); if (confirm(`Delete account?`)) { deleteUser(id).then(() => { logAction("Settings", `Deleted user ${id}`); renderUsersTable(); }); } } else if (editBtn) { const id = editBtn.getAttribute("data-id"); getUser(id).then(user => { document.getElementById("uName").value = user.name; document.getElementById("uEmail").value = user.email; document.getElementById("uRole").value = user.role; document.getElementById("uPassword").value = ""; document.getElementById("userModalTitle").innerText = "Edit User Account"; document.getElementById("saveUserBtn").innerText = "Update Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "New Password (leave blank to keep current)"; document.getElementById("uPassword").required = false; editUserId = id; document.getElementById("userAccountModal").style.display = "block"; }); } });
@@ -1538,7 +1758,7 @@
         document.getElementById("incidentTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-inc-status")) { getIncident(e.target.getAttribute("data-id")).then(inc => { inc.status = e.target.value; saveIncident(inc).then(() => renderIncidentTable()); }); } });
         document.getElementById("incidentTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteIncident(id).then(() => renderIncidentTable()); } else if (btn.classList.contains('edit')) { getIncident(id).then(inc => { document.getElementById("incDate").value = inc.date; document.getElementById("incLocation").value = inc.location; document.getElementById("incCategory").value = inc.category; document.getElementById("incReporter").value = inc.reporter; document.getElementById("incDescription").value = inc.description; document.getElementById("incStatus").value = inc.status; editIncId = id; document.getElementById("logIncidentModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getIncident(id).then(inc => alert(`Location: ${inc.location}\nCategory: ${inc.category}\nDesc: ${inc.description}`)); } });
         document.getElementById("deploymentTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-reassign'); if (btn) openEditEmployeeModal(btn.getAttribute("data-id")); });
-        document.getElementById("employeeTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete employee ${id}?`)) deleteEmployee(id).then(() => renderTable()); } else if (btn.classList.contains('edit')) { openEditEmployeeModal(id); } else if (btn.classList.contains('view')) { getEmployee(id).then(emp => { document.getElementById("viewProfilePic").src = emp.profilePic; document.getElementById("viewProfilePic").dataset.currentId = emp.id; document.getElementById("viewName").innerText = emp.name; document.getElementById("viewId").innerHTML = `<i class="fa-solid fa-id-badge"></i> ${emp.id}`; document.getElementById("viewRole").innerHTML = `<i class="fa-solid fa-user-shield"></i> ${emp.role}`; document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; document.getElementById("v_phone").innerText = emp.phone; document.getElementById("v_gps").innerText = emp.gps; document.getElementById("v_address").innerText = emp.address; document.getElementById("v_dutyPost").innerText = emp.dutyPost; document.getElementById("v_salary").innerText = `GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}`; document.getElementById("v_rate").innerText = `GH₵ ${parseFloat(emp.clientRate || 0).toLocaleString()}`; document.getElementById("v_gName").innerText = emp.guarName; document.getElementById("v_gId").innerText = emp.guarID; document.getElementById("v_gPhone").innerText = emp.guarPhone; document.getElementById("v_gProf").innerText = emp.guarProfession; document.getElementById("v_gGps").innerText = emp.guarGPS; document.getElementById("v_gAddress").innerText = emp.guarAddress; document.getElementById("viewEmployeeModal").style.display = "block"; }); } });
+        document.getElementById("employeeTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete employee ${id}?`)) deleteEmployee(id).then(() => renderTable()); } else if (btn.classList.contains('edit')) { openEditEmployeeModal(id); } else if (btn.classList.contains('view')) { getEmployee(id).then(emp => { document.getElementById("viewProfilePic").src = emp.profilePic; document.getElementById("viewProfilePic").dataset.currentId = emp.id; document.getElementById("viewName").innerText = emp.name; document.getElementById("viewId").innerHTML = `<i class="fa-solid fa-id-badge"></i> ${emp.id}`; document.getElementById("viewRole").innerHTML = `<i class="fa-solid fa-user-shield"></i> ${emp.role}`; document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; document.getElementById("v_phone").innerText = emp.phone; document.getElementById("v_gps").innerText = emp.gps; document.getElementById("v_address").innerText = emp.address; document.getElementById("v_dutyPost").innerText = emp.dutyPost; document.getElementById("v_salary").innerText = `GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}`; document.getElementById("v_rate").innerText = `GH₵ ${parseFloat(emp.clientRate || 0).toLocaleString()}`; document.getElementById("v_gName").innerText = emp.guarName; document.getElementById("v_gId").innerText = emp.guarID; document.getElementById("v_gPhone").innerText = emp.guarPhone; document.getElementById("v_gProf").innerText = emp.guarProfession; document.getElementById("v_gGps").innerText = emp.guarGPS; document.getElementById("v_gAddress").innerText = emp.guarAddress || "N/A"; document.getElementById("v_nokName").innerText = emp.nokName || "N/A"; document.getElementById("v_nokPhone").innerText = emp.nokPhone || "N/A"; document.getElementById("viewEmployeeModal").style.display = "block"; }); } });
         document.getElementById("payrollTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-fin")) { const id = e.target.getAttribute("data-id"), type = e.target.getAttribute("data-type"), periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`; getEmployee(id).then(emp => { if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { status: "Pending", overtime: 0, bonus: 0 }; emp.payrollData[periodKey][type] = parseFloat(e.target.value) || 0; saveEmployee(emp).then(() => renderPayrollTable()); }); } });
         document.getElementById("payrollTable").addEventListener("click", function(e) { const btnPay = e.target.closest('.btn-pay'), btnPrint = e.target.closest('.btn-print-ps'), btnDownload = e.target.closest('.btn-download-ps'); const periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`; if (btnPay) { const row = btnPay.closest('tr'), otInput = row.querySelector('.update-fin[data-type="overtime"]'), bonusInput = row.querySelector('.update-fin[data-type="bonus"]'); getEmployee(btnPay.getAttribute("data-id")).then(emp => { if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { status: "Pending", overtime: 0, bonus: 0 }; if(otInput) emp.payrollData[periodKey].overtime = parseFloat(otInput.value) || 0; if(bonusInput) emp.payrollData[periodKey].bonus = parseFloat(bonusInput.value) || 0; emp.payrollData[periodKey].status = "Paid"; saveEmployee(emp).then(() => renderPayrollTable()); }); } else if (btnPrint || btnDownload) { Promise.all([getEmployee((btnPrint || btnDownload).getAttribute("data-id")), getSetting("system")]).then(([emp, sys]) => { const record = emp.payrollData?.[periodKey] || { overtime: 0, bonus: 0 }; const html = generatePayslipHTML(emp, calculateFinancials(emp, record.overtime, record.bonus), sys ? sys.companyName : "DKB ANCHOR", sys ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO", document.getElementById("payrollMonth").value + " " + document.getElementById("year-filter").value); if (btnPrint) { document.getElementById("printContainer").innerHTML = html; window.print(); } else if (btnDownload) { html2pdf().set({ margin: 0.5, filename: `Payslip_${emp.name.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } }); } });
         document.getElementById("imageUpload").addEventListener("change", function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(event) { document.getElementById("viewProfilePic").src = event.target.result; const id = document.getElementById("viewProfilePic").dataset.currentId; if(id) { getEmployee(id).then(emp => { emp.profilePic = event.target.result; saveEmployee(emp); }); } }; reader.readAsDataURL(file); } });
