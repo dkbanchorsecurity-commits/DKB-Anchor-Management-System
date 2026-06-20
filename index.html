@@ -1925,7 +1925,7 @@
             const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0];
             const sysSettings = window.memoryDb.settings.system || { companyName: "DKB ANCHOR", logo: "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO" };
 
-            // 3. Build the Branded HTML Signature (Hardcoded for Managing Director)
+            // 3. Build the Branded HTML Signature (Hardcoded MD + Website Link)
             const signatureHTML = `
                 <br><br>
                 <table style="font-family: 'Segoe UI', Arial, sans-serif; color: #2D3748; font-size: 13px; max-width: 500px; border-top: 1px solid #E2E8F0; padding-top: 15px; margin-top: 20px; border-collapse: collapse;">
@@ -1938,7 +1938,8 @@
                             <span style="color: #718096; font-size: 12px; text-transform: uppercase;">Managing Director</span><br>
                             <strong style="color: #D4AF37; font-size: 13px; margin-top: 4px; display: inline-block;">${sysSettings.companyName} Security Services</strong><br>
                             <span style="color: #718096; font-size: 12px;">
-                                <a href="mailto:info@dkbanchorsecurity.com" style="color: #0A2540; text-decoration: none; font-weight: 500;">info@dkbanchorsecurity.com</a><br>
+                                <a href="mailto:info@dkbanchorsecurity.com" style="color: #0A2540; text-decoration: none; font-weight: 500;">info@dkbanchorsecurity.com</a> | 
+                                <a href="https://www.dkbanchorsecurity.com" target="_blank" style="color: #0A2540; text-decoration: none; font-weight: 500;">www.dkbanchorsecurity.com</a><br>
                                 0557150062 | 0207816778 | 0247071531
                             </span>
                         </td>
@@ -1987,7 +1988,7 @@
                 submitBtn.innerHTML = originalText;
             }
         });
-
+        
         document.getElementById("expenditureForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { date: document.getElementById("expDate").value, amount: parseFloat(document.getElementById("expAmount").value), category: document.getElementById("expCategory").value, description: document.getElementById("expDescription").value, loggedBy: loggedInUser, timestamp: new Date().getTime() }; if (editExpId) { getExpenditure(editExpId).then(ex => { data.id = editExpId; data.timestamp = ex.timestamp; saveExpenditure(data).then(() => { logAction("Expenditure", `Updated record ${editExpId}`); renderExpenditureTable(); closeModals(); }); }); } else { data.id = "EXP-" + new Date().getTime().toString().slice(-6); saveExpenditure(data).then(() => { logAction("Expenditure", `Logged GH₵ ${data.amount}`); renderExpenditureTable(); closeModals(); }); } });
         document.getElementById("observationForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("obsDate").value, site: document.getElementById("obsSite").value, observer: document.getElementById("obsObserver").value, description: document.getElementById("obsDescription").value, status: document.getElementById("obsStatus").value, timestamp: new Date().getTime() }; if (editObsId) { getObservation(editObsId).then(ex => { data.id = editObsId; data.timestamp = ex.timestamp; saveObservation(data).then(() => { logAction("Observations", `Updated observation ${editObsId}`); renderObservationTable(); closeModals(); }); }); } else { data.id = "OBS-" + new Date().getTime().toString().slice(-6); saveObservation(data).then(() => { logAction("Observations", `Logged observation at ${data.site}`); renderObservationTable(); closeModals(); }); } });
         document.getElementById("incidentForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("incDate").value, location: document.getElementById("incLocation").value, category: document.getElementById("incCategory").value, reporter: document.getElementById("incReporter").value, description: document.getElementById("incDescription").value, status: document.getElementById("incStatus").value, timestamp: new Date().getTime() }; if (editIncId) { getIncident(editIncId).then(ex => { data.id = editIncId; data.timestamp = ex.timestamp; saveIncident(data).then(() => { logAction("Incidents", `Updated incident ${editIncId}`); renderIncidentTable(); closeModals(); }); }); } else { data.id = "INC-" + new Date().getTime().toString().slice(-6); saveIncident(data).then(() => { logAction("Incidents", `Logged incident at ${data.location}`); renderIncidentTable(); closeModals(); }); } });
