@@ -1375,8 +1375,7 @@
 
         window.loadExternalInbox = async function() {
             const tbody = document.querySelector("#messagesTable tbody");
-            const vercelApiUrl = "https://dkb-anchor-portal-b12t4kgwa-david-blessings-projects.vercel.app/api/fetchEmails";
-            
+           const vercelApiUrl = "https://dkb-anchor-portal.vercel.app/api/fetchEmails";
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; font-weight:bold; color: var(--primary-color);"><i class="fa-solid fa-spinner fa-spin"></i> Syncing info@dkbanchorsecurity.com...</td></tr>`;
 
             try {
