@@ -678,6 +678,7 @@
         </main>
     </div>
 
+    <!-- ONBOARD CLIENT MODAL -->
     <div id="onboardClientModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="clientModalTitle">Onboard New Client</h2>
             <form id="clientForm">
@@ -696,6 +697,7 @@
         </div>
     </div>
 
+    <!-- CREATE USER ACCOUNT MODAL -->
     <div id="userAccountModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="userModalTitle">Create User Account</h2>
             <form id="userAccountForm">
@@ -725,6 +727,7 @@
         </div>
     </div>
 
+    <!-- LOG EXPENDITURE MODAL -->
     <div id="logExpenditureModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log New Expenditure</h2>
             <form id="expenditureForm">
@@ -740,6 +743,7 @@
         </div>
     </div>
 
+    <!-- CREATE INVOICE MODAL -->
     <div id="createInvoiceModal" class="modal">
         <div class="modal-content" style="max-width: 850px;"><span class="close-modal">&times;</span><h2 class="modal-header">Create Invoice</h2>
             <form id="invoiceForm">
@@ -780,6 +784,7 @@
         </div>
     </div>
 
+    <!-- LOG INCIDENT MODAL -->
     <div id="logIncidentModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log Incident Report</h2>
             <form id="incidentForm">
@@ -796,6 +801,7 @@
         </div>
     </div>
 
+    <!-- LOG OBSERVATION MODAL -->
     <div id="logObservationModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Log Field Observation</h2>
             <form id="observationForm">
@@ -811,6 +817,7 @@
         </div>
     </div>
 
+    <!-- COMPOSE INTERNAL MESSAGE MODAL -->
     <div id="composeMessageModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header">Compose Message</h2>
             <form id="composeMsgForm">
@@ -824,6 +831,7 @@
         </div>
     </div>
 
+    <!-- SEND EXTERNAL EMAIL MODAL (ZOHO API) -->
     <div id="sendExternalEmailModal" class="modal">
         <div class="modal-content"><span class="close-modal" onclick="document.getElementById('sendExternalEmailModal').style.display='none'">&times;</span>
             <h2 class="modal-header">Send Official Email (Zoho)</h2>
@@ -850,6 +858,7 @@
         </div>
     </div>
 
+    <!-- VIEW MESSAGE MODAL -->
     <div id="viewMessageModal" class="modal">
         <div class="modal-content"><span class="close-modal" onclick="document.getElementById('viewMessageModal').style.display='none'">&times;</span>
             <div class="message-reader-header" style="border-bottom: 2px solid var(--accent-color); padding-bottom: 15px; margin-bottom: 15px;"><div class="message-reader-subject" id="readerSubject" style="font-size: 1.3rem; font-weight: bold; color: var(--primary-color);">Subject</div><div class="message-reader-meta" style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9rem; color: var(--gray-color);"><div><strong>From:</strong> <span id="readerSender">Admin</span> &nbsp;|&nbsp; <strong>To:</strong> <span id="readerRecipient">All</span></div><div id="readerDate">Date</div></div></div>
@@ -858,6 +867,7 @@
         </div>
     </div>
 
+    <!-- ADD EMPLOYEE MODAL -->
     <div id="addEmployeeModal" class="modal">
         <div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-header" id="modalTitle">Add New Employee Profile</h2>
             <form id="addEmployeeForm">
@@ -892,6 +902,7 @@
         </div>
     </div>
 
+    <!-- VIEW EMPLOYEE MODAL -->
     <div id="viewEmployeeModal" class="modal">
         <div class="modal-content"><span class="close-modal" style="color: white; position: absolute; z-index: 10; top: 15px; right: 20px;" onclick="document.getElementById('viewEmployeeModal').style.display='none'">&times;</span>
             <div class="profile-banner"></div>
@@ -919,6 +930,7 @@
         </div>
     </div>
 
+    <!-- HIDDEN CONTAINER FOR PRINTING PAYSLIPS AND INVOICES -->
     <div id="printContainer"></div>
 
     <script type="module">
@@ -963,6 +975,24 @@
         const INC_TIME_KEY = "lastViewedIncidents"; const OBS_TIME_KEY = "lastViewedObservations";
 
         window.currentUserRole = null;
+
+        // ====== GLOBAL MESSAGE COUNTERS ======
+        window.zohoUnreadCount = 0;
+        window.zohoLastEmailId = null;
+        window.internalUnreadCount = 0;
+
+        function updateTotalMessageBadge() {
+            const totalUnread = window.internalUnreadCount + window.zohoUnreadCount;
+            const counterEl = document.getElementById("msgCounter");
+            if (counterEl) {
+                if (totalUnread > 0) {
+                    counterEl.textContent = totalUnread; 
+                    counterEl.style.display = "inline-block";
+                } else { 
+                    counterEl.style.display = "none"; 
+                }
+            }
+        }
         
         // UPDATED RBAC CONFIG TO INCLUDE GRA & SSNIT
         const RBAC_CONFIG = {
@@ -1144,15 +1174,13 @@
         function updateMessageNotification(msgs) {
             const currentUserDisp = document.getElementById('displayUserName').innerText.split('\n')[0];
             const unreadMsgs = msgs.filter(m => m.status === "Unread" && m.sender !== currentUserDisp);
-            const currentUnreadCount = unreadMsgs.length;
-            const counterEl = document.getElementById("msgCounter");
-            if (counterEl) {
-                if (currentUnreadCount > 0) {
-                    counterEl.textContent = currentUnreadCount; counterEl.style.display = "inline-block";
-                    if (currentUnreadCount > previousUnreadCount) notifySound.play().catch(e => console.warn("Waiting for user interaction."));
-                } else { counterEl.style.display = "none"; }
-            }
-            previousUnreadCount = currentUnreadCount;
+            const currentInternalCount = unreadMsgs.length;
+            
+            if (currentInternalCount > previousUnreadCount) notifySound.play().catch(e => console.warn("Waiting for user interaction."));
+            
+            window.internalUnreadCount = currentInternalCount;
+            previousUnreadCount = currentInternalCount;
+            updateTotalMessageBadge();
         }
 
        function renderDashboard() {
@@ -1397,64 +1425,121 @@
             });
         }
 
-        // ====== NEW ZOHO INTEGRATION LOGIC (VIA VERCEL FREE BRIDGE) ======
-        window.zohoEmailsCache = [];
+        // ====== ZOHO INTEGRATION LOGIC (WITH PERSISTENT CACHE) ======
+        
+        // 1. Load from browser memory on refresh
+        try {
+            window.zohoEmailsCache = JSON.parse(localStorage.getItem('dkb_zoho_cache')) || [];
+        } catch(e) {
+            window.zohoEmailsCache = [];
+        }
+
+        window.pollExternalInbox = async function(isManual = false) {
+            if (!window.currentUserRole && !isManual) return; 
+            
+            try {
+                const response = await fetch("https://dkb-anchor-portal.vercel.app/api/fetchEmails", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer DKB_Anchor_Secure_Bridge_2026!" }
+                });
+                
+                if (response.ok) {
+                    const emails = await response.json();
+                    if (emails && emails.length > 0) {
+                        
+                        const unreadZoho = emails.filter(e => e.status !== '1').length;
+                        const latestEmailId = emails[0].messageId;
+                        
+                        // Check if we already loaded an old cache, to prevent false alarms on refresh
+                        const previousTopId = window.zohoEmailsCache.length > 0 ? window.zohoEmailsCache[0].messageId : null;
+                        
+                        // Notification Trigger (Only if truly a new email)
+                        if (!isManual && previousTopId && previousTopId !== latestEmailId) {
+                            notifySound.play().catch(e => {}); 
+                            if ("Notification" in window && Notification.permission === "granted") {
+                                new Notification("DKB Anchor: New Client Email", { 
+                                    body: `Subject: ${emails[0].subject}\nFrom: ${emails[0].sender}`, 
+                                    icon: "logo.png" 
+                                });
+                            }
+                        }
+                        
+                        // 2. Save the fresh emails back to browser memory
+                        window.zohoEmailsCache = emails;
+                        localStorage.setItem('dkb_zoho_cache', JSON.stringify(emails));
+                        
+                        window.zohoUnreadCount = unreadZoho;
+                        updateTotalMessageBadge();
+                        
+                        // Auto-update table visually if user is already looking at it
+                        const tbody = document.querySelector("#messagesTable tbody");
+                        if (tbody && tbody.innerHTML.includes("info@dkbanchorsecurity.com")) {
+                            renderZohoTableUI();
+                        }
+                        return true;
+                    }
+                }
+            } catch (err) {
+                if (isManual) throw err;
+            }
+            return false;
+        };
+
+        // ====== UI RENDER HELPER ======
+        function renderZohoTableUI() {
+            const tbody = document.querySelector("#messagesTable tbody");
+            if (!window.zohoEmailsCache || window.zohoEmailsCache.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No recent emails found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            window.zohoEmailsCache.forEach(email => {
+                const d = new Date(parseInt(email.receivedTime));
+                const newRow = document.createElement("tr");
+                newRow.innerHTML = `
+                    <td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td><strong>${email.sender}</strong></td>
+                    <td>info@dkbanchorsecurity.com</td>
+                    <td><strong>${email.subject}</strong><br><span style="font-size:0.85rem; color: var(--gray-color);">${email.summary || "No preview available"}</span></td>
+                    <td><span class="badge ${email.status === '1' ? 'info-badge' : 'warning-badge'}">${email.status === '1' ? 'Read' : 'New'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action view btn-read-zoho" data-id="${email.messageId}" title="View Email"><i class="fa-solid fa-envelope-open-text"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+            });
+        }
 
         window.loadExternalInbox = async function() {
             const tbody = document.querySelector("#messagesTable tbody");
-            const vercelApiUrl = "https://dkb-anchor-portal.vercel.app/api/fetchEmails";
+            const btn = document.getElementById('btnLoadZoho');
             
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; font-weight:bold; color: var(--primary-color);"><i class="fa-solid fa-spinner fa-spin"></i> Syncing info@dkbanchorsecurity.com...</td></tr>`;
-
+            // 3. INSTANT RENDER: Show cached emails instantly if they exist
+            if (window.zohoEmailsCache && window.zohoEmailsCache.length > 0) {
+                renderZohoTableUI();
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking for updates...';
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; font-weight:bold; color: var(--primary-color);"><i class="fa-solid fa-spinner fa-spin"></i> Syncing info@dkbanchorsecurity.com...</td></tr>`;
+            }
+            
             try {
-                const response = await fetch(vercelApiUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer DKB_Anchor_Secure_Bridge_2026!"
-                    }
-                });
-                
-                if (!response.ok) {
-                    const errorDetails = await response.json();
-                    console.error("ZOHO REJECTION DETAILS:", errorDetails);
-                    throw new Error(`Zoho Error at ${errorDetails.step}: ${JSON.stringify(errorDetails.zohoError)}`);
-                }
-                
-                window.zohoEmailsCache = await response.json();
-                tbody.innerHTML = ''; 
-
-                if (!window.zohoEmailsCache || window.zohoEmailsCache.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No recent emails found.</td></tr>`;
-                    return;
-                }
-
-                window.zohoEmailsCache.forEach(email => {
-                    const d = new Date(parseInt(email.receivedTime));
-                    const newRow = document.createElement("tr");
-                    
-                    newRow.innerHTML = `
-                        <td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                        <td><strong>${email.sender}</strong></td>
-                        <td>info@dkbanchorsecurity.com</td>
-                        <td><strong>${email.subject}</strong><br><span style="font-size:0.85rem; color: var(--gray-color);">${email.summary || "No preview available"}</span></td>
-                        <td><span class="badge ${email.status === '1' ? 'info-badge' : 'warning-badge'}">${email.status === '1' ? 'Read' : 'New'}</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action view btn-read-zoho" data-id="${email.messageId}" title="View Email"><i class="fa-solid fa-envelope-open-text"></i></button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(newRow);
-                });
-                
+                // 4. Silently fetch new updates in the background
+                await window.pollExternalInbox(true); 
+                renderZohoTableUI();
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Zoho Inbox';
                 logAction("Communications", "Synced Zoho External Inbox via Vercel Free Bridge");
-
-            } catch (error) {
-                console.error("Inbox Sync Failed:", error);
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger-color); font-weight:bold;">Sync Failed: ${error.message}</td></tr>`;
+            } catch(error) {
+                if(!window.zohoEmailsCache || window.zohoEmailsCache.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger-color); font-weight:bold;">Sync Failed: ${error.message}</td></tr>`;
+                }
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Zoho Inbox';
             }
         };
+
+        // Background Radar: Check for new external emails every 2 minutes
+        setInterval(() => { window.pollExternalInbox(false); }, 120000); 
 
         // Attach external listeners to the buttons
         document.getElementById('btnLoadZoho')?.addEventListener('click', loadExternalInbox);
@@ -1468,7 +1553,26 @@
                     tbody.innerHTML = '';
                     msgs.sort((a, b) => b.timestamp - a.timestamp).forEach(msg => {
                         const newRow = document.createElement("tr");
-                        newRow.innerHTML = `<td>${new Date(msg.timestamp).toLocaleDateString()} ${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${msg.sender || "System"}</strong></td><td>${msg.recipient}</td><td>${msg.subject}</td><td>${msg.status === "Unread" ? `<span class="badge warning-badge">Unread</span>` : `<span class="badge info-badge">Read</span>`}</td><td><div class="action-buttons"><button class="btn-action view btn-read-msg" data-id="${msg.id}"><i class="fa-solid fa-envelope-open-text"></i></button><button class="btn-action delete btn-del-msg" data-id="${msg.id}"><i class="fa-solid fa-trash"></i></button></div></td>`;
+                        
+                        let badgeHTML = `<span class="badge info-badge">Read</span>`;
+                        if(msg.status === "Unread") {
+                            badgeHTML = `<span class="badge warning-badge">Unread</span>`;
+                        } else if(msg.status === "Sent External") {
+                            badgeHTML = `<span class="badge success-badge"><i class="fa-solid fa-paper-plane"></i> Sent</span>`;
+                        }
+                        
+                        newRow.innerHTML = `
+                            <td>${new Date(msg.timestamp).toLocaleDateString()} ${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td><strong>${msg.sender || "System"}</strong></td>
+                            <td>${msg.recipient}</td>
+                            <td>${msg.subject}</td>
+                            <td>${badgeHTML}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action view btn-read-msg" data-id="${msg.id}"><i class="fa-solid fa-envelope-open-text"></i></button>
+                                    <button class="btn-action delete btn-del-msg" data-id="${msg.id}"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </td>`;
                         tbody.appendChild(newRow);
                     });
                 }
@@ -1626,6 +1730,12 @@
         
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                
+                // Check and request notification permissions
+                if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
+                
                 const loginBtn = document.getElementById('loginBtn');
                 if (loginBtn) { loginBtn.disabled = true; loginBtn.innerText = "Loading workspace..."; }
                 try {
@@ -1635,7 +1745,10 @@
                     
                     loginContainer.style.opacity = '0';
                     setTimeout(() => { loginContainer.style.display = 'none'; appContainer.style.display = 'flex'; }, 300);
+                    
                     startRealTimeSync(); 
+                    window.pollExternalInbox(false); // Silently fetch Zoho emails on page load
+                    
                 } catch (e) {
                     console.error("Database connection error:", e);
                     alert("Error establishing secure connection. Please check your internet or refresh the app.");
@@ -1769,7 +1882,7 @@
 
         document.getElementById("composeMsgForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { id: "MSG-" + new Date().getTime().toString().slice(-6), sender: loggedInUser, recipient: document.getElementById("msgRecipient").value, subject: document.getElementById("msgSubject").value, body: document.getElementById("msgBody").value, timestamp: new Date().getTime(), status: "Unread" }; saveMessage(data).then(() => { logAction("Messages", `Broadcast to ${data.recipient}`); renderMessageTable(); closeModals(); }); });
         
-        // ZOHO SEND EXTERNAL EMAIL LOGIC
+        // ZOHO SEND EXTERNAL EMAIL LOGIC (WITH AUTOMATIC SIGNATURE)
         document.getElementById("sendExternalEmailForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             
@@ -1780,7 +1893,39 @@
             
             const to = document.getElementById("extEmailTo").value;
             const subject = document.getElementById("extEmailSubject").value;
-            const content = document.getElementById("extEmailBody").value;
+            const rawContent = document.getElementById("extEmailBody").value;
+            
+            // 1. Convert text line breaks to HTML line breaks
+            let formattedContent = rawContent.replace(/\n/g, '<br>');
+
+            // 2. Grab current user and system branding details dynamically
+            const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0];
+            const userRole = window.currentUserRole || "Management Team";
+            const sysSettings = window.memoryDb.settings.system || { companyName: "DKB ANCHOR", logo: "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO" };
+
+            // 3. Build the Branded HTML Signature
+            const signatureHTML = `
+                <br><br>
+                <table style="font-family: 'Segoe UI', Arial, sans-serif; color: #2D3748; font-size: 13px; max-width: 500px; border-top: 1px solid #E2E8F0; padding-top: 15px; margin-top: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding-right: 15px; border-right: 2px solid #D4AF37; vertical-align: middle;">
+                            <img src="${sysSettings.logo}" alt="Company Logo" style="max-height: 50px; display: block;">
+                        </td>
+                        <td style="padding-left: 15px; vertical-align: middle; line-height: 1.5;">
+                            <strong style="color: #0A2540; font-size: 15px; text-transform: uppercase;">${loggedInUser}</strong><br>
+                            <span style="color: #718096; font-size: 12px; text-transform: uppercase;">${userRole}</span><br>
+                            <strong style="color: #D4AF37; font-size: 13px; margin-top: 4px; display: inline-block;">${sysSettings.companyName} Security Services</strong><br>
+                            <span style="color: #718096; font-size: 12px;">
+                                <a href="mailto:info@dkbanchorsecurity.com" style="color: #0A2540; text-decoration: none; font-weight: 500;">info@dkbanchorsecurity.com</a><br>
+                                0557150062 | 0207816778 | 0247071531
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            `;
+
+            // 4. Combine the message and signature
+            const finalEmailContent = formattedContent + signatureHTML;
             
             try {
                 const response = await fetch("https://dkb-anchor-portal.vercel.app/api/sendEmail", {
@@ -1789,13 +1934,25 @@
                         "Content-Type": "application/json",
                         "Authorization": "Bearer DKB_Anchor_Secure_Bridge_2026!"
                     },
-                    body: JSON.stringify({ to, subject, content })
+                    body: JSON.stringify({ to, subject, content: finalEmailContent })
                 });
                 
                 const data = await response.json();
                 
                 if (!response.ok) throw new Error(data.error || "Failed to send email");
                 
+                // Save the record to Firebase
+                const sentMsgData = { 
+                    id: "OUT-" + new Date().getTime().toString().slice(-6), 
+                    sender: loggedInUser + " (via info@dkb...)", 
+                    recipient: to, 
+                    subject: subject, 
+                    body: rawContent, 
+                    timestamp: new Date().getTime(), 
+                    status: "Sent External" 
+                };
+                await saveMessage(sentMsgData);
+
                 alert("Success! Email has been dispatched via Zoho.");
                 logAction("Communications", `Sent external email to ${to}`);
                 closeModals();
