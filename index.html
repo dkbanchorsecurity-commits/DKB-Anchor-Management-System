@@ -142,7 +142,7 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow-y: auto; background-color: rgba(10, 37, 64, 0.8); backdrop-filter: blur(4px); padding: 20px; }
         .modal-content { background-color: var(--panel-bg); margin: 2% auto; padding: 25px; border-radius: 8px; width: 100%; max-width: 850px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-top: 5px solid var(--accent-color); position: relative; animation: fadeIn 0.3s ease-in-out; transition: background-color 0.3s; }
         #addEmployeeModal .modal-content, #onboardClientModal .modal-content { max-width: 850px; }
-        #logIncidentModal .modal-content, #logObservationModal .modal-content, #logExpenditureModal .modal-content, #composeMessageModal .modal-content, #viewMessageModal .modal-content, #userAccountModal .modal-content { max-width: 550px; }
+        #logIncidentModal .modal-content, #logObservationModal .modal-content, #logExpenditureModal .modal-content, #composeMessageModal .modal-content, #viewMessageModal .modal-content, #userAccountModal .modal-content, #sendExternalEmailModal .modal-content { max-width: 550px; }
         .close-modal { color: var(--text-dark); position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.3s; line-height: 1; }
         .form-section { margin-bottom: 20px; padding: 15px; background-color: var(--bg-light); border-radius: 6px; border-left: 3px solid var(--accent-color); }
         .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
@@ -592,11 +592,12 @@
             </section>
 
             <section id="messages" class="content-section hidden">
-                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Internal Communications</h1></div></header>
+                <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Internal & External Communications</h1></div></header>
                 <div class="panel">
                     <div class="panel-controls controls-row">
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button id="openComposeMsgBtn" class="btn-primary"><i class="fa-solid fa-pen-to-square"></i> Compose Internal</button>
+                            <button id="openExternalEmailBtn" class="btn-primary alert-bg"><i class="fa-solid fa-paper-plane"></i> Send External Email</button>
                             <button id="btnLoadInternal" class="btn-secondary"><i class="fa-solid fa-inbox"></i> Internal Inbox</button>
                             <button id="btnLoadZoho" class="btn-secondary" style="background-color: var(--accent-color); color: var(--primary-color); border:none;"><i class="fa-solid fa-cloud-arrow-down"></i> Zoho Inbox</button>
                         </div>
@@ -819,6 +820,32 @@
                     <div class="form-group full-width"><label>Message</label><textarea id="msgBody" rows="6" required></textarea></div>
                 </div></div>
                 <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelComposeMsgBtn">Cancel</button><button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Message</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="sendExternalEmailModal" class="modal">
+        <div class="modal-content"><span class="close-modal" onclick="document.getElementById('sendExternalEmailModal').style.display='none'">&times;</span>
+            <h2 class="modal-header">Send Official Email (Zoho)</h2>
+            <form id="sendExternalEmailForm">
+                <div class="form-section"><div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>To (Client/External Address)</label>
+                        <input type="email" id="extEmailTo" placeholder="client@company.com" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Subject</label>
+                        <input type="text" id="extEmailSubject" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Message Body</label>
+                        <textarea id="extEmailBody" rows="6" required></textarea>
+                    </div>
+                </div></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('sendExternalEmailModal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn-primary alert-bg" id="extEmailSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Transmit to Client</button>
+                </div>
             </form>
         </div>
     </div>
@@ -1388,13 +1415,11 @@
                     }
                 });
                 
-                // --- NEW ERROR TRAPPING ---
                 if (!response.ok) {
                     const errorDetails = await response.json();
                     console.error("ZOHO REJECTION DETAILS:", errorDetails);
                     throw new Error(`Zoho Error at ${errorDetails.step}: ${JSON.stringify(errorDetails.zohoError)}`);
                 }
-                // --------------------------
                 
                 window.zohoEmailsCache = await response.json();
                 tbody.innerHTML = ''; 
@@ -1670,18 +1695,19 @@
         attachSearch("employeeSearchInput", "employeeTable"); attachSearch("clientSearchInput", "clientTable"); attachSearch("payrollSearchInput", "payrollTable"); attachSearch("deploymentSearchInput", "deploymentTable"); attachSearch("incidentSearchInput", "incidentTable"); attachSearch("observationSearchInput", "observationTable"); attachSearch("expenditureSearchInput", "expenditureTable"); attachSearch("attendanceSearchInput", "attendanceTable"); attachSearch("messageSearchInput", "messagesTable"); attachSearch("auditSearchInput", "auditTable"); attachSearch("invoiceSearchInput", "invoiceTable");
 
         // MODALS
-        const modals = [document.getElementById("addEmployeeModal"), document.getElementById("viewEmployeeModal"), document.getElementById("logIncidentModal"), document.getElementById("logObservationModal"), document.getElementById("logExpenditureModal"), document.getElementById("composeMessageModal"), document.getElementById("viewMessageModal"), document.getElementById("userAccountModal"), document.getElementById("createInvoiceModal"), document.getElementById("onboardClientModal")];
-        const forms = [document.getElementById("addEmployeeForm"), document.getElementById("incidentForm"), document.getElementById("observationForm"), document.getElementById("expenditureForm"), document.getElementById("composeMsgForm"), document.getElementById("userAccountForm"), document.getElementById("invoiceForm"), document.getElementById("clientForm")];
+        const modals = [document.getElementById("addEmployeeModal"), document.getElementById("viewEmployeeModal"), document.getElementById("logIncidentModal"), document.getElementById("logObservationModal"), document.getElementById("logExpenditureModal"), document.getElementById("composeMessageModal"), document.getElementById("viewMessageModal"), document.getElementById("userAccountModal"), document.getElementById("createInvoiceModal"), document.getElementById("onboardClientModal"), document.getElementById("sendExternalEmailModal")];
+        const forms = [document.getElementById("addEmployeeForm"), document.getElementById("incidentForm"), document.getElementById("observationForm"), document.getElementById("expenditureForm"), document.getElementById("composeMsgForm"), document.getElementById("userAccountForm"), document.getElementById("invoiceForm"), document.getElementById("clientForm"), document.getElementById("sendExternalEmailForm")];
         let editId = null, editIncId = null, editObsId = null, editExpId = null, editUserId = null, editClientId = null;
 
         document.getElementById("openCreateInvoiceBtn").onclick = () => { document.getElementById("invoiceForm").reset(); document.getElementById("invoiceItemsBody").innerHTML = ''; document.getElementById("invDate").value = new Date().toISOString().split('T')[0]; const d = new Date(); document.getElementById("invBillingMonth").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; addInvoiceRow(); calculateInvoiceTotal(); document.getElementById("createInvoiceModal").style.display = "block"; };
         document.getElementById("openAddEmployeeModal").onclick = () => { editId = null; document.getElementById("addEmployeeForm").reset(); document.getElementById("modalTitle").innerText = "Add New Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Save Profile"; modals[0].style.display = "block"; };
-        document.getElementById("openLogIncidentBtn").onclick = () => modals[2].style.display = "block";
-        document.getElementById("openLogObservationBtn").onclick = () => modals[3].style.display = "block";
-        document.getElementById("openLogExpenditureBtn").onclick = () => modals[4].style.display = "block";
-        document.getElementById("openComposeMsgBtn").onclick = () => modals[5].style.display = "block";
+        document.getElementById("openLogIncidentBtn").onclick = () => document.getElementById("logIncidentModal").style.display = "block";
+        document.getElementById("openLogObservationBtn").onclick = () => document.getElementById("logObservationModal").style.display = "block";
+        document.getElementById("openLogExpenditureBtn").onclick = () => document.getElementById("logExpenditureModal").style.display = "block";
+        document.getElementById("openComposeMsgBtn").onclick = () => document.getElementById("composeMessageModal").style.display = "block";
+        document.getElementById("openExternalEmailBtn").onclick = () => { document.getElementById("sendExternalEmailForm").reset(); document.getElementById("sendExternalEmailModal").style.display = "block"; };
         document.getElementById("openOnboardClientBtn").onclick = () => { editClientId = null; document.getElementById("clientForm").reset(); document.getElementById("clientModalTitle").innerText = "Onboard New Client"; document.getElementById("saveClientBtn").innerText = "Save Client"; document.getElementById("onboardClientModal").style.display = "block"; };
-        document.getElementById("openUserModalBtn").onclick = () => { editUserId = null; document.getElementById("userAccountForm").reset(); document.getElementById("userModalTitle").innerText = "Create User Account"; document.getElementById("saveUserBtn").innerText = "Create Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "Temporary Password"; document.getElementById("uPassword").required = true; modals[7].style.display = "block"; };
+        document.getElementById("openUserModalBtn").onclick = () => { editUserId = null; document.getElementById("userAccountForm").reset(); document.getElementById("userModalTitle").innerText = "Create User Account"; document.getElementById("saveUserBtn").innerText = "Create Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "Temporary Password"; document.getElementById("uPassword").required = true; document.getElementById("userAccountModal").style.display = "block"; };
         
         function closeModals() { modals.forEach(m => m.style.display = "none"); forms.forEach(f => f.reset()); editId = editIncId = editObsId = editExpId = editUserId = editClientId = null; }
         document.querySelectorAll(".close-modal, .btn-secondary").forEach(el => el.addEventListener('click', closeModals));
@@ -1742,6 +1768,47 @@
         });
 
         document.getElementById("composeMsgForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { id: "MSG-" + new Date().getTime().toString().slice(-6), sender: loggedInUser, recipient: document.getElementById("msgRecipient").value, subject: document.getElementById("msgSubject").value, body: document.getElementById("msgBody").value, timestamp: new Date().getTime(), status: "Unread" }; saveMessage(data).then(() => { logAction("Messages", `Broadcast to ${data.recipient}`); renderMessageTable(); closeModals(); }); });
+        
+        // ZOHO SEND EXTERNAL EMAIL LOGIC
+        document.getElementById("sendExternalEmailForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById("extEmailSubmitBtn");
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Transmitting...';
+            
+            const to = document.getElementById("extEmailTo").value;
+            const subject = document.getElementById("extEmailSubject").value;
+            const content = document.getElementById("extEmailBody").value;
+            
+            try {
+                const response = await fetch("https://dkb-anchor-portal.vercel.app/api/sendEmail", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer DKB_Anchor_Secure_Bridge_2026!"
+                    },
+                    body: JSON.stringify({ to, subject, content })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || "Failed to send email");
+                
+                alert("Success! Email has been dispatched via Zoho.");
+                logAction("Communications", `Sent external email to ${to}`);
+                closeModals();
+                
+            } catch (error) {
+                console.error("Email Transmission Error:", error);
+                alert(`Transmission Failed: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
         document.getElementById("expenditureForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { date: document.getElementById("expDate").value, amount: parseFloat(document.getElementById("expAmount").value), category: document.getElementById("expCategory").value, description: document.getElementById("expDescription").value, loggedBy: loggedInUser, timestamp: new Date().getTime() }; if (editExpId) { getExpenditure(editExpId).then(ex => { data.id = editExpId; data.timestamp = ex.timestamp; saveExpenditure(data).then(() => { logAction("Expenditure", `Updated record ${editExpId}`); renderExpenditureTable(); closeModals(); }); }); } else { data.id = "EXP-" + new Date().getTime().toString().slice(-6); saveExpenditure(data).then(() => { logAction("Expenditure", `Logged GH₵ ${data.amount}`); renderExpenditureTable(); closeModals(); }); } });
         document.getElementById("observationForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("obsDate").value, site: document.getElementById("obsSite").value, observer: document.getElementById("obsObserver").value, description: document.getElementById("obsDescription").value, status: document.getElementById("obsStatus").value, timestamp: new Date().getTime() }; if (editObsId) { getObservation(editObsId).then(ex => { data.id = editObsId; data.timestamp = ex.timestamp; saveObservation(data).then(() => { logAction("Observations", `Updated observation ${editObsId}`); renderObservationTable(); closeModals(); }); }); } else { data.id = "OBS-" + new Date().getTime().toString().slice(-6); saveObservation(data).then(() => { logAction("Observations", `Logged observation at ${data.site}`); renderObservationTable(); closeModals(); }); } });
         document.getElementById("incidentForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("incDate").value, location: document.getElementById("incLocation").value, category: document.getElementById("incCategory").value, reporter: document.getElementById("incReporter").value, description: document.getElementById("incDescription").value, status: document.getElementById("incStatus").value, timestamp: new Date().getTime() }; if (editIncId) { getIncident(editIncId).then(ex => { data.id = editIncId; data.timestamp = ex.timestamp; saveIncident(data).then(() => { logAction("Incidents", `Updated incident ${editIncId}`); renderIncidentTable(); closeModals(); }); }); } else { data.id = "INC-" + new Date().getTime().toString().slice(-6); saveIncident(data).then(() => { logAction("Incidents", `Logged incident at ${data.location}`); renderIncidentTable(); closeModals(); }); } });
