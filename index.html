@@ -651,11 +651,12 @@
                             <form id="brandingForm" style="margin-top: 20px;">
                                 <div class="form-group"><label>Company Name</label><input type="text" id="settingCompanyName" value="DKB ANCHOR" required></div>
                                 <div class="form-group" style="margin-top: 15px;">
-                                    <label>Company Logo</label>
+                                    <label>Company Logo (Public Web Link)</label>
                                     <div style="display: flex; gap: 15px; align-items: center; background: var(--bg-light); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
                                         <img id="settingLogoPreview" src="https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO" alt="Logo Preview" style="max-height: 40px; background: #fff; padding: 2px; border-radius: 4px;">
-                                        <input type="file" id="settingLogoUpload" accept="image/*" style="flex: 1; border: none; padding: 0;">
+                                        <input type="url" id="settingLogoUrl" placeholder="https://yourwebsite.com/logo.png" style="flex: 1; border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; outline: none;" required>
                                     </div>
+                                    <small style="color: var(--gray-color); font-size: 0.8rem; margin-top: 5px; display: block;">*Must be a public URL so external email clients can load the image.</small>
                                 </div>
                                 <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Save Branding</button>
                             </form>
@@ -1221,15 +1222,37 @@
 
         function applySystemSettings(data = null) {
             if(!data) return;
-            document.getElementById("sidebarLogo").src = data.logo; document.getElementById("sidebarCompanyName").innerText = data.companyName; document.getElementById("settingLogoPreview").src = data.logo; document.getElementById("settingCompanyName").value = data.companyName;
+            document.getElementById("sidebarLogo").src = data.logo; 
+            document.getElementById("sidebarCompanyName").innerText = data.companyName; 
+            document.getElementById("settingLogoPreview").src = data.logo; 
+            document.getElementById("settingCompanyName").value = data.companyName;
+            
+            const urlInput = document.getElementById("settingLogoUrl");
+            if (urlInput) urlInput.value = data.logo;
+
             let link = document.querySelector("link[rel~='icon']"); if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); } link.href = data.logo;
             const themeToggle = document.getElementById("themeToggleBtn");
             if (data.theme === "dark") { document.body.classList.add("dark-theme"); themeToggle.checked = true; } else { document.body.classList.remove("dark-theme"); themeToggle.checked = false; }
         }
 
-        document.getElementById("brandingForm").addEventListener("submit", function(e) { e.preventDefault(); getSetting("system").then(data => { data.companyName = document.getElementById("settingCompanyName").value; data.logo = document.getElementById("settingLogoPreview").src; saveSetting(data).then(() => { applySystemSettings(data); logAction("Settings", "Updated Company Branding"); alert("Branding Settings Saved!"); }); }); });
+        document.getElementById("brandingForm").addEventListener("submit", function(e) { 
+            e.preventDefault(); 
+            getSetting("system").then(data => { 
+                data.companyName = document.getElementById("settingCompanyName").value; 
+                data.logo = document.getElementById("settingLogoUrl").value; 
+                saveSetting(data).then(() => { 
+                    applySystemSettings(data); 
+                    logAction("Settings", "Updated Company Branding"); 
+                    alert("Branding Settings Saved!"); 
+                }); 
+            }); 
+        });
+
+        document.getElementById("settingLogoUrl")?.addEventListener("input", function(e) {
+            document.getElementById("settingLogoPreview").src = e.target.value;
+        });
+
         document.getElementById("themeToggleBtn").addEventListener("change", function(e) { const newTheme = e.target.checked ? "dark" : "light"; if (e.target.checked) document.body.classList.add("dark-theme"); else document.body.classList.remove("dark-theme"); getSetting("system").then(data => { data.theme = newTheme; saveSetting(data).then(() => logAction("Settings", `Toggled theme to ${newTheme}`)); }); });
-        document.getElementById("settingLogoUpload").addEventListener("change", function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(event) { document.getElementById("settingLogoPreview").src = event.target.result; }; reader.readAsDataURL(file); } });
 
         function calculateFinancials(emp, overtimeVal = 0, bonusVal = 0) {
             const basic = parseFloat(emp.basicSalary) || 0; 
@@ -1882,7 +1905,7 @@
 
         document.getElementById("composeMsgForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { id: "MSG-" + new Date().getTime().toString().slice(-6), sender: loggedInUser, recipient: document.getElementById("msgRecipient").value, subject: document.getElementById("msgSubject").value, body: document.getElementById("msgBody").value, timestamp: new Date().getTime(), status: "Unread" }; saveMessage(data).then(() => { logAction("Messages", `Broadcast to ${data.recipient}`); renderMessageTable(); closeModals(); }); });
         
-       // ZOHO SEND EXTERNAL EMAIL LOGIC (WITH AUTOMATIC SIGNATURE)
+        // ZOHO SEND EXTERNAL EMAIL LOGIC (WITH AUTOMATIC SIGNATURE)
         document.getElementById("sendExternalEmailForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             
@@ -1964,6 +1987,7 @@
                 submitBtn.innerHTML = originalText;
             }
         });
+
         document.getElementById("expenditureForm").addEventListener("submit", function(e) { e.preventDefault(); const loggedInUser = document.getElementById('displayUserName').innerText.split('\n')[0]; const data = { date: document.getElementById("expDate").value, amount: parseFloat(document.getElementById("expAmount").value), category: document.getElementById("expCategory").value, description: document.getElementById("expDescription").value, loggedBy: loggedInUser, timestamp: new Date().getTime() }; if (editExpId) { getExpenditure(editExpId).then(ex => { data.id = editExpId; data.timestamp = ex.timestamp; saveExpenditure(data).then(() => { logAction("Expenditure", `Updated record ${editExpId}`); renderExpenditureTable(); closeModals(); }); }); } else { data.id = "EXP-" + new Date().getTime().toString().slice(-6); saveExpenditure(data).then(() => { logAction("Expenditure", `Logged GH₵ ${data.amount}`); renderExpenditureTable(); closeModals(); }); } });
         document.getElementById("observationForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("obsDate").value, site: document.getElementById("obsSite").value, observer: document.getElementById("obsObserver").value, description: document.getElementById("obsDescription").value, status: document.getElementById("obsStatus").value, timestamp: new Date().getTime() }; if (editObsId) { getObservation(editObsId).then(ex => { data.id = editObsId; data.timestamp = ex.timestamp; saveObservation(data).then(() => { logAction("Observations", `Updated observation ${editObsId}`); renderObservationTable(); closeModals(); }); }); } else { data.id = "OBS-" + new Date().getTime().toString().slice(-6); saveObservation(data).then(() => { logAction("Observations", `Logged observation at ${data.site}`); renderObservationTable(); closeModals(); }); } });
         document.getElementById("incidentForm").addEventListener("submit", function(e) { e.preventDefault(); const data = { date: document.getElementById("incDate").value, location: document.getElementById("incLocation").value, category: document.getElementById("incCategory").value, reporter: document.getElementById("incReporter").value, description: document.getElementById("incDescription").value, status: document.getElementById("incStatus").value, timestamp: new Date().getTime() }; if (editIncId) { getIncident(editIncId).then(ex => { data.id = editIncId; data.timestamp = ex.timestamp; saveIncident(data).then(() => { logAction("Incidents", `Updated incident ${editIncId}`); renderIncidentTable(); closeModals(); }); }); } else { data.id = "INC-" + new Date().getTime().toString().slice(-6); saveIncident(data).then(() => { logAction("Incidents", `Logged incident at ${data.location}`); renderIncidentTable(); closeModals(); }); } });
