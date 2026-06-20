@@ -309,7 +309,6 @@
                <div class="dashboard-cards">
     <div class="card"><h3>Total Employees</h3><p class="stat" id="dashTotalEmp">0</p></div>
     <div class="card"><h3>Active Guards</h3><p class="stat" id="dashActiveGuards">0</p></div>
-    <!-- NEW: Total Clients Card -->
     <div class="card"><h3>Total Clients</h3><p class="stat" id="dashTotalClients" style="color: var(--info-color);">0</p></div>
     
     <div class="card"><h3>Total Incidents</h3><p class="stat alert" id="dashTotalInc">0</p></div>
@@ -596,7 +595,11 @@
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Internal Communications</h1></div></header>
                 <div class="panel">
                     <div class="panel-controls controls-row">
-                        <button id="openComposeMsgBtn" class="btn-primary"><i class="fa-solid fa-pen-to-square"></i> Compose Message</button>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="openComposeMsgBtn" class="btn-primary"><i class="fa-solid fa-pen-to-square"></i> Compose Internal</button>
+                            <button id="btnLoadInternal" class="btn-secondary"><i class="fa-solid fa-inbox"></i> Internal Inbox</button>
+                            <button id="btnLoadZoho" class="btn-secondary" style="background-color: var(--accent-color); color: var(--primary-color); border:none;"><i class="fa-solid fa-cloud-arrow-down"></i> Zoho Inbox</button>
+                        </div>
                         <div class="controls-group">
                             <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="messageSearchInput" placeholder="Search subject, recipient..."></div>
                         </div>
@@ -1133,13 +1136,13 @@
         const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
         const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
         
-        // NEW: Calculate Total Clients
+        // Calculate Total Clients
         const totalClients = clients.length;
 
         // Update the DOM elements
         document.getElementById('dashTotalEmp').innerText = employees.length; 
         document.getElementById('dashActiveGuards').innerText = activeGuards; 
-        document.getElementById('dashTotalClients').innerText = totalClients; // NEW
+        document.getElementById('dashTotalClients').innerText = totalClients;
         document.getElementById('dashTotalInc').innerText = incidents.length; 
         document.getElementById('dashTotalObs').innerText = observations.length; 
         document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
@@ -1148,7 +1151,6 @@
         document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
         document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
 
-        // ... (Keep the rest of your chart rendering code exactly as it is below this point) ...
         const currentMonth = new Date().getMonth(); const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(Math.max(0, currentMonth - 5), currentMonth + 1);
         let incData = new Array(monthLabels.length).fill(0); incidents.forEach(inc => { const diff = currentMonth - new Date(inc.date).getMonth(); if (diff >= 0 && diff < monthLabels.length) incData[monthLabels.length - 1 - diff]++; });
         let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 }; observations.forEach(obs => { if(obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
@@ -1367,6 +1369,65 @@
                 });
             });
         }
+
+        // ====== NEW ZOHO INTEGRATION LOGIC (VIA VERCEL FREE BRIDGE) ======
+        window.zohoEmailsCache = [];
+
+        window.loadExternalInbox = async function() {
+            const tbody = document.querySelector("#messagesTable tbody");
+            const vercelApiUrl = "https://dkb-anchor-portal-b12t4kgwa-david-blessings-projects.vercel.app/api/fetchEmails";
+            
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; font-weight:bold; color: var(--primary-color);"><i class="fa-solid fa-spinner fa-spin"></i> Syncing info@dkbanchorsecurity.com...</td></tr>`;
+
+            try {
+                const response = await fetch(vercelApiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer DKB_Anchor_Secure_Bridge_2026!"
+                    }
+                });
+                
+                if (!response.ok) throw new Error("Server responded with error status");
+                
+                window.zohoEmailsCache = await response.json();
+                tbody.innerHTML = ''; 
+
+                if (!window.zohoEmailsCache || window.zohoEmailsCache.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">No recent emails found.</td></tr>`;
+                    return;
+                }
+
+                window.zohoEmailsCache.forEach(email => {
+                    const d = new Date(parseInt(email.receivedTime));
+                    const newRow = document.createElement("tr");
+                    
+                    newRow.innerHTML = `
+                        <td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                        <td><strong>${email.sender}</strong></td>
+                        <td>info@dkbanchorsecurity.com</td>
+                        <td><strong>${email.subject}</strong><br><span style="font-size:0.85rem; color: var(--gray-color);">${email.summary || "No preview available"}</span></td>
+                        <td><span class="badge ${email.status === '1' ? 'info-badge' : 'warning-badge'}">${email.status === '1' ? 'Read' : 'New'}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action view btn-read-zoho" data-id="${email.messageId}" title="View Email"><i class="fa-solid fa-envelope-open-text"></i></button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(newRow);
+                });
+                
+                logAction("Communications", "Synced Zoho External Inbox via Vercel Free Bridge");
+
+            } catch (error) {
+                console.error("Inbox Sync Failed:", error);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger-color); font-weight:bold;">Error syncing inbox. Ensure your Vercel service is online.</td></tr>`;
+            }
+        };
+
+        // Attach external listeners to the buttons
+        document.getElementById('btnLoadZoho')?.addEventListener('click', loadExternalInbox);
+        document.getElementById('btnLoadInternal')?.addEventListener('click', () => { renderMessageTable(); });
 
         function renderMessageTable() {
             getAllMessages().then(msgs => {
@@ -1750,7 +1811,39 @@
 
         document.getElementById("usersTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-user-role")) { getUser(e.target.getAttribute("data-id")).then(user => { const oldRole = user.role; user.role = e.target.value; saveUser(user).then(() => { logAction("Settings", `Changed role for ${user.email} from ${oldRole} to ${user.role}`); renderUsersTable(); }); }); } });
         document.getElementById("usersTable").addEventListener("click", function(e) { const editBtn = e.target.closest('.btn-edit-user'), delBtn = e.target.closest('.btn-del-user'); if (delBtn) { const id = delBtn.getAttribute("data-id"); if (id === "USR-001") return alert("Cannot delete Super Admin."); if (confirm(`Delete account?`)) { deleteUser(id).then(() => { logAction("Settings", `Deleted user ${id}`); renderUsersTable(); }); } } else if (editBtn) { const id = editBtn.getAttribute("data-id"); getUser(id).then(user => { document.getElementById("uName").value = user.name; document.getElementById("uEmail").value = user.email; document.getElementById("uRole").value = user.role; document.getElementById("uPassword").value = ""; document.getElementById("userModalTitle").innerText = "Edit User Account"; document.getElementById("saveUserBtn").innerText = "Update Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "New Password (leave blank to keep current)"; document.getElementById("uPassword").required = false; editUserId = id; document.getElementById("userAccountModal").style.display = "block"; }); } });
-        document.getElementById("messagesTable").addEventListener("click", function(e) { const readBtn = e.target.closest('.btn-read-msg'), delBtn = e.target.closest('.btn-del-msg'); if (delBtn) { if (confirm(`Delete message?`)) deleteMessage(delBtn.getAttribute("data-id")).then(() => { renderMessageTable(); }); } else if (readBtn) { getMessage(readBtn.getAttribute("data-id")).then(msg => { document.getElementById("readerSubject").innerText = msg.subject; document.getElementById("readerSender").innerText = msg.sender; document.getElementById("readerRecipient").innerText = msg.recipient; document.getElementById("readerDate").innerText = new Date(msg.timestamp).toLocaleString(); document.getElementById("readerBody").innerText = msg.body; document.getElementById("viewMessageModal").style.display = "block"; if (msg.status === "Unread") { msg.status = "Read"; saveMessage(msg).then(() => renderMessageTable()); } }); } });
+        
+        // ZOHO ENABLED MESSAGE TABLE CLICK HANDLER
+        document.getElementById("messagesTable").addEventListener("click", function(e) { 
+            const readBtn = e.target.closest('.btn-read-msg'), 
+                  delBtn = e.target.closest('.btn-del-msg'),
+                  zohoReadBtn = e.target.closest('.btn-read-zoho');
+            
+            if (delBtn) { 
+                if (confirm(`Delete message?`)) deleteMessage(delBtn.getAttribute("data-id")).then(() => { renderMessageTable(); }); 
+            } else if (readBtn) { 
+                getMessage(readBtn.getAttribute("data-id")).then(msg => { 
+                    document.getElementById("readerSubject").innerText = msg.subject; 
+                    document.getElementById("readerSender").innerText = msg.sender; 
+                    document.getElementById("readerRecipient").innerText = msg.recipient; 
+                    document.getElementById("readerDate").innerText = new Date(msg.timestamp).toLocaleString(); 
+                    document.getElementById("readerBody").innerText = msg.body; 
+                    document.getElementById("viewMessageModal").style.display = "block"; 
+                    if (msg.status === "Unread") { msg.status = "Read"; saveMessage(msg).then(() => renderMessageTable()); } 
+                }); 
+            } else if (zohoReadBtn) {
+                const messageId = zohoReadBtn.getAttribute("data-id");
+                const email = window.zohoEmailsCache.find(e => e.messageId === messageId);
+                if(email) {
+                    document.getElementById("readerSubject").innerText = email.subject; 
+                    document.getElementById("readerSender").innerText = email.sender; 
+                    document.getElementById("readerRecipient").innerText = "info@dkbanchorsecurity.com"; 
+                    document.getElementById("readerDate").innerText = new Date(parseInt(email.receivedTime)).toLocaleString(); 
+                    document.getElementById("readerBody").innerText = email.summary || "Full body requires separate Zoho API call. Summary provided above."; 
+                    document.getElementById("viewMessageModal").style.display = "block"; 
+                }
+            } 
+        });
+        
         document.getElementById("attendanceTable").addEventListener("click", function(e) { const inBtn = e.target.closest('.btn-clock-in'), outBtn = e.target.closest('.btn-clock-out'); if (inBtn) { saveAttendanceRecord({ id: `${inBtn.getAttribute("data-empid")}_${inBtn.getAttribute("data-date")}`, empId: inBtn.getAttribute("data-empid"), date: inBtn.getAttribute("data-date"), clockIn: new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }), clockOut: null }).then(() => { renderAttendanceTable(); }); } if (outBtn) { getAttendanceRecord(`${outBtn.getAttribute("data-empid")}_${outBtn.getAttribute("data-date")}`).then(rec => { if(rec) { rec.clockOut = new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }); saveAttendanceRecord(rec).then(() => renderAttendanceTable()); } }); } });
         document.getElementById("expenditureTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteExpenditure(id).then(() => renderExpenditureTable()); } else if (btn.classList.contains('edit')) { getExpenditure(id).then(exp => { document.getElementById("expDate").value = exp.date; document.getElementById("expAmount").value = exp.amount; document.getElementById("expCategory").value = exp.category; document.getElementById("expDescription").value = exp.description; editExpId = id; document.getElementById("logExpenditureModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getExpenditure(id).then(exp => alert(`Amount: GH₵ ${exp.amount}\nCategory: ${exp.category}\nDesc: ${exp.description}`)); } });
         document.getElementById("observationTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-obs-status")) { getObservation(e.target.getAttribute("data-id")).then(obs => { obs.status = e.target.value; saveObservation(obs).then(() => renderObservationTable()); }); } });
@@ -1768,7 +1861,7 @@
         function calculateInvoiceTotal() { let subtotal = 0; document.getElementById("invoiceItemsBody").querySelectorAll('tr').forEach(tr => { const qty = parseFloat(tr.querySelector('.inv-qty').value) || 0; const rate = parseFloat(tr.querySelector('.inv-rate').value) || 0; const amt = qty * rate; tr.querySelector('.inv-amt').innerText = amt.toFixed(2); subtotal += amt; }); const gefl = subtotal * 0.025; const nhil = subtotal * 0.025; const taxableValueForVat = subtotal + gefl + nhil; const vat = taxableValueForVat * 0.15; const total = subtotal + gefl + nhil + vat; document.getElementById("invSubtotalText").innerText = subtotal.toFixed(2); document.getElementById("invGeflText").innerText = gefl.toFixed(2); document.getElementById("invNhilText").innerText = nhil.toFixed(2); document.getElementById("invVatText").innerText = vat.toFixed(2); document.getElementById("invTotalText").innerText = total.toFixed(2); const saveBtn = document.getElementById("saveInvoiceActionBtn"); if (saveBtn) saveBtn.disabled = (total <= 0); }
         document.getElementById("invoiceForm").addEventListener("submit", function(e) { e.preventDefault(); const items = []; document.getElementById("invoiceItemsBody").querySelectorAll('tr').forEach(tr => { items.push({ desc: tr.querySelector('.inv-desc').value, qty: parseFloat(tr.querySelector('.inv-qty').value), rate: parseFloat(tr.querySelector('.inv-rate').value), amt: parseFloat(tr.querySelector('.inv-amt').innerText) }); }); const subtotal = parseFloat(document.getElementById("invSubtotalText").innerText); const gefl = parseFloat(document.getElementById("invGeflText").innerText); const nhil = parseFloat(document.getElementById("invNhilText").innerText); const vat = parseFloat(document.getElementById("invVatText").innerText); const total = parseFloat(document.getElementById("invTotalText").innerText); const invId = "INV-" + new Date().getTime().toString().slice(-5); const invoiceData = { id: invId, date: document.getElementById("invDate").value, billingMonth: document.getElementById("invBillingMonth").value, clientName: document.getElementById("invClientName").value, clientAddress: document.getElementById("invClientAddress").value, items: items, subtotal: subtotal, gefl: gefl, nhil: nhil, vat: vat, total: total, status: "Draft", timestamp: new Date().getTime() }; saveInvoice(invoiceData).then(() => { logAction("Invoices", `Created Invoice ${invId} for ${invoiceData.clientName}`); renderInvoiceTable(); document.getElementById("createInvoiceModal").style.display = "none"; }); });
         document.getElementById("invoiceTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-inv-status")) { getInvoice(e.target.getAttribute("data-id")).then(inv => { inv.status = e.target.value; saveInvoice(inv).then(() => renderInvoiceTable()); }); } });
-        document.getElementById("invoiceTable").addEventListener("click", function(e) { const printBtn = e.target.closest('.btn-print-inv'); const downloadBtn = e.target.closest('.btn-download-inv'); const delBtn = e.target.closest('.btn-del-inv'); if (delBtn) { if (confirm(`Delete Invoice?`)) deleteInvoice(delBtn.getAttribute("data-id")).then(() => renderInvoiceTable()); } else if (printBtn || downloadBtn) { const actionBtn = printBtn || downloadBtn; const isDownload = !!downloadBtn; Promise.all([getInvoice(actionBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { let itemsHtml = ""; inv.items.forEach(item => { itemsHtml += `<tr><td style="padding: 10px; border-bottom: 1px solid #E2E8F0;">${item.desc}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${item.qty}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.rate.toFixed(2)}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.amt.toFixed(2)}</td></tr>`; }); let billingMonthDisplay = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' }) : "-"; const html = `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"> <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0A2540; padding-bottom: 20px; margin-bottom: 30px;"> <div> <img src="${sys ? sys.logo : ''}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"> <h2 style="color: #0A2540; margin: 0; font-size: 1.5rem;">${sys ? sys.companyName : 'DKB ANCHOR'}</h2> <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #4A5568; max-width: 350px; line-height: 1.4;">Mile 7 Opposite Ruttchen Trucks Gh. Ltd,<br>Near Mile 7 police Station Accra Ghana.</p> <p style="margin: 3px 0 0 0; font-size: 0.9rem; color: #4A5568;"><strong>Contacts:</strong> 0557150062 / 0207816778</p> </div> <div style="text-align: right;"> <h1 style="color: #D4AF37; margin: 0; font-size: 2.5rem; text-transform: uppercase;">Invoice</h1> <p style="margin: 5px 0 0 0; font-size: 1.1rem; color: #718096;"><strong>#${inv.id}</strong></p> </div> </div> <div style="display: flex; justify-content: space-between; margin-bottom: 40px;"> <div> <h4 style="color: #718096; margin: 0 0 5px 0; text-transform: uppercase; font-size: 0.85rem;">Billed To:</h4> <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;">${inv.clientName}</p> <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> </div> <div style="text-align: right;"> <p style="margin: 0 0 5px 0;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> <p style="margin: 0 0 5px 0;"><strong>Billing Month:</strong> ${billingMonthDisplay}</p> <p style="margin: 0;"><strong>Status:</strong> ${inv.status}</p> </div> </div> <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;"> <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: center;">Qty</th><th style="padding: 12px 10px; text-align: right;">Rate (GH₵)</th><th style="padding: 12px 10px; text-align: right;">Amount (GH₵)</th></tr></thead> <tbody>${itemsHtml}</tbody> </table> <div style="display: flex; justify-content: flex-end;"> <div style="width: 320px;"> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;"><span>Subtotal:</span><strong>GH₵ ${inv.subtotal.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>GETFund Levy (2.5%):</span><strong>GH₵ ${inv.gefl.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>NHIL (2.5%):</span><strong>GH₵ ${inv.nhil.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>VAT (15%):</span><strong>GH₵ ${inv.vat.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> </div> </div> <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 0.9rem;"><p>Thank you for your business!</p></div> </div>`; if (isDownload) { html2pdf().set({ margin: 0.5, filename: `${inv.id}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } else { document.getElementById("printContainer").innerHTML = html; window.print(); } }); } });
+        document.getElementById("invoiceTable").addEventListener("click", function(e) { const printBtn = e.target.closest('.btn-print-inv'); const downloadBtn = e.target.closest('.btn-download-inv'); const delBtn = e.target.closest('.btn-del-inv'); if (delBtn) { if (confirm(`Delete Invoice?`)) deleteInvoice(delBtn.getAttribute("data-id")).then(() => renderInvoiceTable()); } else if (printBtn || downloadBtn) { const actionBtn = printBtn || downloadBtn; const isDownload = !!downloadBtn; Promise.all([getInvoice(actionBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { let itemsHtml = ""; inv.items.forEach(item => { itemsHtml += `<tr><td style="padding: 10px; border-bottom: 1px solid #E2E8F0;">${item.desc}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${item.qty}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.rate.toFixed(2)}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.amt.toFixed(2)}</td></tr>`; }); let billingMonthDisplay = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' }) : "-"; const html = `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"> <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0A2540; padding-bottom: 20px; margin-bottom: 30px;"> <div> <img src="${sys ? sys.logo : ''}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"> <h2 style="color: #0A2540; margin: 0; font-size: 1.5rem;">${sys ? sys.companyName : 'DKB ANCHOR'}</h2> <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #4A5568; max-width: 350px; line-height: 1.4;">Mile 7 Opposite Ruttchen Trucks Gh. Ltd,<br>Near Mile 7 police Station Accra Ghana.</p> <p style="margin: 3px 0 0 0; font-size: 0.9rem; color: #4A5568;"><strong>Contacts:</strong> 0557150062 / 0207816778</p> </div> <div style="text-align: right;"> <h1 style="color: #D4AF37; margin: 0; font-size: 2.5rem; text-transform: uppercase;">Invoice</h1> <p style="margin: 5px 0 0 0; font-size: 1.1rem; color: #718096;"><strong>#${inv.id}</strong></p> </div> </div> <div style="display: flex; justify-content: space-between; margin-bottom: 40px;"> <div> <h4 style="color: #718096; margin: 0 0 5px 0; text-transform: uppercase; font-size: 0.85rem;">Billed To:</h4> <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;">${inv.clientName}</p> <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> </div> <div style="text-align: right;"> <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> </div> <div style="text-align: right;"> <p style="margin: 0 0 5px 0;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> <p style="margin: 0 0 5px 0;"><strong>Billing Month:</strong> ${billingMonthDisplay}</p> <p style="margin: 0;"><strong>Status:</strong> ${inv.status}</p> </div> </div> <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;"> <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: center;">Qty</th><th style="padding: 12px 10px; text-align: right;">Rate (GH₵)</th><th style="padding: 12px 10px; text-align: right;">Amount (GH₵)</th></tr></thead> <tbody>${itemsHtml}</tbody> </table> <div style="display: flex; justify-content: flex-end;"> <div style="width: 320px;"> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;"><span>Subtotal:</span><strong>GH₵ ${inv.subtotal.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>GETFund Levy (2.5%):</span><strong>GH₵ ${inv.gefl.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>NHIL (2.5%):</span><strong>GH₵ ${inv.nhil.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>VAT (15%):</span><strong>GH₵ ${inv.vat.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> </div> </div> <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 0.9rem;"><p>Thank you for your business!</p></div> </div>`; if (isDownload) { html2pdf().set({ margin: 0.5, filename: `${inv.id}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } else { document.getElementById("printContainer").innerHTML = html; window.print(); } }); } });
     </script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed: ', err)); }); }</script>
 </body>
