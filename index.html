@@ -1375,7 +1375,8 @@
 
         window.loadExternalInbox = async function() {
             const tbody = document.querySelector("#messagesTable tbody");
-           const vercelApiUrl = "https://dkb-anchor-portal.vercel.app/api/fetchEmails";
+            const vercelApiUrl = "https://dkb-anchor-portal.vercel.app/api/fetchEmails";
+            
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; font-weight:bold; color: var(--primary-color);"><i class="fa-solid fa-spinner fa-spin"></i> Syncing info@dkbanchorsecurity.com...</td></tr>`;
 
             try {
@@ -1387,7 +1388,13 @@
                     }
                 });
                 
-                if (!response.ok) throw new Error("Server responded with error status");
+                // --- NEW ERROR TRAPPING ---
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    console.error("ZOHO REJECTION DETAILS:", errorDetails);
+                    throw new Error(`Zoho Error at ${errorDetails.step}: ${JSON.stringify(errorDetails.zohoError)}`);
+                }
+                // --------------------------
                 
                 window.zohoEmailsCache = await response.json();
                 tbody.innerHTML = ''; 
@@ -1420,7 +1427,7 @@
 
             } catch (error) {
                 console.error("Inbox Sync Failed:", error);
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger-color); font-weight:bold;">Error syncing inbox. Ensure your Vercel service is online.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--danger-color); font-weight:bold;">Sync Failed: ${error.message}</td></tr>`;
             }
         };
 
