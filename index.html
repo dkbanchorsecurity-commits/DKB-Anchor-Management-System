@@ -883,6 +883,7 @@
                     <div class="form-group"><label>Role</label><select id="empRole" required><option value="" disabled selected>Select Role</option><option value="Admin">Admin</option><option value="Operations Manager">Operations Manager</option><option value="Finance Manager">Finance Manager</option><option value="Safety Manager">Safety Manager</option><option value="Marketing Manager">Marketing Manager</option><option value="IT Manager">IT Manager</option><option value="Supervisor">Supervisor</option><option value="Guard">Guard</option></select></div>
                     <div class="form-group"><label>Duty Post</label><select id="empDutyPost" required><option value="" disabled selected>Select Duty Post</option></select></div>
                     <div class="form-group"><label>Assigned Shift</label><select id="empShift" required><option value="" disabled selected>Select Shift</option><option value="Day">Day</option><option value="Night">Night</option></select></div>
+                    <div class="form-group"><label>Enrolment Date</label><input type="date" id="empEnrolmentDate" required></div>
                     <div class="form-group"><label>Client Billing Rate (GH₵)</label><input type="number" id="empClientRate" required></div>
                     <div class="form-group"><label>Basic Salary (GH₵)</label><input type="number" id="empBasicSalary" required></div>
                 </div></div>
@@ -897,6 +898,12 @@
                 <div class="form-section"><h3>4. Next of Kin Information</h3><div class="form-grid">
                     <div class="form-group"><label>Next of Kin Name</label><input type="text" id="nokName" required></div>
                     <div class="form-group"><label>Next of Kin Phone</label><input type="tel" id="nokPhone" required></div>
+                </div></div>
+                <div class="form-section"><h3>5. Bank / Payment Details</h3><div class="form-grid">
+                    <div class="form-group"><label>Bank Name / Mobile Money</label><input type="text" id="empBankName" required></div>
+                    <div class="form-group"><label>Account Name</label><input type="text" id="empAccName" required></div>
+                    <div class="form-group"><label>Account / MoMo Number</label><input type="text" id="empAccNumber" required></div>
+                    <div class="form-group"><label>Branch / Network</label><input type="text" id="empBankBranch" required></div>
                 </div></div>
                 <div class="modal-footer"><button type="button" class="btn-secondary" id="cancelEmployeeBtn">Cancel</button><button type="submit" class="btn-primary" id="saveEmployeeBtn">Save Profile</button></div>
             </form>
@@ -917,7 +924,8 @@
             <div class="profile-body">
                 <div class="profile-column">
                     <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-address-card"></i> Personal Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Ghana Card ID</label><span id="v_ghanaCard">-</span></div><div class="view-item-new"><label>Phone Number</label><span id="v_phone">-</span></div><div class="view-item-new"><label>Ghana Post GPS</label><span id="v_gps">-</span></div><div class="view-item-new"><label>Residential Address</label><span id="v_address">-</span></div></div></div>
-                    <div class="profile-section-card"><h4><i class="fa-solid fa-briefcase"></i> Employment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Duty Post</label><span id="v_dutyPost">-</span></div><div class="view-item-new"><label>Basic Salary</label><span id="v_salary">-</span></div><div class="view-item-new"><label>Client Billing Rate</label><span id="v_rate">-</span></div></div></div>
+                    <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-briefcase"></i> Employment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Duty Post</label><span id="v_dutyPost">-</span></div><div class="view-item-new"><label>Enrolment Date</label><span id="v_enrolmentDate">-</span></div><div class="view-item-new"><label>Basic Salary</label><span id="v_salary">-</span></div><div class="view-item-new"><label>Client Billing Rate</label><span id="v_rate">-</span></div></div></div>
+                    <div class="profile-section-card"><h4><i class="fa-solid fa-building-columns"></i> Payment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Bank / MoMo</label><span id="v_bankName">-</span></div><div class="view-item-new"><label>Account Name</label><span id="v_accName">-</span></div><div class="view-item-new"><label>Account No.</label><span id="v_accNumber">-</span></div><div class="view-item-new"><label>Branch / Network</label><span id="v_bankBranch">-</span></div></div></div>
                 </div>
                 <div class="profile-column">
                     <div class="profile-section-card"><h4><i class="fa-solid fa-users-line"></i> Guarantor Information</h4><div class="view-grid-new"><div class="view-item-new"><label>Guarantor Name</label><span id="v_gName">-</span></div><div class="view-item-new"><label>Guarantor ID</label><span id="v_gId">-</span></div><div class="view-item-new"><label>Guarantor Phone</label><span id="v_gPhone">-</span></div><div class="view-item-new"><label>Guarantor Profession</label><span id="v_gProf">-</span></div><div class="view-item-new"><label>Guarantor GPS</label><span id="v_gGps">-</span></div><div class="view-item-new"><label>Guarantor Address</label><span id="v_gAddress">-</span></div></div></div>
@@ -1165,8 +1173,8 @@
 
         document.getElementById("exportEmployeesBtn")?.addEventListener("click", function() {
             getAllEmployees().then(emps => {
-                let csv = "Emp ID,Name,Role,Duty Post,Shift,Ghana Card,Phone,Basic Salary (GH₵),Client Rate (GH₵)\n";
-                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.ghanaCard}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)}\n`; });
+                let csv = "Emp ID,Name,Role,Duty Post,Shift,Ghana Card,Phone,Basic Salary (GH₵),Client Rate (GH₵),Bank/MoMo,Account Name,Account Number,Enrolment Date\n";
+                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.ghanaCard}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)},"${emp.bankName || ''}","${emp.accName || ''}","${emp.accNumber || ''}","${emp.enrolmentDate || ''}"\n`; });
                 const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = `DKB_Employee_Directory.csv`; link.click();
                 logAction("Employee Management", "Exported Employee Directory");
             });
@@ -1185,40 +1193,40 @@
         }
 
        function renderDashboard() {
-    Promise.all([ getAllEmployees(), getAllIncidents(), getAllObservations(), getAllExpenditures(), getAllClients() ]).then(([employees, incidents, observations, expenditures, clients]) => {
-        const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
-        const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
-        const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
-        const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-        const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
-        
-        // Calculate Total Clients
-        const totalClients = clients.length;
+            Promise.all([ getAllEmployees(), getAllIncidents(), getAllObservations(), getAllExpenditures(), getAllClients() ]).then(([employees, incidents, observations, expenditures, clients]) => {
+                const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
+                const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
+                const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
+                const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+                const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
+                
+                // Calculate Total Clients
+                const totalClients = clients.length;
 
-        // Update the DOM elements
-        document.getElementById('dashTotalEmp').innerText = employees.length; 
-        document.getElementById('dashActiveGuards').innerText = activeGuards; 
-        document.getElementById('dashTotalClients').innerText = totalClients;
-        document.getElementById('dashTotalInc').innerText = incidents.length; 
-        document.getElementById('dashTotalObs').innerText = observations.length; 
-        document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
-        document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
-        document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
-        document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
-        document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
+                // Update the DOM elements
+                document.getElementById('dashTotalEmp').innerText = employees.length; 
+                document.getElementById('dashActiveGuards').innerText = activeGuards; 
+                document.getElementById('dashTotalClients').innerText = totalClients;
+                document.getElementById('dashTotalInc').innerText = incidents.length; 
+                document.getElementById('dashTotalObs').innerText = observations.length; 
+                document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+                document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+                document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+                document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`; 
+                document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
 
-        const currentMonth = new Date().getMonth(); const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(Math.max(0, currentMonth - 5), currentMonth + 1);
-        let incData = new Array(monthLabels.length).fill(0); incidents.forEach(inc => { const diff = currentMonth - new Date(inc.date).getMonth(); if (diff >= 0 && diff < monthLabels.length) incData[monthLabels.length - 1 - diff]++; });
-        let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 }; observations.forEach(obs => { if(obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
-        let revData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? monthlyRevenue : Math.floor(monthlyRevenue * (0.9 + Math.random()*0.2))); let profData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? liveProfit : Math.floor(liveProfit * (0.8 + Math.random()*0.4))); let depData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? activeGuards : Math.floor(activeGuards * (0.95 + Math.random()*0.05)));
+                const currentMonth = new Date().getMonth(); const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(Math.max(0, currentMonth - 5), currentMonth + 1);
+                let incData = new Array(monthLabels.length).fill(0); incidents.forEach(inc => { const diff = currentMonth - new Date(inc.date).getMonth(); if (diff >= 0 && diff < monthLabels.length) incData[monthLabels.length - 1 - diff]++; });
+                let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 }; observations.forEach(obs => { if(obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
+                let revData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? monthlyRevenue : Math.floor(monthlyRevenue * (0.9 + Math.random()*0.2))); let profData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? liveProfit : Math.floor(liveProfit * (0.8 + Math.random()*0.4))); let depData = monthLabels.map((_, i) => i === monthLabels.length - 1 ? activeGuards : Math.floor(activeGuards * (0.95 + Math.random()*0.05)));
 
-        const cDB = window.dashboardCharts;
-        if(cDB.dep) cDB.dep.destroy(); cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), { type: 'line', data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-        if(cDB.inc) cDB.inc.destroy(); cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-        if(cDB.obs) cDB.obs.destroy(); cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
-        if(cDB.fin) cDB.fin.destroy(); cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
-    });
-}
+                const cDB = window.dashboardCharts;
+                if(cDB.dep) cDB.dep.destroy(); cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), { type: 'line', data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+                if(cDB.inc) cDB.inc.destroy(); cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+                if(cDB.obs) cDB.obs.destroy(); cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' } });
+                if(cDB.fin) cDB.fin.destroy(); cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+            });
+        }
 
         function applySystemSettings(data = null) {
             if(!data) return;
@@ -2006,7 +2014,8 @@
                 const dpSelect = document.getElementById("empDutyPost"); 
                 if(emp.dutyPost && !Array.from(dpSelect.options).some(o => o.value === emp.dutyPost)) { const opt = document.createElement("option"); opt.value = emp.dutyPost; opt.innerText = emp.dutyPost + " (Unregistered)"; dpSelect.appendChild(opt); } 
                 dpSelect.value = emp.dutyPost; 
-                document.getElementById("empShift").value = emp.shift; 
+                document.getElementById("empShift").value = emp.shift;
+                document.getElementById("empEnrolmentDate").value = emp.enrolmentDate || "";
                 document.getElementById("empClientRate").value = emp.clientRate; 
                 document.getElementById("empBasicSalary").value = emp.basicSalary; 
                 document.getElementById("guarName").value = emp.guarName; 
@@ -2019,6 +2028,12 @@
                 // Next of Kin
                 document.getElementById("nokName").value = emp.nokName || "";
                 document.getElementById("nokPhone").value = emp.nokPhone || "";
+                
+                // Bank Details
+                document.getElementById("empBankName").value = emp.bankName || "";
+                document.getElementById("empAccName").value = emp.accName || "";
+                document.getElementById("empAccNumber").value = emp.accNumber || "";
+                document.getElementById("empBankBranch").value = emp.bankBranch || "";
                 
                 editId = id; document.getElementById("addEmployeeModal").style.display = "block"; 
             }); 
@@ -2035,6 +2050,7 @@
                 role: document.getElementById("empRole").value, 
                 dutyPost: document.getElementById("empDutyPost").value, 
                 shift: document.getElementById("empShift").value, 
+                enrolmentDate: document.getElementById("empEnrolmentDate").value,
                 clientRate: document.getElementById("empClientRate").value, 
                 basicSalary: document.getElementById("empBasicSalary").value, 
                 guarName: document.getElementById("guarName").value, 
@@ -2044,7 +2060,11 @@
                 guarGPS: document.getElementById("guarGPS").value, 
                 guarAddress: document.getElementById("guarAddress").value,
                 nokName: document.getElementById("nokName").value,
-                nokPhone: document.getElementById("nokPhone").value
+                nokPhone: document.getElementById("nokPhone").value,
+                bankName: document.getElementById("empBankName").value,
+                accName: document.getElementById("empAccName").value,
+                accNumber: document.getElementById("empAccNumber").value,
+                bankBranch: document.getElementById("empBankBranch").value
             }; 
             const submitBtn = document.getElementById("saveEmployeeBtn"); const originalText = submitBtn.innerText; submitBtn.disabled = true; submitBtn.innerText = "Saving..."; 
             
@@ -2054,11 +2074,11 @@
                     saveEmployee(data).then(() => { logAction("Employee Management", `Updated ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); 
                 }); 
             } else { 
-                getAllEmployees().then(emps => { 
-                    let maxId = 0; emps.forEach(e => { const num = parseInt(e.id.split('-')[1]); if (num > maxId) maxId = num; }); 
-                    data.id = `DKB-${(maxId + 1).toString().padStart(3, '0')}`; data.payrollData = {}; data.profilePic = `https://via.placeholder.com/150/F4F6F8/0A2540?text=${data.name.substring(0,2).toUpperCase()}`; 
-                    saveEmployee(data).then(() => { logAction("Employee Management", `Created ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); 
-                }); 
+                const randomNum = Math.floor(100000 + Math.random() * 900000);
+                data.id = `DKB-GH-${randomNum}`; 
+                data.payrollData = {}; 
+                data.profilePic = `https://via.placeholder.com/150/F4F6F8/0A2540?text=${data.name.substring(0,2).toUpperCase()}`; 
+                saveEmployee(data).then(() => { logAction("Employee Management", `Created ${data.name}`); renderTable(); renderPayrollTable(); renderDeploymentTable(); renderAttendanceTable(); closeModals(); }).finally(() => { submitBtn.disabled = false; submitBtn.innerText = originalText; }); 
             } 
         });
 
@@ -2104,7 +2124,51 @@
         document.getElementById("incidentTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-inc-status")) { getIncident(e.target.getAttribute("data-id")).then(inc => { inc.status = e.target.value; saveIncident(inc).then(() => renderIncidentTable()); }); } });
         document.getElementById("incidentTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteIncident(id).then(() => renderIncidentTable()); } else if (btn.classList.contains('edit')) { getIncident(id).then(inc => { document.getElementById("incDate").value = inc.date; document.getElementById("incLocation").value = inc.location; document.getElementById("incCategory").value = inc.category; document.getElementById("incReporter").value = inc.reporter; document.getElementById("incDescription").value = inc.description; document.getElementById("incStatus").value = inc.status; editIncId = id; document.getElementById("logIncidentModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getIncident(id).then(inc => alert(`Location: ${inc.location}\nCategory: ${inc.category}\nDesc: ${inc.description}`)); } });
         document.getElementById("deploymentTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-reassign'); if (btn) openEditEmployeeModal(btn.getAttribute("data-id")); });
-        document.getElementById("employeeTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete employee ${id}?`)) deleteEmployee(id).then(() => renderTable()); } else if (btn.classList.contains('edit')) { openEditEmployeeModal(id); } else if (btn.classList.contains('view')) { getEmployee(id).then(emp => { document.getElementById("viewProfilePic").src = emp.profilePic; document.getElementById("viewProfilePic").dataset.currentId = emp.id; document.getElementById("viewName").innerText = emp.name; document.getElementById("viewId").innerHTML = `<i class="fa-solid fa-id-badge"></i> ${emp.id}`; document.getElementById("viewRole").innerHTML = `<i class="fa-solid fa-user-shield"></i> ${emp.role}`; document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; document.getElementById("v_phone").innerText = emp.phone; document.getElementById("v_gps").innerText = emp.gps; document.getElementById("v_address").innerText = emp.address; document.getElementById("v_dutyPost").innerText = emp.dutyPost; document.getElementById("v_salary").innerText = `GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}`; document.getElementById("v_rate").innerText = `GH₵ ${parseFloat(emp.clientRate || 0).toLocaleString()}`; document.getElementById("v_gName").innerText = emp.guarName; document.getElementById("v_gId").innerText = emp.guarID; document.getElementById("v_gPhone").innerText = emp.guarPhone; document.getElementById("v_gProf").innerText = emp.guarProfession; document.getElementById("v_gGps").innerText = emp.guarGPS; document.getElementById("v_gAddress").innerText = emp.guarAddress || "N/A"; document.getElementById("v_nokName").innerText = emp.nokName || "N/A"; document.getElementById("v_nokPhone").innerText = emp.nokPhone || "N/A"; document.getElementById("viewEmployeeModal").style.display = "block"; }); } });
+        
+        document.getElementById("employeeTable").addEventListener("click", function(e) { 
+            const btn = e.target.closest('.btn-action'); if (!btn) return; 
+            const id = btn.getAttribute("data-id"); 
+            if (btn.classList.contains('delete')) { 
+                if (confirm(`Delete employee ${id}?`)) deleteEmployee(id).then(() => renderTable()); 
+            } else if (btn.classList.contains('edit')) { 
+                openEditEmployeeModal(id); 
+            } else if (btn.classList.contains('view')) { 
+                getEmployee(id).then(emp => { 
+                    document.getElementById("viewProfilePic").src = emp.profilePic; 
+                    document.getElementById("viewProfilePic").dataset.currentId = emp.id; 
+                    document.getElementById("viewName").innerText = emp.name; 
+                    document.getElementById("viewId").innerHTML = `<i class="fa-solid fa-id-badge"></i> ${emp.id}`; 
+                    document.getElementById("viewRole").innerHTML = `<i class="fa-solid fa-user-shield"></i> ${emp.role}`; 
+                    document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; 
+                    document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; 
+                    document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; 
+                    document.getElementById("v_phone").innerText = emp.phone; 
+                    document.getElementById("v_gps").innerText = emp.gps; 
+                    document.getElementById("v_address").innerText = emp.address; 
+                    document.getElementById("v_dutyPost").innerText = emp.dutyPost; 
+                    document.getElementById("v_enrolmentDate").innerText = emp.enrolmentDate ? new Date(emp.enrolmentDate).toLocaleDateString() : "N/A";
+                    document.getElementById("v_salary").innerText = `GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}`; 
+                    document.getElementById("v_rate").innerText = `GH₵ ${parseFloat(emp.clientRate || 0).toLocaleString()}`; 
+                    document.getElementById("v_gName").innerText = emp.guarName; 
+                    document.getElementById("v_gId").innerText = emp.guarID; 
+                    document.getElementById("v_gPhone").innerText = emp.guarPhone; 
+                    document.getElementById("v_gProf").innerText = emp.guarProfession; 
+                    document.getElementById("v_gGps").innerText = emp.guarGPS; 
+                    document.getElementById("v_gAddress").innerText = emp.guarAddress || "N/A"; 
+                    document.getElementById("v_nokName").innerText = emp.nokName || "N/A"; 
+                    document.getElementById("v_nokPhone").innerText = emp.nokPhone || "N/A"; 
+                    
+                    // Bank Details
+                    document.getElementById("v_bankName").innerText = emp.bankName || "N/A";
+                    document.getElementById("v_accName").innerText = emp.accName || "N/A";
+                    document.getElementById("v_accNumber").innerText = emp.accNumber || "N/A";
+                    document.getElementById("v_bankBranch").innerText = emp.bankBranch || "N/A";
+
+                    document.getElementById("viewEmployeeModal").style.display = "block"; 
+                }); 
+            } 
+        });
+        
         document.getElementById("payrollTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-fin")) { const id = e.target.getAttribute("data-id"), type = e.target.getAttribute("data-type"), periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`; getEmployee(id).then(emp => { if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { status: "Pending", overtime: 0, bonus: 0 }; emp.payrollData[periodKey][type] = parseFloat(e.target.value) || 0; saveEmployee(emp).then(() => renderPayrollTable()); }); } });
         document.getElementById("payrollTable").addEventListener("click", function(e) { const btnPay = e.target.closest('.btn-pay'), btnPrint = e.target.closest('.btn-print-ps'), btnDownload = e.target.closest('.btn-download-ps'); const periodKey = `${document.getElementById("payrollMonth").value}_${document.getElementById("year-filter").value}`; if (btnPay) { const row = btnPay.closest('tr'), otInput = row.querySelector('.update-fin[data-type="overtime"]'), bonusInput = row.querySelector('.update-fin[data-type="bonus"]'); getEmployee(btnPay.getAttribute("data-id")).then(emp => { if (!emp.payrollData) emp.payrollData = {}; if (!emp.payrollData[periodKey]) emp.payrollData[periodKey] = { status: "Pending", overtime: 0, bonus: 0 }; if(otInput) emp.payrollData[periodKey].overtime = parseFloat(otInput.value) || 0; if(bonusInput) emp.payrollData[periodKey].bonus = parseFloat(bonusInput.value) || 0; emp.payrollData[periodKey].status = "Paid"; saveEmployee(emp).then(() => renderPayrollTable()); }); } else if (btnPrint || btnDownload) { Promise.all([getEmployee((btnPrint || btnDownload).getAttribute("data-id")), getSetting("system")]).then(([emp, sys]) => { const record = emp.payrollData?.[periodKey] || { overtime: 0, bonus: 0 }; const html = generatePayslipHTML(emp, calculateFinancials(emp, record.overtime, record.bonus), sys ? sys.companyName : "DKB ANCHOR", sys ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO", document.getElementById("payrollMonth").value + " " + document.getElementById("year-filter").value); if (btnPrint) { document.getElementById("printContainer").innerHTML = html; window.print(); } else if (btnDownload) { html2pdf().set({ margin: 0.5, filename: `Payslip_${emp.name.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } }); } });
         document.getElementById("imageUpload").addEventListener("change", function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(event) { document.getElementById("viewProfilePic").src = event.target.result; const id = document.getElementById("viewProfilePic").dataset.currentId; if(id) { getEmployee(id).then(emp => { emp.profilePic = event.target.result; saveEmployee(emp); }); } }; reader.readAsDataURL(file); } });
