@@ -56,7 +56,7 @@
         .sidebar { width: 260px; background-color: var(--primary-color); color: var(--text-light); display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); flex-shrink: 0; transition: all 0.3s ease; z-index: 999; height: 100vh; }
         .sidebar-header { padding: 25px 20px; background-color: var(--secondary-color); text-align: center; border-bottom: 2px solid var(--accent-color); transition: background-color 0.3s; }
         .brand-logo { max-width: 120px; max-height: 80px; object-fit: contain; margin-bottom: 15px; border-radius: 4px; display: inline-block; background: #fff; padding: 5px; }
-        .sidebar-header h2 { font-size: 1.2rem; letter-spacing: 1px; color: var(--accent-color); line-height: 1.2; font-family: 'Footlight MT Light', serif; }
+        .sidebar-header h2 { font-size: 26px; letter-spacing: 1px; color: var(--accent-color); line-height: 1.2; font-family: 'Footlight MT Light', serif; }
         .sidebar-header p { font-size: 0.8rem; color: var(--text-light); opacity: 0.8; margin-top: 5px; }
         .nav-links { list-style: none; padding: 20px 0; overflow-y: auto; flex: 1; }
         .nav-links li a { display: flex; align-items: center; padding: 12px 25px; color: var(--text-light); text-decoration: none; transition: all 0.3s ease; border-left: 4px solid transparent; font-size: 0.95rem; }
@@ -71,7 +71,7 @@
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
-        header h1 { color: var(--danger-color); font-size: 1.6rem; font-weight: bold; font-family: 'Footlight MT Light', serif;}
+        header h1 { color: var(--danger-color); font-size: 26px; font-weight: bold; font-family: 'Footlight MT Light', serif;}
         .live-clock { font-family: 'Courier New', Courier, monospace; font-size: 1rem; font-weight: bold; color: var(--accent-color); background-color: var(--primary-color); padding: 5px 10px; border-radius: 4px; letter-spacing: 1px; white-space: nowrap; }
         .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .year-selector { padding: 6px 12px; border: 1px solid var(--accent-color); border-radius: 4px; background-color: var(--panel-bg); color: var(--primary-color); font-weight: bold; font-size: 0.9rem; cursor: pointer; outline: none; transition: all 0.3s; }
@@ -715,6 +715,13 @@
                             <option value="Client">Client Portal Access</option>
                         </select>
                     </div>
+                    <div class="form-group full-width" id="clientSiteGroup" style="display: none;">
+                        <label>Associated Client / Site</label>
+                        <select id="uClientSite">
+                            <option value="" disabled selected>Select Client Site</option>
+                        </select>
+                        <small style="color: var(--gray-color); font-size: 0.8rem; margin-top: 5px; display: block;">*Required for Client Portal Access. This restricts their view to this specific site.</small>
+                    </div>
                     <div class="form-group full-width" id="pwdGroup">
                         <label>Temporary Password</label>
                         <div style="position: relative;">
@@ -946,7 +953,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
         import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, deleteDoc, getDoc, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD7cUX5DXzGhktfRItpdXJ45TrYH9KlVm4",
@@ -984,6 +991,7 @@
         const INC_TIME_KEY = "lastViewedIncidents"; const OBS_TIME_KEY = "lastViewedObservations";
 
         window.currentUserRole = null;
+        window.currentUserSite = null;
 
         // ====== GLOBAL MESSAGE COUNTERS ======
         window.zohoUnreadCount = 0;
@@ -1009,7 +1017,7 @@
             "Operations Manager": ["dashboard", "employee-management", "clients", "guard-deployment", "incident-reporting", "observations", "attendance", "messages"],
             "Finance Manager": ["dashboard", "clients", "payroll", "expenditure", "invoices", "messages", "gra-portal", "ssnit-portal"],
             "Standard User": ["dashboard", "incident-reporting", "observations", "attendance", "messages"],
-            "Client": ["dashboard", "messages"]
+            "Client": ["dashboard", "guard-deployment", "incident-reporting", "observations", "attendance", "invoices", "messages"]
         };
 
         function applyRBAC(role, displayName) {
@@ -1046,6 +1054,30 @@
             const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
             pwdInput.setAttribute('type', type);
             this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+        });
+
+        document.getElementById("uRole").addEventListener("change", function() {
+            const siteGroup = document.getElementById("clientSiteGroup");
+            const siteSelect = document.getElementById("uClientSite");
+            
+            if (this.value === "Client") {
+                siteGroup.style.display = "block";
+                siteSelect.required = true;
+                siteSelect.innerHTML = '<option value="" disabled selected>Select Client Site</option>';
+                
+                getAllClients().then(clients => {
+                    clients.forEach(c => {
+                        const opt = document.createElement("option"); 
+                        opt.value = c.name; 
+                        opt.innerText = c.name; 
+                        siteSelect.appendChild(opt);
+                    });
+                });
+            } else {
+                siteGroup.style.display = "none";
+                siteSelect.required = false;
+                siteSelect.value = "";
+            }
         });
 
         function startRealTimeSync() {
@@ -1194,6 +1226,14 @@
 
        function renderDashboard() {
             Promise.all([ getAllEmployees(), getAllIncidents(), getAllObservations(), getAllExpenditures(), getAllClients() ]).then(([employees, incidents, observations, expenditures, clients]) => {
+                
+                if (window.currentUserRole === "Client") {
+                    employees = employees.filter(e => e.dutyPost === window.currentUserSite);
+                    incidents = incidents.filter(i => i.location === window.currentUserSite);
+                    observations = observations.filter(o => o.site === window.currentUserSite);
+                    expenditures = []; 
+                }
+
                 const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
                 const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
                 const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
@@ -1305,7 +1345,8 @@
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${cl.id}"><i class="fa-solid fa-trash"></i></button>` : '';
                     let statusClass = cl.status === 'Active' ? 'success-badge' : (cl.status === 'Inactive' ? 'absent-badge' : 'warning-badge');
-                    newRow.innerHTML = `<td><strong>${cl.id}</strong></td><td>${cl.name}</td><td>${cl.contactPerson}</td><td>${cl.phone}</td><td><span class="badge ${statusClass}">${cl.status}</span></td><td class="action-buttons"><button class="btn-action view btn-view-client-guards" data-name="${cl.name}" title="View Deployed Guards"><i class="fa-solid fa-users"></i></button><button class="btn-action edit" data-id="${cl.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</td>`;
+                    let portalBadge = cl.portalUserId ? `<br><span class="badge info-badge" style="margin-top: 5px;"><i class="fa-solid fa-link"></i> Portal Active</span>` : '';
+                    newRow.innerHTML = `<td><strong>${cl.id}</strong></td><td>${cl.name}${portalBadge}</td><td>${cl.contactPerson}</td><td>${cl.phone}</td><td><span class="badge ${statusClass}">${cl.status}</span></td><td class="action-buttons"><button class="btn-action view btn-view-client-guards" data-name="${cl.name}" title="View Deployed Guards"><i class="fa-solid fa-users"></i></button><button class="btn-action edit" data-id="${cl.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1339,6 +1380,12 @@
 
         function renderInvoiceTable() {
             getAllInvoices().then(invoices => {
+                
+                if (window.currentUserRole === "Client") {
+                    invoices = invoices.filter(inv => inv.clientName === window.currentUserSite);
+                    document.getElementById("openCreateInvoiceBtn").style.display = "none";
+                }
+
                 const tbody = document.querySelector("#invoiceTable tbody"); tbody.innerHTML = '';
                 const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
                 invoices.sort((a, b) => b.timestamp - a.timestamp).forEach(inv => {
@@ -1378,7 +1425,13 @@
                 const tbody = document.querySelector("#deploymentTable tbody"); tbody.innerHTML = '';
                 
                 let filteredGuards = employees.filter(emp => emp.role && emp.role.toLowerCase().includes("guard"));
-                if(filterDropdown.value !== "All") filteredGuards = filteredGuards.filter(emp => emp.dutyPost === filterDropdown.value);
+                
+                if (window.currentUserRole === "Client") {
+                    filteredGuards = filteredGuards.filter(emp => emp.dutyPost === window.currentUserSite);
+                    document.getElementById("deploymentClientFilter").style.display = "none";
+                } else if(filterDropdown.value !== "All") {
+                    filteredGuards = filteredGuards.filter(emp => emp.dutyPost === filterDropdown.value);
+                }
 
                 filteredGuards.forEach(emp => {
                     const newRow = document.createElement("tr");
@@ -1396,6 +1449,9 @@
                 const tbody = document.querySelector("#attendanceTable tbody"); tbody.innerHTML = '';
                 const todaysLogs = attendanceLogs.filter(log => log.date === selectedDate);
                 employees.forEach(emp => {
+                    
+                    if (window.currentUserRole === "Client" && emp.dutyPost !== window.currentUserSite) return;
+
                     const logId = `${emp.id}_${selectedDate}`; const record = todaysLogs.find(log => log.id === logId);
                     let timeIn = "-", timeOut = "-", statusBadge = `<span class="badge absent-badge">Absent</span>`, actionHtml = `<button class="btn-primary btn-clock-in" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock In</button>`, photoInHtml = "", photoOutHtml = "";
                     if (record) { 
@@ -1421,6 +1477,11 @@
                     if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? "inline-block" : "none"; if (newCount > previousObsCount) { if (["Super Admin", "Operations Manager"].includes(window.currentUserRole)) { notifySound.play().catch(e => console.warn("Waiting for interaction.")); } } previousObsCount = newCount; }
                 }
 
+                if (window.currentUserRole === "Client") {
+                    observations = observations.filter(obs => obs.site === window.currentUserSite);
+                    document.getElementById("openLogObservationBtn").style.display = "none";
+                }
+
                 const tbody = document.querySelector("#observationTable tbody"); tbody.innerHTML = '';
                 const canDelete = ["Super Admin", "Operations Manager"].includes(window.currentUserRole);
                 observations.sort((a, b) => b.timestamp - a.timestamp).forEach(obs => {
@@ -1441,6 +1502,11 @@
                 else {
                     const lastViewed = parseInt(localStorage.getItem(INC_TIME_KEY) || 0); const newCount = incidents.filter(inc => inc.timestamp > lastViewed).length; const badge = document.getElementById("incCounter");
                     if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? "inline-block" : "none"; if (newCount > previousIncCount) { if (["Super Admin", "Operations Manager"].includes(window.currentUserRole)) { notifySound.play().catch(e => console.warn("Waiting for interaction.")); } } previousIncCount = newCount; }
+                }
+
+                if (window.currentUserRole === "Client") {
+                    incidents = incidents.filter(inc => inc.location === window.currentUserSite);
+                    document.getElementById("openLogIncidentBtn").style.display = "none";
                 }
 
                 const tbody = document.querySelector("#incidentTable tbody"); tbody.innerHTML = '';
@@ -1643,8 +1709,9 @@
                         </td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-action edit btn-edit-user" data-id="${user.id}"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn-action delete btn-del-user" data-id="${user.id}"><i class="fa-solid fa-trash"></i></button>
+                                <button class="btn-action edit btn-edit-user" data-id="${user.id}" title="Edit User"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-action edit btn-reset-pwd" data-email="${user.email}" title="Send Password Reset"><i class="fa-solid fa-key"></i></button>
+                                <button class="btn-action delete btn-del-user" data-id="${user.id}" title="Delete User"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </td>`;
                     tbody.appendChild(newRow);
@@ -1768,17 +1835,26 @@
                 }
                 
                 const loginBtn = document.getElementById('loginBtn');
+                const errDiv = document.getElementById('loginError');
+
                 if (loginBtn) { loginBtn.disabled = true; loginBtn.innerText = "Loading workspace..."; }
+                
                 try {
                     const dbUser = await checkAndSeedInitialData(user);
-                    if (dbUser) { window.currentUserRole = dbUser.role; applyRBAC(dbUser.role, dbUser.name); } 
-                    else { window.currentUserRole = "Standard User"; applyRBAC("Standard User", user.displayName || user.email); }
+                    
+                    // Determine the role and name
+                    const role = dbUser ? dbUser.role : "Standard User";
+                    const name = dbUser ? dbUser.name : (user.displayName || user.email);
+
+                    window.currentUserRole = role; 
+                    window.currentUserSite = dbUser && dbUser.clientSite ? dbUser.clientSite : null; // Map the site
+                    applyRBAC(role, name); 
                     
                     loginContainer.style.opacity = '0';
                     setTimeout(() => { loginContainer.style.display = 'none'; appContainer.style.display = 'flex'; }, 300);
                     
                     startRealTimeSync(); 
-                    window.pollExternalInbox(false); // Silently fetch Zoho emails on page load
+                    window.pollExternalInbox(false); 
                     
                 } catch (e) {
                     console.error("Database connection error:", e);
@@ -1851,7 +1927,20 @@
         document.getElementById("openComposeMsgBtn").onclick = () => document.getElementById("composeMessageModal").style.display = "block";
         document.getElementById("openExternalEmailBtn").onclick = () => { document.getElementById("sendExternalEmailForm").reset(); document.getElementById("sendExternalEmailModal").style.display = "block"; };
         document.getElementById("openOnboardClientBtn").onclick = () => { editClientId = null; document.getElementById("clientForm").reset(); document.getElementById("clientModalTitle").innerText = "Onboard New Client"; document.getElementById("saveClientBtn").innerText = "Save Client"; document.getElementById("onboardClientModal").style.display = "block"; };
-        document.getElementById("openUserModalBtn").onclick = () => { editUserId = null; document.getElementById("userAccountForm").reset(); document.getElementById("userModalTitle").innerText = "Create User Account"; document.getElementById("saveUserBtn").innerText = "Create Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "Temporary Password"; document.getElementById("uPassword").required = true; document.getElementById("userAccountModal").style.display = "block"; };
+        document.getElementById("openUserModalBtn").onclick = () => { 
+            editUserId = null; 
+            document.getElementById("userAccountForm").reset(); 
+            document.getElementById("userModalTitle").innerText = "Create User Account"; 
+            document.getElementById("saveUserBtn").innerText = "Create Account"; 
+            
+            // Ensure password field is visible for new accounts
+            document.getElementById("pwdGroup").style.display = "block";
+            document.getElementById("pwdGroup").querySelector("label").innerText = "Temporary Password"; 
+            document.getElementById("uPassword").required = true; 
+            
+            document.getElementById("uRole").dispatchEvent(new Event('change'));
+            document.getElementById("userAccountModal").style.display = "block"; 
+        };
         
         function closeModals() { modals.forEach(m => m.style.display = "none"); forms.forEach(f => f.reset()); editId = editIncId = editObsId = editExpId = editUserId = editClientId = null; }
         document.querySelectorAll(".close-modal, .btn-secondary").forEach(el => el.addEventListener('click', closeModals));
@@ -1886,28 +1975,71 @@
 
         document.getElementById("userAccountForm").addEventListener("submit", async function(e) { 
             e.preventDefault(); 
+            
             const pwdInput = document.getElementById("uPassword").value.trim();
-            const data = { name: document.getElementById("uName").value, email: document.getElementById("uEmail").value, role: document.getElementById("uRole").value }; 
+            const roleVal = document.getElementById("uRole").value;
+            const siteVal = roleVal === "Client" ? document.getElementById("uClientSite").value : null;
+
+            const data = { 
+                name: document.getElementById("uName").value, 
+                email: document.getElementById("uEmail").value, 
+                role: roleVal,
+                clientSite: siteVal
+            }; 
             
             const submitBtn = document.getElementById("saveUserBtn");
-            submitBtn.disabled = true; submitBtn.innerText = "Processing...";
+            submitBtn.disabled = true; 
+            submitBtn.innerText = "Processing via Firebase...";
 
             try {
                 if (editUserId) { 
+                    // Update Existing User
                     const ex = await getUser(editUserId); 
-                    data.id = editUserId; data.password = pwdInput !== "" ? pwdInput : ex.password; data.created = ex.created; 
-                    await saveUser(data); logAction("Settings", `Updated user ${data.email}`); 
+                    data.id = editUserId; 
+                    data.password = ex.password; // Preserve old record
+                    data.created = ex.created; 
+                    
+                    await saveUser(data); // 1. Update Firestore 'users' collection
+                    logAction("Settings", `Updated user ${data.email}`); 
+                    
                 } else { 
+                    // Create New User
+                    // 1. Create the credentials securely in Firebase Authentication
                     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, pwdInput);
+                    
+                    // Sign out the secondary instance so it doesn't interfere with the Admin's session
                     await signOut(secondaryAuth);
-                    data.id = userCredential.user.uid; data.password = pwdInput; data.created = new Date().getTime(); 
-                    await saveUser(data); logAction("Settings", `Created user ${data.email}`); 
+                    
+                    data.id = userCredential.user.uid; 
+                    data.password = pwdInput; 
+                    data.created = new Date().getTime(); 
+                    
+                    // 2. Save the mapped profile to the Firestore 'users' collection
+                    await saveUser(data); 
+                    logAction("Settings", `Created user ${data.email}`); 
                 }
-                renderUsersTable(); closeModals(); 
+
+                // 3. AUTO-UPDATE CLIENT COLLECTION: Link the newly created auth account to their client profile
+                if (data.role === "Client" && data.clientSite) {
+                    const clients = await getAllClients();
+                    const matchedClient = clients.find(c => c.name === data.clientSite);
+                    
+                    if (matchedClient) {
+                        matchedClient.portalUserId = data.id;
+                        matchedClient.portalEmail = data.email;
+                        await saveClient(matchedClient); // Push update to Firebase Clients collection
+                    }
+                }
+
+                renderUsersTable(); 
+                closeModals(); 
+                
             } catch (error) {
-                alert("Error saving account: " + error.message);
+                console.error("Firebase Auth Error:", error);
+                alert("Error syncing to Firebase: " + error.message);
             } finally {
-                submitBtn.disabled = false; submitBtn.innerText = editUserId ? "Update Account" : "Create Account";
+                submitBtn.disabled = false; 
+                submitBtn.innerText = editUserId ? "Update Account" : "Create Account";
             }
         });
 
@@ -2083,7 +2215,55 @@
         });
 
         document.getElementById("usersTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-user-role")) { getUser(e.target.getAttribute("data-id")).then(user => { const oldRole = user.role; user.role = e.target.value; saveUser(user).then(() => { logAction("Settings", `Changed role for ${user.email} from ${oldRole} to ${user.role}`); renderUsersTable(); }); }); } });
-        document.getElementById("usersTable").addEventListener("click", function(e) { const editBtn = e.target.closest('.btn-edit-user'), delBtn = e.target.closest('.btn-del-user'); if (delBtn) { const id = delBtn.getAttribute("data-id"); if (id === "USR-001") return alert("Cannot delete Super Admin."); if (confirm(`Delete account?`)) { deleteUser(id).then(() => { logAction("Settings", `Deleted user ${id}`); renderUsersTable(); }); } } else if (editBtn) { const id = editBtn.getAttribute("data-id"); getUser(id).then(user => { document.getElementById("uName").value = user.name; document.getElementById("uEmail").value = user.email; document.getElementById("uRole").value = user.role; document.getElementById("uPassword").value = ""; document.getElementById("userModalTitle").innerText = "Edit User Account"; document.getElementById("saveUserBtn").innerText = "Update Account"; document.getElementById("pwdGroup").querySelector("label").innerText = "New Password (leave blank to keep current)"; document.getElementById("uPassword").required = false; editUserId = id; document.getElementById("userAccountModal").style.display = "block"; }); } });
+        
+        document.getElementById("usersTable").addEventListener("click", function(e) { 
+            const editBtn = e.target.closest('.btn-edit-user'), 
+                  delBtn = e.target.closest('.btn-del-user'),
+                  resetBtn = e.target.closest('.btn-reset-pwd'); 
+                  
+            if (delBtn) { 
+                const id = delBtn.getAttribute("data-id"); 
+                if (id === "USR-001") return alert("Cannot delete Super Admin."); 
+                if (confirm(`Delete account?`)) { 
+                    deleteUser(id).then(() => { 
+                        logAction("Settings", `Deleted user ${id}`); 
+                        renderUsersTable(); 
+                    }); 
+                } 
+            } else if (resetBtn) {
+                const email = resetBtn.getAttribute("data-email");
+                if (confirm(`Send a secure password reset email to ${email}?`)) {
+                    sendPasswordResetEmail(auth, email).then(() => {
+                        alert("Password reset link sent! The client can now set a new password.");
+                        logAction("Settings", `Sent password reset email to ${email}`);
+                    }).catch(err => alert("Error: " + err.message));
+                }
+            } else if (editBtn) { 
+                const id = editBtn.getAttribute("data-id"); 
+                getUser(id).then(user => { 
+                    document.getElementById("uName").value = user.name; 
+                    document.getElementById("uEmail").value = user.email; 
+                    document.getElementById("uRole").value = user.role; 
+                    
+                    // Trigger the change event to populate the client dropdown if needed
+                    document.getElementById("uRole").dispatchEvent(new Event('change'));
+                    setTimeout(() => {
+                        if (user.role === "Client" && user.clientSite) {
+                            document.getElementById("uClientSite").value = user.clientSite;
+                        }
+                    }, 100);
+
+                    // Hide the password field during edit to prevent confusion
+                    document.getElementById("pwdGroup").style.display = "none";
+                    document.getElementById("uPassword").required = false; 
+                    
+                    document.getElementById("userModalTitle").innerText = "Edit User Account"; 
+                    document.getElementById("saveUserBtn").innerText = "Update Account"; 
+                    editUserId = id; 
+                    document.getElementById("userAccountModal").style.display = "block"; 
+                }); 
+            } 
+        });
         
         // ZOHO ENABLED MESSAGE TABLE CLICK HANDLER
         document.getElementById("messagesTable").addEventListener("click", function(e) { 
