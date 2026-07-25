@@ -338,7 +338,7 @@
                     </div>
                     <div class="table-responsive"> 
                         <table class="data-table" id="employeeTable">
-                            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Duty Post</th><th>Shift</th><th>Basic Salary</th><th>Action</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Duty Post</th><th>Shift</th><th>Status</th><th>Basic Salary</th><th>Action</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -519,7 +519,7 @@
                     </div>
                     <div class="table-responsive"> 
                         <table class="data-table" id="deploymentTable">
-                            <thead><tr><th>Emp ID</th><th>Guard Name</th><th>Role</th><th>Assigned Duty Post</th><th>Shift</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Emp ID</th><th>Guard Name</th><th>Role</th><th>Assigned Duty Post</th><th>Shift</th><th>Status</th><th>Action</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -891,6 +891,7 @@
                     <div class="form-group"><label>Role</label><select id="empRole" required><option value="" disabled selected>Select Role</option><option value="Admin">Admin</option><option value="Operations Manager">Operations Manager</option><option value="Finance Manager">Finance Manager</option><option value="Safety Manager">Safety Manager</option><option value="Marketing Manager">Marketing Manager</option><option value="IT Manager">IT Manager</option><option value="Supervisor">Supervisor</option><option value="Guard">Guard</option></select></div>
                     <div class="form-group"><label>Duty Post</label><select id="empDutyPost" required><option value="" disabled selected>Select Duty Post</option></select></div>
                     <div class="form-group"><label>Assigned Shift</label><select id="empShift" required><option value="" disabled selected>Select Shift</option><option value="Day">Day</option><option value="Night">Night</option></select></div>
+                    <div class="form-group"><label>Duty Status</label><select id="empStatus" required><option value="Active" selected>Active</option><option value="Off Duty">Off Duty</option></select></div>
                     <div class="form-group"><label>Enrolment Date</label><input type="date" id="empEnrolmentDate" required></div>
                     <div class="form-group"><label>Client Billing Rate (GH₵)</label><input type="number" id="empClientRate" required></div>
                     <div class="form-group"><label>Basic Salary (GH₵)</label><input type="number" id="empBasicSalary" required></div>
@@ -926,7 +927,7 @@
                 <div class="profile-pic-wrapper"><img id="viewProfilePic" src="https://via.placeholder.com/150/F4F6F8/0A2540?text=User" alt="Profile"><label for="imageUpload" class="upload-overlay"><i class="fa-solid fa-camera"></i> Change</label><input type="file" id="imageUpload" accept="image/*" style="display:none;"></div>
                 <div class="profile-title-area">
                     <h2 id="viewName">Employee Name</h2>
-                    <div class="profile-badges"><span class="badge module-badge" id="viewId"><i class="fa-solid fa-id-badge"></i> ID</span><span class="badge info-badge" id="viewRole"><i class="fa-solid fa-user-shield"></i> Role</span><span class="badge" id="v_shiftBadge"><i class="fa-solid fa-clock"></i> Shift</span></div>
+                    <div class="profile-badges"><span class="badge module-badge" id="viewId"><i class="fa-solid fa-id-badge"></i> ID</span><span class="badge info-badge" id="viewRole"><i class="fa-solid fa-user-shield"></i> Role</span><span class="badge" id="v_shiftBadge"><i class="fa-solid fa-clock"></i> Shift</span><span class="badge" id="v_statusBadge"><i class="fa-solid fa-toggle-on"></i> Active</span></div>
                 </div>
             </div>
             <div class="profile-body">
@@ -1087,7 +1088,7 @@
                 { col: "attendance", render: () => renderAttendanceTable() },
                 { col: "observations", render: () => { renderObservationTable(); renderDashboard(); } },
                 { col: "incidents", render: () => { renderIncidentTable(); renderDashboard(); } },
-                { col: "employees", render: () => { renderTable(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); renderGraDashboard(); renderSsnitDashboard(); } },
+                { col: "employees", render: () => { renderTable(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); renderGraDashboard(); renderSsnitDashboard(); renderAttendanceTable(); } },
                 { col: "clients", render: () => renderClientTable() },
                 { col: "expenditures", render: () => { renderExpenditureTable(); renderDashboard(); } },
                 { col: "invoices", render: () => { renderInvoiceTable(); renderGraDashboard(); } },
@@ -1206,8 +1207,8 @@
 
         document.getElementById("exportEmployeesBtn")?.addEventListener("click", function() {
             getAllEmployees().then(emps => {
-                let csv = "Emp ID,Name,Role,Duty Post,Shift,Ghana Card,SSNIT Number,Phone,Basic Salary (GH₵),Client Rate (GH₵),Bank/MoMo,Account Name,Account Number,Enrolment Date\n";
-                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.ghanaCard}","${emp.ssnit || ''}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)},"${emp.bankName || ''}","${emp.accName || ''}","${emp.accNumber || ''}","${emp.enrolmentDate || ''}"\n`; });
+                let csv = "Emp ID,Name,Role,Duty Post,Shift,Status,Ghana Card,SSNIT Number,Phone,Basic Salary (GH₵),Client Rate (GH₵),Bank/MoMo,Account Name,Account Number,Enrolment Date\n";
+                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.status || 'Active'}","${emp.ghanaCard}","${emp.ssnit || ''}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)},"${emp.bankName || ''}","${emp.accName || ''}","${emp.accNumber || ''}","${emp.enrolmentDate || ''}"\n`; });
                 const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = `DKB_Employee_Directory.csv`; link.click();
                 logAction("Employee Management", "Exported Employee Directory");
             });
@@ -1235,7 +1236,7 @@
                     expenditures = []; 
                 }
 
-                const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard')).length;
+                const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard') && e.status !== 'Off Duty').length;
                 const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
                 const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
                 const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
@@ -1423,6 +1424,13 @@
                     }
                 });
 
+                const thead = document.querySelector("#deploymentTable thead tr");
+                if (window.currentUserRole === "Client") {
+                    thead.innerHTML = `<th>Emp ID</th><th>Guard Name</th><th>Role</th><th>Assigned Duty Post</th><th>Shift</th><th>Status</th>`;
+                } else {
+                    thead.innerHTML = `<th>Emp ID</th><th>Guard Name</th><th>Role</th><th>Assigned Duty Post</th><th>Shift</th><th>Status</th><th>Action</th>`;
+                }
+
                 const tbody = document.querySelector("#deploymentTable tbody"); tbody.innerHTML = '';
                 
                 let filteredGuards = employees.filter(emp => emp.role && emp.role.toLowerCase().includes("guard"));
@@ -1436,7 +1444,12 @@
 
                 filteredGuards.forEach(emp => {
                     const newRow = document.createElement("tr");
-                    newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.role}</td><td style="color: var(--primary-color);"><i class="fa-solid fa-map-pin" style="color: var(--danger-color); font-size: 0.8rem; margin-right: 5px;"></i> ${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td class="action-buttons"><button class="btn-action edit btn-reassign" data-id="${emp.id}"><i class="fa-solid fa-location-arrow"></i> Reassign</button></td>`;
+                    const dutyStatus = emp.status || 'Active';
+                    const statusBadge = `<span class="badge ${dutyStatus === 'Off Duty' ? 'absent-badge' : 'success-badge'}">${dutyStatus}</span>`;
+                    
+                    let actionTd = window.currentUserRole === "Client" ? "" : `<td class="action-buttons"><button class="btn-action edit btn-reassign" data-id="${emp.id}"><i class="fa-solid fa-location-arrow"></i> Reassign</button></td>`;
+                    
+                    newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.role}</td><td style="color: var(--primary-color);"><i class="fa-solid fa-map-pin" style="color: var(--danger-color); font-size: 0.8rem; margin-right: 5px;"></i> ${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td>${statusBadge}</td>${actionTd}`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1454,14 +1467,32 @@
                     if (window.currentUserRole === "Client" && emp.dutyPost !== window.currentUserSite) return;
 
                     const logId = `${emp.id}_${selectedDate}`; const record = todaysLogs.find(log => log.id === logId);
-                    let timeIn = "-", timeOut = "-", statusBadge = `<span class="badge absent-badge">Absent</span>`, actionHtml = `<button class="btn-primary btn-clock-in" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock In</button>`, photoInHtml = "", photoOutHtml = "";
+                    
+                    const dutyStatus = emp.status || 'Active';
+                    const isOffDuty = dutyStatus === 'Off Duty';
+                    
+                    let timeIn = "-", timeOut = "-", statusBadge = isOffDuty ? `<span class="badge absent-badge" style="background: rgba(113, 128, 150, 0.2);"><i class="fa-solid fa-power-off"></i> Off Duty</span>` : `<span class="badge absent-badge">Absent</span>`;
+                    let actionHtml = isOffDuty ? "" : `<button class="btn-primary btn-clock-in" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock In</button>`;
+                    let photoInHtml = "", photoOutHtml = "";
+                    
                     if (record) { 
                         timeIn = record.clockIn; if(record.photoIn) photoInHtml = `<br><span onclick="viewGuardPhoto('${record.photoIn}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Photo</span>`;
                         if (record.clockOut) { 
                             timeOut = record.clockOut; if(record.photoOut) photoOutHtml = `<br><span onclick="viewGuardPhoto('${record.photoOut}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Photo</span>`;
                             statusBadge = `<span class="badge success-badge"><i class="fa-solid fa-check"></i> Completed</span>`; actionHtml = `<span style="color: var(--success-color); font-weight: bold; font-size: 0.85rem;">Shift Done</span>`; 
-                        } else { statusBadge = `<span class="badge warning-badge"><i class="fa-solid fa-spinner"></i> On Duty</span>`; actionHtml = `<button class="btn-primary alert-bg btn-clock-out" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock Out</button>`; } 
+                        } else { 
+                            statusBadge = `<span class="badge warning-badge"><i class="fa-solid fa-spinner"></i> On Duty</span>`; actionHtml = `<button class="btn-primary alert-bg btn-clock-out" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock Out</button>`; 
+                        } 
                     }
+                    
+                    // Add the toggle switch to actionHtml if not client
+                    if (window.currentUserRole !== "Client") {
+                        const toggleIcon = isOffDuty ? 'fa-toggle-off' : 'fa-toggle-on';
+                        const toggleColor = isOffDuty ? 'var(--gray-color)' : 'var(--success-color)';
+                        const toggleHtml = `<button class="btn-action edit btn-toggle-duty" data-id="${emp.id}" title="Toggle Duty Status" style="color: ${toggleColor}; margin-left: 10px;"><i class="fa-solid ${toggleIcon}"></i></button>`;
+                        actionHtml = `<div style="display:flex; align-items:center;">${actionHtml}${toggleHtml}</div>`;
+                    }
+
                     const newRow = document.createElement("tr");
                     newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td style="font-family: monospace; font-weight: bold; color: var(--primary-color);">${timeIn}${photoInHtml}</td><td style="font-family: monospace; font-weight: bold; color: var(--danger-color);">${timeOut}${photoOutHtml}</td><td>${statusBadge}</td><td>${actionHtml}</td>`;
                     tbody.appendChild(newRow);
@@ -1847,6 +1878,25 @@
                     const role = dbUser ? dbUser.role : "Standard User";
                     const name = dbUser ? dbUser.name : (user.displayName || user.email);
 
+                    // --- SECURITY FIX: Block 'Client' role ---
+                    if (role === "Client") {
+                        await signOut(auth); // Forcefully log them back out
+                        
+                        if (errDiv) {
+                            errDiv.innerText = "Access Denied: Clients are not permitted on the main portal. Please use the Client Portal.";
+                            errDiv.style.display = 'block';
+                            errDiv.style.background = 'rgba(229, 62, 62, 0.1)';
+                            errDiv.style.border = '1px solid var(--danger-color)';
+                        }
+                        
+                        if (loginBtn) { 
+                            loginBtn.disabled = false; 
+                            loginBtn.innerText = "Secure Login"; 
+                        }
+                        return; // Halt execution so the app container doesn't load
+                    }
+                    // -----------------------------------------
+
                     window.currentUserRole = role; 
                     window.currentUserSite = dbUser && dbUser.clientSite ? dbUser.clientSite : null; // Map the site
                     applyRBAC(role, name); 
@@ -1921,7 +1971,7 @@
         let editId = null, editIncId = null, editObsId = null, editExpId = null, editUserId = null, editClientId = null;
 
         document.getElementById("openCreateInvoiceBtn").onclick = () => { document.getElementById("invoiceForm").reset(); document.getElementById("invoiceItemsBody").innerHTML = ''; document.getElementById("invDate").value = new Date().toISOString().split('T')[0]; const d = new Date(); document.getElementById("invBillingMonth").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; addInvoiceRow(); calculateInvoiceTotal(); document.getElementById("createInvoiceModal").style.display = "block"; };
-        document.getElementById("openAddEmployeeModal").onclick = () => { editId = null; document.getElementById("addEmployeeForm").reset(); document.getElementById("modalTitle").innerText = "Add New Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Save Profile"; modals[0].style.display = "block"; };
+        document.getElementById("openAddEmployeeModal").onclick = () => { editId = null; document.getElementById("addEmployeeForm").reset(); document.getElementById("modalTitle").innerText = "Add New Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Save Profile"; document.getElementById("empStatus").value = "Active"; modals[0].style.display = "block"; };
         document.getElementById("openLogIncidentBtn").onclick = () => document.getElementById("logIncidentModal").style.display = "block";
         document.getElementById("openLogObservationBtn").onclick = () => document.getElementById("logObservationModal").style.display = "block";
         document.getElementById("openLogExpenditureBtn").onclick = () => document.getElementById("logExpenditureModal").style.display = "block";
@@ -2149,6 +2199,7 @@
                 if(emp.dutyPost && !Array.from(dpSelect.options).some(o => o.value === emp.dutyPost)) { const opt = document.createElement("option"); opt.value = emp.dutyPost; opt.innerText = emp.dutyPost + " (Unregistered)"; dpSelect.appendChild(opt); } 
                 dpSelect.value = emp.dutyPost; 
                 document.getElementById("empShift").value = emp.shift;
+                document.getElementById("empStatus").value = emp.status || "Active";
                 document.getElementById("empEnrolmentDate").value = emp.enrolmentDate || "";
                 document.getElementById("empClientRate").value = emp.clientRate; 
                 document.getElementById("empBasicSalary").value = emp.basicSalary; 
@@ -2185,6 +2236,7 @@
                 role: document.getElementById("empRole").value, 
                 dutyPost: document.getElementById("empDutyPost").value, 
                 shift: document.getElementById("empShift").value, 
+                status: document.getElementById("empStatus").value,
                 enrolmentDate: document.getElementById("empEnrolmentDate").value,
                 clientRate: document.getElementById("empClientRate").value, 
                 basicSalary: document.getElementById("empBasicSalary").value, 
@@ -2300,7 +2352,32 @@
             } 
         });
         
-        document.getElementById("attendanceTable").addEventListener("click", function(e) { const inBtn = e.target.closest('.btn-clock-in'), outBtn = e.target.closest('.btn-clock-out'); if (inBtn) { saveAttendanceRecord({ id: `${inBtn.getAttribute("data-empid")}_${inBtn.getAttribute("data-date")}`, empId: inBtn.getAttribute("data-empid"), date: inBtn.getAttribute("data-date"), clockIn: new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }), clockOut: null }).then(() => { renderAttendanceTable(); }); } if (outBtn) { getAttendanceRecord(`${outBtn.getAttribute("data-empid")}_${outBtn.getAttribute("data-date")}`).then(rec => { if(rec) { rec.clockOut = new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }); saveAttendanceRecord(rec).then(() => renderAttendanceTable()); } }); } });
+        document.getElementById("attendanceTable").addEventListener("click", function(e) { 
+            const inBtn = e.target.closest('.btn-clock-in'), 
+                  outBtn = e.target.closest('.btn-clock-out'),
+                  toggleBtn = e.target.closest('.btn-toggle-duty'); 
+                  
+            if (inBtn) { 
+                saveAttendanceRecord({ id: `${inBtn.getAttribute("data-empid")}_${inBtn.getAttribute("data-date")}`, empId: inBtn.getAttribute("data-empid"), date: inBtn.getAttribute("data-date"), clockIn: new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }), clockOut: null }).then(() => { renderAttendanceTable(); }); 
+            } else if (outBtn) { 
+                getAttendanceRecord(`${outBtn.getAttribute("data-empid")}_${outBtn.getAttribute("data-date")}`).then(rec => { 
+                    if(rec) { 
+                        rec.clockOut = new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }); 
+                        saveAttendanceRecord(rec).then(() => renderAttendanceTable()); 
+                    } 
+                }); 
+            } else if (toggleBtn) {
+                const id = toggleBtn.getAttribute("data-id");
+                getEmployee(id).then(emp => { 
+                    emp.status = (emp.status === 'Off Duty') ? 'Active' : 'Off Duty'; 
+                    saveEmployee(emp).then(() => {
+                        logAction("Attendance", `Toggled duty status of ${emp.name} to ${emp.status}`);
+                        renderAttendanceTable();
+                    }); 
+                });
+            }
+        });
+
         document.getElementById("expenditureTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteExpenditure(id).then(() => renderExpenditureTable()); } else if (btn.classList.contains('edit')) { getExpenditure(id).then(exp => { document.getElementById("expDate").value = exp.date; document.getElementById("expAmount").value = exp.amount; document.getElementById("expCategory").value = exp.category; document.getElementById("expDescription").value = exp.description; editExpId = id; document.getElementById("logExpenditureModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getExpenditure(id).then(exp => alert(`Amount: GH₵ ${exp.amount}\nCategory: ${exp.category}\nDesc: ${exp.description}`)); } });
         document.getElementById("observationTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-obs-status")) { getObservation(e.target.getAttribute("data-id")).then(obs => { obs.status = e.target.value; saveObservation(obs).then(() => renderObservationTable()); }); } });
         document.getElementById("observationTable").addEventListener("click", function(e) { const btn = e.target.closest('.btn-action'); if (!btn) return; const id = btn.getAttribute("data-id"); if (btn.classList.contains('delete')) { if (confirm(`Delete?`)) deleteObservation(id).then(() => renderObservationTable()); } else if (btn.classList.contains('edit')) { getObservation(id).then(obs => { document.getElementById("obsDate").value = obs.date; document.getElementById("obsSite").value = obs.site; document.getElementById("obsObserver").value = obs.observer; document.getElementById("obsDescription").value = obs.description; document.getElementById("obsStatus").value = obs.status; editObsId = id; document.getElementById("logObservationModal").style.display = "block"; }); } else if (btn.classList.contains('view')) { getObservation(id).then(obs => alert(`Site: ${obs.site}\nObserver: ${obs.observer}\nDesc: ${obs.description}`)); } });
@@ -2324,6 +2401,11 @@
                     document.getElementById("viewRole").innerHTML = `<i class="fa-solid fa-user-shield"></i> ${emp.role}`; 
                     document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; 
                     document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; 
+                    
+                    const dutyStatus = emp.status || 'Active';
+                    document.getElementById("v_statusBadge").className = `badge ${dutyStatus === 'Off Duty' ? 'absent-badge' : 'success-badge'}`;
+                    document.getElementById("v_statusBadge").innerHTML = `<i class="fa-solid ${dutyStatus === 'Off Duty' ? 'fa-toggle-off' : 'fa-toggle-on'}"></i> ${dutyStatus}`;
+
                     document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; 
                     document.getElementById("v_ssnit").innerText = emp.ssnit || "N/A";
                     document.getElementById("v_phone").innerText = emp.phone; 
