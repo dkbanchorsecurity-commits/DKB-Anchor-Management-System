@@ -882,8 +882,9 @@
                 <div class="form-section"><h3>1. Personal Details</h3><div class="form-grid">
                     <div class="form-group"><label>Full Name</label><input type="text" id="empName" required></div>
                     <div class="form-group"><label>Ghana Card ID</label><input type="text" id="empGhanaCard" required></div>
+                    <div class="form-group"><label>SSNIT Number</label><input type="text" id="empSSNIT"></div>
                     <div class="form-group"><label>Phone Number</label><input type="tel" id="empPhone" required></div>
-                    <div class="form-group"><label>Ghana Post GPS</label><input type="text" id="empGPS" required></div>
+                    <div class="form-group full-width"><label>Ghana Post GPS</label><input type="text" id="empGPS" required></div>
                     <div class="form-group full-width"><label>Residential Address</label><input type="text" id="empAddress" required></div>
                 </div></div>
                 <div class="form-section"><h3>2. Employment Details</h3><div class="form-grid">
@@ -930,7 +931,7 @@
             </div>
             <div class="profile-body">
                 <div class="profile-column">
-                    <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-address-card"></i> Personal Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Ghana Card ID</label><span id="v_ghanaCard">-</span></div><div class="view-item-new"><label>Phone Number</label><span id="v_phone">-</span></div><div class="view-item-new"><label>Ghana Post GPS</label><span id="v_gps">-</span></div><div class="view-item-new"><label>Residential Address</label><span id="v_address">-</span></div></div></div>
+                    <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-address-card"></i> Personal Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Ghana Card ID</label><span id="v_ghanaCard">-</span></div><div class="view-item-new"><label>SSNIT Number</label><span id="v_ssnit">-</span></div><div class="view-item-new"><label>Phone Number</label><span id="v_phone">-</span></div><div class="view-item-new"><label>Ghana Post GPS</label><span id="v_gps">-</span></div><div class="view-item-new"><label>Residential Address</label><span id="v_address">-</span></div></div></div>
                     <div class="profile-section-card" style="margin-bottom: 25px;"><h4><i class="fa-solid fa-briefcase"></i> Employment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Duty Post</label><span id="v_dutyPost">-</span></div><div class="view-item-new"><label>Enrolment Date</label><span id="v_enrolmentDate">-</span></div><div class="view-item-new"><label>Basic Salary</label><span id="v_salary">-</span></div><div class="view-item-new"><label>Client Billing Rate</label><span id="v_rate">-</span></div></div></div>
                     <div class="profile-section-card"><h4><i class="fa-solid fa-building-columns"></i> Payment Details</h4><div class="view-grid-new"><div class="view-item-new"><label>Bank / MoMo</label><span id="v_bankName">-</span></div><div class="view-item-new"><label>Account Name</label><span id="v_accName">-</span></div><div class="view-item-new"><label>Account No.</label><span id="v_accNumber">-</span></div><div class="view-item-new"><label>Branch / Network</label><span id="v_bankBranch">-</span></div></div></div>
                 </div>
@@ -1205,8 +1206,8 @@
 
         document.getElementById("exportEmployeesBtn")?.addEventListener("click", function() {
             getAllEmployees().then(emps => {
-                let csv = "Emp ID,Name,Role,Duty Post,Shift,Ghana Card,Phone,Basic Salary (GH₵),Client Rate (GH₵),Bank/MoMo,Account Name,Account Number,Enrolment Date\n";
-                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.ghanaCard}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)},"${emp.bankName || ''}","${emp.accName || ''}","${emp.accNumber || ''}","${emp.enrolmentDate || ''}"\n`; });
+                let csv = "Emp ID,Name,Role,Duty Post,Shift,Ghana Card,SSNIT Number,Phone,Basic Salary (GH₵),Client Rate (GH₵),Bank/MoMo,Account Name,Account Number,Enrolment Date\n";
+                emps.forEach(emp => { csv += `"${emp.id}","${emp.name}","${emp.role}","${emp.dutyPost}","${emp.shift}","${emp.ghanaCard}","${emp.ssnit || ''}","${emp.phone}",${parseFloat(emp.basicSalary || 0)},${parseFloat(emp.clientRate || 0)},"${emp.bankName || ''}","${emp.accName || ''}","${emp.accNumber || ''}","${emp.enrolmentDate || ''}"\n`; });
                 const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = `DKB_Employee_Directory.csv`; link.click();
                 logAction("Employee Management", "Exported Employee Directory");
             });
@@ -2139,6 +2140,7 @@
                 document.getElementById("saveEmployeeBtn").innerText = "Update Employee"; 
                 document.getElementById("empName").value = emp.name; 
                 document.getElementById("empGhanaCard").value = emp.ghanaCard; 
+                document.getElementById("empSSNIT").value = emp.ssnit || "";
                 document.getElementById("empPhone").value = emp.phone; 
                 document.getElementById("empGPS").value = emp.gps; 
                 document.getElementById("empAddress").value = emp.address; 
@@ -2176,6 +2178,7 @@
             const data = { 
                 name: document.getElementById("empName").value, 
                 ghanaCard: document.getElementById("empGhanaCard").value, 
+                ssnit: document.getElementById("empSSNIT").value,
                 phone: document.getElementById("empPhone").value, 
                 gps: document.getElementById("empGPS").value, 
                 address: document.getElementById("empAddress").value, 
@@ -2322,6 +2325,7 @@
                     document.getElementById("v_shiftBadge").className = `badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}`; 
                     document.getElementById("v_shiftBadge").innerHTML = `<i class="fa-solid fa-clock"></i> ${emp.shift}`; 
                     document.getElementById("v_ghanaCard").innerText = emp.ghanaCard; 
+                    document.getElementById("v_ssnit").innerText = emp.ssnit || "N/A";
                     document.getElementById("v_phone").innerText = emp.phone; 
                     document.getElementById("v_gps").innerText = emp.gps; 
                     document.getElementById("v_address").innerText = emp.address; 
