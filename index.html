@@ -1238,7 +1238,18 @@
 
                 const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard') && e.status !== 'Off Duty').length;
                 const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
-                const monthlySalaries = employees.reduce((sum, e) => sum + (parseFloat(e.basicSalary) || 0), 0);
+                
+                // NEW NET PAY CALCULATION
+                const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+                const currentYearVal = document.getElementById("year-filter") ? document.getElementById("year-filter").value : new Date().getFullYear();
+                const periodKey = `${currentMonthName}_${currentYearVal}`;
+
+                const monthlySalaries = employees.reduce((sum, emp) => {
+                    const record = (emp.payrollData && emp.payrollData[periodKey]) ? emp.payrollData[periodKey] : { overtime: 0, bonus: 0 };
+                    const fin = calculateFinancials(emp, record.overtime, record.bonus);
+                    return sum + fin.netPay;
+                }, 0);
+
                 const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
                 const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
                 
@@ -1325,7 +1336,13 @@
                 employees.forEach(emp => {
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${emp.id}"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td>${emp.id}</td><td>${emp.name}</td><td>${emp.role}</td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td>GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}</td><td class="action-buttons"><button class="btn-action view" data-id="${emp.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${emp.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</td>`;
+                    
+                    const dutyStatus = emp.status || 'Active';
+                    const statusBadge = `<span class="badge ${dutyStatus === 'Off Duty' ? 'absent-badge' : 'success-badge'}">${dutyStatus}</span>`;
+                    const toggleIcon = dutyStatus === 'Off Duty' ? 'fa-toggle-off' : 'fa-toggle-on';
+                    const toggleHtml = `<button class="btn-action edit btn-toggle-duty" data-id="${emp.id}" title="Toggle Duty Status"><i class="fa-solid ${toggleIcon}"></i></button>`;
+
+                    newRow.innerHTML = `<td>${emp.id}</td><td>${emp.name}</td><td>${emp.role}</td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td>${statusBadge}</td><td>GH₵ ${parseFloat(emp.basicSalary || 0).toLocaleString()}</td><td class="action-buttons"><button class="btn-action view" data-id="${emp.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${emp.id}"><i class="fa-solid fa-pen"></i></button>${toggleHtml}${deleteHtml}</td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1878,25 +1895,6 @@
                     const role = dbUser ? dbUser.role : "Standard User";
                     const name = dbUser ? dbUser.name : (user.displayName || user.email);
 
-                    // --- SECURITY FIX: Block 'Client' role ---
-                    if (role === "Client") {
-                        await signOut(auth); // Forcefully log them back out
-                        
-                        if (errDiv) {
-                            errDiv.innerText = "Access Denied: Clients are not permitted on the main portal. Please use the Client Portal.";
-                            errDiv.style.display = 'block';
-                            errDiv.style.background = 'rgba(229, 62, 62, 0.1)';
-                            errDiv.style.border = '1px solid var(--danger-color)';
-                        }
-                        
-                        if (loginBtn) { 
-                            loginBtn.disabled = false; 
-                            loginBtn.innerText = "Secure Login"; 
-                        }
-                        return; // Halt execution so the app container doesn't load
-                    }
-                    // -----------------------------------------
-
                     window.currentUserRole = role; 
                     window.currentUserSite = dbUser && dbUser.clientSite ? dbUser.clientSite : null; // Map the site
                     applyRBAC(role, name); 
@@ -2391,7 +2389,17 @@
             if (btn.classList.contains('delete')) { 
                 if (confirm(`Delete employee ${id}?`)) deleteEmployee(id).then(() => renderTable()); 
             } else if (btn.classList.contains('edit')) { 
-                openEditEmployeeModal(id); 
+                if (btn.classList.contains('btn-toggle-duty')) {
+                    getEmployee(id).then(emp => { 
+                        emp.status = (emp.status === 'Off Duty') ? 'Active' : 'Off Duty'; 
+                        saveEmployee(emp).then(() => {
+                            logAction("Employee Management", `Toggled duty status of ${emp.name} to ${emp.status}`);
+                            renderTable();
+                        }); 
+                    });
+                } else {
+                    openEditEmployeeModal(id); 
+                }
             } else if (btn.classList.contains('view')) { 
                 getEmployee(id).then(emp => { 
                     document.getElementById("viewProfilePic").src = emp.profilePic; 
