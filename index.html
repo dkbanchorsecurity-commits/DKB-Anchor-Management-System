@@ -269,7 +269,7 @@
         <nav class="sidebar" id="mainSidebar">
             <div class="sidebar-header">
                 <img src="logo.png" alt="Company Logo" class="brand-logo" id="sidebarLogo">
-                <h2 id="sidebarCompanyName">DKB ANCHOR</h2>
+                <h2 id="sidebarCompanyName">DKB ANCHOR SECURITY</h2>
                 <p>Security Services Ltd.</p>
             </div>
             <ul class="nav-links">
@@ -1895,6 +1895,25 @@
                     const role = dbUser ? dbUser.role : "Standard User";
                     const name = dbUser ? dbUser.name : (user.displayName || user.email);
 
+                    // --- SECURITY FIX: Block 'Client' role ---
+                    if (role === "Client") {
+                        await signOut(auth); // Forcefully log them back out
+                        
+                        if (errDiv) {
+                            errDiv.innerText = "Access Denied: Clients are not permitted on the main portal. Please use the Client Portal.";
+                            errDiv.style.display = 'block';
+                            errDiv.style.background = 'rgba(229, 62, 62, 0.1)';
+                            errDiv.style.border = '1px solid var(--danger-color)';
+                        }
+                        
+                        if (loginBtn) { 
+                            loginBtn.disabled = false; 
+                            loginBtn.innerText = "Secure Login"; 
+                        }
+                        return; // Halt execution so the app container doesn't load
+                    }
+                    // -----------------------------------------
+
                     window.currentUserRole = role; 
                     window.currentUserSite = dbUser && dbUser.clientSite ? dbUser.clientSite : null; // Map the site
                     applyRBAC(role, name); 
@@ -2370,7 +2389,7 @@
                     emp.status = (emp.status === 'Off Duty') ? 'Active' : 'Off Duty'; 
                     saveEmployee(emp).then(() => {
                         logAction("Attendance", `Toggled duty status of ${emp.name} to ${emp.status}`);
-                        renderAttendanceTable();
+                        renderAttendanceTable(); // FORCE THE UI TO REFRESH INSTANTLY
                     }); 
                 });
             }
@@ -2464,7 +2483,7 @@
                     const html = generatePayslipHTML(
                         emp, 
                         calculateFinancials(emp, record.overtime, record.bonus), 
-                        sys ? sys.companyName : "DKB ANCHOR", 
+                        sys ? sys.companyName : "DKB ANCHOR SECURITY", 
                         sys ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO", 
                         document.getElementById("payrollMonth").value + " " + document.getElementById("year-filter").value
                     ); 
@@ -2510,7 +2529,56 @@
                     }); 
                     let billingMonthDisplay = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' }) : "-"; 
                     const logoUrl = sys && sys.logo ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO";
-                    const html = `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"> <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0A2540; padding-bottom: 20px; margin-bottom: 30px;"> <div> <img src="${logoUrl}" crossorigin="anonymous" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"> <h2 style="color: #0A2540; margin: 0; font-size: 1.5rem;">${sys ? sys.companyName : 'DKB ANCHOR'}</h2> <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #4A5568; max-width: 350px; line-height: 1.4;">Mile 7 Opposite Ruttchen Trucks Gh. Ltd,<br>Near Mile 7 police Station Accra Ghana.</p> <p style="margin: 3px 0 0 0; font-size: 0.9rem; color: #4A5568;"><strong>Contacts:</strong> 0557150062 / 0207816778</p> </div> <div style="text-align: right;"> <h1 style="color: #D4AF37; margin: 0; font-size: 2.5rem; text-transform: uppercase;">Invoice</h1> <p style="margin: 5px 0 0 0; font-size: 1.1rem; color: #718096;"><strong>#${inv.id}</strong></p> </div> </div> <div style="display: flex; justify-content: space-between; margin-bottom: 40px;"> <div> <h4 style="color: #718096; margin: 0 0 5px 0; text-transform: uppercase; font-size: 0.85rem;">Billed To:</h4> <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;">${inv.clientName}</p> <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> </div> <div style="text-align: right;"> <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> </div> <div style="text-align: right;"> <p style="margin: 0 0 5px 0;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> <p style="margin: 0 0 5px 0;"><strong>Billing Month:</strong> ${billingMonthDisplay}</p> <p style="margin: 0;"><strong>Status:</strong> ${inv.status}</p> </div> </div> <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;"> <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: center;">Qty</th><th style="padding: 12px 10px; text-align: right;">Rate (GH₵)</th><th style="padding: 12px 10px; text-align: right;">Amount (GH₵)</th></tr></thead> <tbody>${itemsHtml}</tbody> </table> <div style="display: flex; justify-content: flex-end;"> <div style="width: 320px;"> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;"><span>Subtotal:</span><strong>GH₵ ${inv.subtotal.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>GETFund Levy (2.5%):</span><strong>GH₵ ${inv.gefl.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>NHIL (2.5%):</span><strong>GH₵ ${inv.nhil.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>VAT (15%):</span><strong>GH₵ ${inv.vat.toFixed(2)}</strong></div> <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> </div> </div> <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 0.9rem;"><p>Thank you for your business!</p></div> </div>`; 
+                    const html = `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"> 
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0A2540; padding-bottom: 20px; margin-bottom: 30px;"> 
+                            <div> 
+                                <img src="${logoUrl}" crossorigin="anonymous" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"> 
+                                <h2 style="color: #0A2540; margin: 0; font-size: 1.5rem;">${sys ? sys.companyName : 'DKB ANCHOR SECURITY'}</h2> 
+                                <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #4A5568; max-width: 350px; line-height: 1.4;">Mile 7 Opposite Ruttchen Trucks Gh. Ltd,<br>Near Mile 7 police Station Accra Ghana.</p> 
+                                <p style="margin: 3px 0 0 0; font-size: 0.9rem; color: #4A5568;"><strong>Contacts:</strong> 0557150062 / 0207816778</p> 
+                            </div> 
+                            <div style="text-align: right;"> 
+                                <h1 style="color: #D4AF37; margin: 0; font-size: 2.5rem; text-transform: uppercase;">Invoice</h1> 
+                                <p style="margin: 5px 0 0 0; font-size: 1.1rem; color: #718096;"><strong>#${inv.id}</strong></p> 
+                            </div> 
+                        </div> 
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 40px;"> 
+                            <div> 
+                                <h4 style="color: #718096; margin: 0 0 5px 0; text-transform: uppercase; font-size: 0.85rem;">Billed To:</h4> 
+                                <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;">${inv.clientName}</p> 
+                                <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> 
+                            </div> 
+                            <div style="text-align: right;"> 
+                                <p style="margin: 0 0 5px 0;"><strong>Date:</strong> ${new Date(inv.date).toLocaleDateString()}</p> 
+                                <p style="margin: 0 0 5px 0;"><strong>Billing Month:</strong> ${billingMonthDisplay}</p> 
+                                <p style="margin: 0;"><strong>Status:</strong> ${inv.status}</p> 
+                            </div> 
+                        </div> 
+                        
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;"> 
+                            <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: center;">Qty</th><th style="padding: 12px 10px; text-align: right;">Rate (GH₵)</th><th style="padding: 12px 10px; text-align: right;">Amount (GH₵)</th></tr></thead> 
+                            <tbody>${itemsHtml}</tbody> 
+                        </table> 
+                        
+                        <div style="display: flex; justify-content: flex-end;"> 
+                            <div style="width: 320px;"> 
+                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;"><span>Subtotal:</span><strong>GH₵ ${inv.subtotal.toFixed(2)}</strong></div> 
+                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>GETFund Levy (2.5%):</span><strong>GH₵ ${inv.gefl.toFixed(2)}</strong></div> 
+                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>NHIL (2.5%):</span><strong>GH₵ ${inv.nhil.toFixed(2)}</strong></div> 
+                                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0; color: #4A5568;"><span>VAT (15%):</span><strong>GH₵ ${inv.vat.toFixed(2)}</strong></div> 
+                                <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> 
+                            </div> 
+                        </div> 
+                        
+                        <div style="margin-top: 30px; padding: 15px; background-color: #F4F6F8; border-left: 4px solid #D4AF37; font-size: 0.95rem; color: #2D3748; line-height: 1.5;">
+                            <strong>Note:</strong> All payments should be made to Bank: Guaranty Trust Bank Ghana, Account Name: DKB Anchor Security Services Ltd, Account number: 3211001003568
+                        </div> 
+                        
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 0.9rem;">
+                            <p>Thank you for your business!</p>
+                        </div> 
+                    </div>`; 
                     
                     if (isDownload) { 
                         html2pdf().set({ 
