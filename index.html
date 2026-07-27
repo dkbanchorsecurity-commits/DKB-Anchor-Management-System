@@ -1411,7 +1411,10 @@
                     let displayMonth = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'short', year: 'numeric' }) : "-";
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete btn-del-inv" data-id="${inv.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td><strong>${inv.id}</strong><br><span style="font-size: 0.75rem; color: var(--accent-color); font-weight: bold;">${displayMonth}</span></td><td>${new Date(inv.date).toLocaleDateString()}</td><td>${inv.clientName}</td><td style="font-weight: bold; color: var(--primary-color);">GH₵ ${parseFloat(inv.total).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td><select class="inline-input update-inv-status" data-id="${inv.id}" style="width: 100px; padding: 5px;"><option value="Draft" ${inv.status === 'Draft' ? 'selected' : ''}>Draft</option><option value="Sent" ${inv.status === 'Sent' ? 'selected' : ''}>Sent</option><option value="Paid" ${inv.status === 'Paid' ? 'selected' : ''}>Paid</option></select></td><td><div class="action-buttons"><button class="btn-action view btn-print-inv" data-id="${inv.id}" title="Print"><i class="fa-solid fa-print"></i></button><button class="btn-action edit btn-download-inv" data-id="${inv.id}" title="Download PDF"><i class="fa-solid fa-file-pdf"></i></button>${deleteHtml}</div></td>`;
+                    
+                    const receiptHtml = inv.status === 'Paid' ? `<button class="btn-action view btn-download-receipt" style="color: var(--success-color);" data-id="${inv.id}" title="Download Receipt"><i class="fa-solid fa-receipt"></i></button>` : '';
+
+                    newRow.innerHTML = `<td><strong>${inv.id}</strong><br><span style="font-size: 0.75rem; color: var(--accent-color); font-weight: bold;">${displayMonth}</span></td><td>${new Date(inv.date).toLocaleDateString()}</td><td>${inv.clientName}</td><td style="font-weight: bold; color: var(--primary-color);">GH₵ ${parseFloat(inv.total).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td><select class="inline-input update-inv-status" data-id="${inv.id}" style="width: 100px; padding: 5px;"><option value="Draft" ${inv.status === 'Draft' ? 'selected' : ''}>Draft</option><option value="Sent" ${inv.status === 'Sent' ? 'selected' : ''}>Sent</option><option value="Paid" ${inv.status === 'Paid' ? 'selected' : ''}>Paid</option></select></td><td><div class="action-buttons"><button class="btn-action view btn-print-inv" data-id="${inv.id}" title="Print Invoice"><i class="fa-solid fa-print"></i></button><button class="btn-action edit btn-download-inv" data-id="${inv.id}" title="Download Invoice PDF"><i class="fa-solid fa-file-pdf"></i></button>${receiptHtml}${deleteHtml}</div></td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -2516,6 +2519,7 @@
             const printBtn = e.target.closest('.btn-print-inv'); 
             const downloadBtn = e.target.closest('.btn-download-inv'); 
             const delBtn = e.target.closest('.btn-del-inv'); 
+            const receiptBtn = e.target.closest('.btn-download-receipt'); 
             
             if (delBtn) { 
                 if (confirm(`Delete Invoice?`)) deleteInvoice(delBtn.getAttribute("data-id")).then(() => renderInvoiceTable()); 
@@ -2593,7 +2597,67 @@
                         setTimeout(() => window.print(), 500); 
                     } 
                 }); 
-            } 
+            } else if (receiptBtn) { 
+                Promise.all([getInvoice(receiptBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { 
+                    const logoUrl = sys && sys.logo ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO";
+                    let billingMonthDisplay = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' }) : "-"; 
+                    
+                    const receiptHtml = `<div style="width: 100%; max-width: 800px; margin: 0 auto; background: #ffffff; color: #000; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif;"> 
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0A2540; padding-bottom: 20px; margin-bottom: 30px;"> 
+                            <div> 
+                                <img src="${logoUrl}" crossorigin="anonymous" alt="Logo" style="max-height: 60px; margin-bottom: 10px;"> 
+                                <h2 style="color: #0A2540; margin: 0; font-size: 1.5rem;">${sys ? sys.companyName : 'DKB ANCHOR'}</h2> 
+                                <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #4A5568; max-width: 350px; line-height: 1.4;">Mile 7 Opposite Ruttchen Trucks Gh. Ltd,<br>Near Mile 7 police Station Accra Ghana.</p> 
+                                <p style="margin: 3px 0 0 0; font-size: 0.9rem; color: #4A5568;"><strong>Contacts:</strong> 0557150062 / 0207816778 / 0247071531</p> 
+                            </div> 
+                            <div style="text-align: right;"> 
+                                <h1 style="color: #38A169; margin: 0; font-size: 2.5rem; text-transform: uppercase;">Receipt</h1> 
+                                <p style="margin: 5px 0 0 0; font-size: 1.1rem; color: #718096;"><strong>#REC-${inv.id.replace('INV-', '')}</strong></p> 
+                            </div> 
+                        </div> 
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 40px;"> 
+                            <div> 
+                                <h4 style="color: #718096; margin: 0 0 5px 0; text-transform: uppercase; font-size: 0.85rem;">Received From:</h4> 
+                                <p style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #0A2540;">${inv.clientName}</p> 
+                                <p style="margin: 5px 0 0 0; max-width: 250px; line-height: 1.4;">${inv.clientAddress}</p> 
+                            </div> 
+                            <div style="text-align: right;"> 
+                                <p style="margin: 0 0 5px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p> 
+                                <p style="margin: 0 0 5px 0;"><strong>Payment For:</strong> Invoice #${inv.id}</p> 
+                            </div> 
+                        </div> 
+                        
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;"> 
+                            <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: right;">Amount Paid (GH₵)</th></tr></thead> 
+                            <tbody> 
+                                <tr>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #E2E8F0;">Full payment for security services (Billing Month: ${billingMonthDisplay})</td>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${inv.total.toFixed(2)}</td>
+                                </tr> 
+                            </tbody> 
+                        </table> 
+                        
+                        <div style="display: flex; justify-content: flex-end;"> 
+                            <div style="width: 320px; background: rgba(56, 161, 105, 0.1); padding: 15px; border-left: 4px solid #38A169; border-radius: 4px;"> 
+                                <div style="display: flex; justify-content: space-between; font-size: 1.3rem; color: #38A169; font-weight: bold;"><span>Amount Paid:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> 
+                            </div> 
+                        </div> 
+                        
+                        <div style="margin-top: 50px; padding-top: 20px; padding-bottom: 40px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 1rem; font-weight: bold;">
+                            Payment successfully received. Thank you!
+                        </div> 
+                    </div>`; 
+
+                    html2pdf().set({ 
+                        margin: 0.5, 
+                        filename: `Receipt_REC-${inv.id.replace('INV-', '')}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, 
+                        image: { type: 'jpeg', quality: 0.98 }, 
+                        html2canvas: { scale: 2, useCORS: true }, 
+                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
+                    }).from(receiptHtml).save(); 
+                }); 
+            }
         });
     </script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed: ', err)); }); }</script>
