@@ -857,6 +857,11 @@
                         <label>Message Body</label>
                         <textarea id="extEmailBody" rows="6" required></textarea>
                     </div>
+                    <div class="form-group full-width">
+                        <label>Attachment (Optional)</label>
+                        <input type="file" id="extEmailAttachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        <small style="color: var(--gray-color); font-size: 0.8rem; margin-top: 5px; display: block;">*Max file size: 5MB</small>
+                    </div>
                 </div></div>
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('sendExternalEmailModal').style.display='none'">Cancel</button>
@@ -2128,6 +2133,30 @@
             const to = document.getElementById("extEmailTo").value;
             const subject = document.getElementById("extEmailSubject").value;
             const rawContent = document.getElementById("extEmailBody").value;
+            const fileInput = document.getElementById("extEmailAttachment");
+            
+            // Handle Attachment
+            let attachmentData = null;
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("Attachment too large. Maximum size is 5MB.");
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    return;
+                }
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = error => reject(error);
+                });
+                attachmentData = {
+                    name: file.name,
+                    mimeType: file.type,
+                    content: base64
+                };
+            }
             
             // 1. Convert text line breaks to HTML line breaks
             let formattedContent = rawContent.replace(/\n/g, '<br>');
@@ -2160,6 +2189,8 @@
 
             // 4. Combine the message and signature
             const finalEmailContent = formattedContent + signatureHTML;
+            const payload = { to, subject, content: finalEmailContent };
+            if (attachmentData) payload.attachment = attachmentData;
             
             try {
                 const response = await fetch("https://dkb-anchor-portal.vercel.app/api/sendEmail", {
@@ -2168,7 +2199,7 @@
                         "Content-Type": "application/json",
                         "Authorization": "Bearer DKB_Anchor_Secure_Bridge_2026!"
                     },
-                    body: JSON.stringify({ to, subject, content: finalEmailContent })
+                    body: JSON.stringify(payload)
                 });
                 
                 const data = await response.json();
@@ -2181,7 +2212,7 @@
                     sender: loggedInUser + " (via info@dkb...)", 
                     recipient: to, 
                     subject: subject, 
-                    body: rawContent, 
+                    body: rawContent + (attachmentData ? `\n[Attachment: ${attachmentData.name}]` : ""), 
                     timestamp: new Date().getTime(), 
                     status: "Sent External" 
                 };
@@ -2599,6 +2630,18 @@
                 }); 
             } else if (receiptBtn) { 
                 Promise.all([getInvoice(receiptBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { 
+                    
+                    const defaultAmount = inv.total.toFixed(2);
+                    const amountInput = prompt(`Enter the exact amount received for Invoice #${inv.id} (GH₵):`, defaultAmount);
+                    
+                    if (amountInput === null) return; 
+                    
+                    const amountPaid = parseFloat(amountInput);
+                    if (isNaN(amountPaid) || amountPaid <= 0) {
+                        alert("Invalid amount entered. Receipt generation cancelled.");
+                        return;
+                    }
+
                     const logoUrl = sys && sys.logo ? sys.logo : "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO";
                     let billingMonthDisplay = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'long', year: 'numeric' }) : "-"; 
                     
@@ -2632,15 +2675,15 @@
                             <thead><tr style="background: #0A2540; color: #fff;"><th style="padding: 12px 10px; text-align: left;">Description</th><th style="padding: 12px 10px; text-align: right;">Amount Paid (GH₵)</th></tr></thead> 
                             <tbody> 
                                 <tr>
-                                    <td style="padding: 15px 10px; border-bottom: 1px solid #E2E8F0;">Full payment for security services (Billing Month: ${billingMonthDisplay})</td>
-                                    <td style="padding: 15px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${inv.total.toFixed(2)}</td>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #E2E8F0;">Payment for security services (Invoice #${inv.id} - ${billingMonthDisplay})</td>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${amountPaid.toFixed(2)}</td>
                                 </tr> 
                             </tbody> 
                         </table> 
                         
                         <div style="display: flex; justify-content: flex-end;"> 
                             <div style="width: 320px; background: rgba(56, 161, 105, 0.1); padding: 15px; border-left: 4px solid #38A169; border-radius: 4px;"> 
-                                <div style="display: flex; justify-content: space-between; font-size: 1.3rem; color: #38A169; font-weight: bold;"><span>Amount Paid:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> 
+                                <div style="display: flex; justify-content: space-between; font-size: 1.3rem; color: #38A169; font-weight: bold;"><span>Amount Paid:</span><span>GH₵ ${amountPaid.toFixed(2)}</span></div> 
                             </div> 
                         </div> 
                         
