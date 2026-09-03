@@ -1491,11 +1491,6 @@
         
         document.getElementById("deploymentClientFilter")?.addEventListener("change", renderDeploymentTable);
 
-        // MANUAL 24 HOUR TIME FORMATTER
-        const getTime24 = (d = new Date()) => {
-            return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-        };
-
         function renderAttendanceTable() {
             const selectedDate = document.getElementById("attendanceDateFilter").value; if (!selectedDate) return;
             Promise.all([getAllEmployees(), getAllAttendance()]).then(([employees, attendanceLogs]) => {
@@ -1592,7 +1587,7 @@
                     const d = new Date(obs.date); let photoHtml = obs.photo ? `<br><span onclick="viewGuardPhoto('${obs.photo}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;"><i class="fa-solid fa-image"></i> View Photo</span>` : "";
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${obs.id}"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${getTime24(d)}</td><td><strong>${obs.site}</strong></td><td>${obs.observer}</td><td style="max-width: 300px;"><div title="${obs.description}">${obs.description.length > 50 ? obs.description.substring(0, 50) + '...' : obs.description}</div>${photoHtml}</td><td><select class="inline-input update-obs-status" data-id="${obs.id}" style="width: 140px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending Review" ${obs.status === 'Pending Review' ? 'selected' : ''}>Pending Review</option><option value="Reviewed" ${obs.status === 'Reviewed' ? 'selected' : ''}>Reviewed</option><option value="Addressed" ${obs.status === 'Addressed' ? 'selected' : ''}>Addressed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${obs.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${obs.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</td><td><strong>${obs.site}</strong></td><td>${obs.observer}</td><td style="max-width: 300px;"><div title="${obs.description}">${obs.description.length > 50 ? obs.description.substring(0, 50) + '...' : obs.description}</div>${photoHtml}</td><td><select class="inline-input update-obs-status" data-id="${obs.id}" style="width: 140px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending Review" ${obs.status === 'Pending Review' ? 'selected' : ''}>Pending Review</option><option value="Reviewed" ${obs.status === 'Reviewed' ? 'selected' : ''}>Reviewed</option><option value="Addressed" ${obs.status === 'Addressed' ? 'selected' : ''}>Addressed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${obs.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${obs.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1619,7 +1614,7 @@
                     const d = new Date(inc.date); let photoHtml = inc.photo ? `<br><span onclick="viewGuardPhoto('${inc.photo}')" style="font-size: 0.75rem; color: var(--danger-color); font-weight: bold; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;"><i class="fa-solid fa-camera"></i> View Evidence</span>` : "";
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${inc.id}"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${getTime24(d)}</td><td><strong>${inc.location}</strong></td><td>${inc.category}${photoHtml}</td><td>${inc.reporter}</td><td><select class="inline-input update-inc-status" data-id="${inc.id}" style="width: 130px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending" ${inc.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Investigating" ${inc.status === 'Investigating' ? 'selected' : ''}>Investigating</option><option value="Closed" ${inc.status === 'Closed' ? 'selected' : ''}>Closed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${inc.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${inc.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</td><td><strong>${inc.location}</strong></td><td>${inc.category}${photoHtml}</td><td>${inc.reporter}</td><td><select class="inline-input update-inc-status" data-id="${inc.id}" style="width: 130px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending" ${inc.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Investigating" ${inc.status === 'Investigating' ? 'selected' : ''}>Investigating</option><option value="Closed" ${inc.status === 'Closed' ? 'selected' : ''}>Closed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${inc.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${inc.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1697,7 +1692,7 @@
                 const d = new Date(parseInt(email.receivedTime));
                 const newRow = document.createElement("tr");
                 newRow.innerHTML = `
-                    <td>${d.toLocaleDateString()} ${getTime24(d)}</td>
+                    <td>${d.toLocaleDateString()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</td>
                     <td><strong>${email.sender}</strong></td>
                     <td>info@dkbanchorsecurity.com</td>
                     <td><strong>${email.subject}</strong><br><span style="font-size:0.85rem; color: var(--gray-color);">${email.summary || "No preview available"}</span></td>
@@ -1763,7 +1758,7 @@
                         }
                         
                         newRow.innerHTML = `
-                            <td>${d.toLocaleDateString()} ${getTime24(d)}</td>
+                            <td>${d.toLocaleDateString()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</td>
                             <td><strong>${msg.sender || "System"}</strong></td>
                             <td>${msg.recipient}</td>
                             <td>${msg.subject}</td>
@@ -1787,7 +1782,7 @@
                 filtered.sort((a, b) => b.timestamp - a.timestamp).forEach(log => {
                     const newRow = document.createElement("tr");
                     const d = new Date(log.timestamp);
-                    newRow.innerHTML = `<td style="font-family: monospace; font-size: 0.9rem;">${d.toLocaleDateString()} ${getTime24(d)}</td><td><strong>${log.user}</strong></td><td><span class="badge module-badge">${log.module}</span></td><td>${log.action}</td>`;
+                    newRow.innerHTML = `<td style="font-family: monospace; font-size: 0.9rem;">${d.toLocaleDateString()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</td><td><strong>${log.user}</strong></td><td><span class="badge module-badge">${log.module}</span></td><td>${log.action}</td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -2486,12 +2481,29 @@
                 return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
             };
             
-            // Reusable GPS locator Promise
+            // Reusable GPS locator Promise with strict error catching and timeout
             const getGPS = () => new Promise(resolve => {
-                if (!navigator.geolocation) return resolve('N/A');
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser.");
+                    return resolve('N/A');
+                }
+                
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0
+                };
+
                 navigator.geolocation.getCurrentPosition(
-                    pos => resolve(`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`),
-                    err => resolve('N/A')
+                    pos => resolve(`${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`),
+                    err => {
+                        console.warn("GPS Error:", err);
+                        if(err.code === 1) alert("Permission Denied: Please allow Location Access in your browser settings to capture GPS.");
+                        else if(err.code === 2) alert("Location unavailable. Make sure your device GPS is turned on.");
+                        else if(err.code === 3) alert("Location request timed out. Saving without GPS.");
+                        resolve('N/A');
+                    },
+                    options
                 );
             });
 
