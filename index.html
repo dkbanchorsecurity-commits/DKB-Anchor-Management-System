@@ -307,17 +307,17 @@
                 </header>
                 
                <div class="dashboard-cards">
-    <div class="card"><h3>Total Employees</h3><p class="stat" id="dashTotalEmp">0</p></div>
-    <div class="card"><h3>Active Guards</h3><p class="stat" id="dashActiveGuards">0</p></div>
-    <div class="card"><h3>Total Clients</h3><p class="stat" id="dashTotalClients" style="color: var(--info-color);">0</p></div>
-    
-    <div class="card"><h3>Total Incidents</h3><p class="stat alert" id="dashTotalInc">0</p></div>
-    <div class="card"><h3>Total Observations</h3><p class="stat warning" id="dashTotalObs">0</p></div>
-    <div class="card financial-element"><h3>Monthly Revenue</h3><p class="stat success" id="dashRevenue">GH₵ 0.00</p></div>
-    <div class="card financial-element"><h3>Monthly Salaries</h3><p class="stat warning" id="dashSalaries">GH₵ 0.00</p></div>
-    <div class="card financial-element"><h3>Total Expenses</h3><p class="stat alert" id="dashTotalExp">GH₵ 0.00</p></div>
-    <div class="card financial-element"><h3>Live Profit Margin</h3><p class="stat success" id="dashTotalProfit">GH₵ 0.00</p></div>
-</div>
+                    <div class="card"><h3>Total Employees</h3><p class="stat" id="dashTotalEmp">0</p></div>
+                    <div class="card"><h3>Active Guards</h3><p class="stat" id="dashActiveGuards">0</p></div>
+                    <div class="card"><h3>Total Clients</h3><p class="stat" id="dashTotalClients" style="color: var(--info-color);">0</p></div>
+                    
+                    <div class="card"><h3>Total Incidents</h3><p class="stat alert" id="dashTotalInc">0</p></div>
+                    <div class="card"><h3>Total Observations</h3><p class="stat warning" id="dashTotalObs">0</p></div>
+                    <div class="card financial-element"><h3>Monthly Revenue</h3><p class="stat success" id="dashRevenue">GH₵ 0.00</p></div>
+                    <div class="card financial-element"><h3>Monthly Salaries</h3><p class="stat warning" id="dashSalaries">GH₵ 0.00</p></div>
+                    <div class="card financial-element"><h3>Total Expenses</h3><p class="stat alert" id="dashTotalExp">GH₵ 0.00</p></div>
+                    <div class="card financial-element"><h3>Live Profit Margin</h3><p class="stat success" id="dashTotalProfit">GH₵ 0.00</p></div>
+                </div>
                 <div class="charts-wrapper">
                     <div class="chart-card"><h3>Monthly Deployment Trend</h3><div class="canvas-container"><canvas id="deploymentChart"></canvas></div></div>
                     <div class="chart-card"><h3>Monthly Incidents</h3><div class="canvas-container"><canvas id="incidentChart"></canvas></div></div>
@@ -584,7 +584,7 @@
                     </div>
                     <div class="table-responsive"> 
                         <table class="data-table" id="attendanceTable">
-                            <thead><tr><th>Emp ID</th><th>Name</th><th>Duty Post</th><th>Shift</th><th>Clock In Time</th><th>Clock Out Time</th><th>Status</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Emp ID</th><th>Name</th><th>Duty Post</th><th>Shift</th><th>Clock In</th><th>In GPS</th><th>Clock Out</th><th>Out GPS</th><th>Status</th><th>Action</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -1127,7 +1127,16 @@
         mobileBtns.forEach(btn => btn.addEventListener('click', toggleSidebar)); overlay.addEventListener('click', toggleSidebar);
         document.querySelectorAll(".nav-links a").forEach(link => { link.addEventListener("click", function(e) { if(window.innerWidth <= 768 && this.id !== 'navLogoutBtn') toggleSidebar(); }); });
 
-        setInterval(() => { const clockEl = document.getElementById('live-clock'); if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('en-US', { hour12: true }); }, 1000);
+        // MANUAL 24 HOUR LIVE CLOCK FORMATTER
+        setInterval(() => { 
+            const clockEl = document.getElementById('live-clock'); 
+            if (clockEl) {
+                const d = new Date();
+                clockEl.textContent = String(d.getHours()).padStart(2, '0') + ':' + 
+                                      String(d.getMinutes()).padStart(2, '0') + ':' + 
+                                      String(d.getSeconds()).padStart(2, '0');
+            } 
+        }, 1000);
 
         const yearFilter = document.getElementById('year-filter'); 
         for (let y = Math.max(2026, new Date().getFullYear()); y >= 2026; y--) yearFilter.appendChild(new Option(y, y));
@@ -1482,11 +1491,35 @@
         
         document.getElementById("deploymentClientFilter")?.addEventListener("change", renderDeploymentTable);
 
+        // MANUAL 24 HOUR TIME FORMATTER
+        const getTime24 = (d = new Date()) => {
+            return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        };
+
         function renderAttendanceTable() {
             const selectedDate = document.getElementById("attendanceDateFilter").value; if (!selectedDate) return;
             Promise.all([getAllEmployees(), getAllAttendance()]).then(([employees, attendanceLogs]) => {
                 const tbody = document.querySelector("#attendanceTable tbody"); tbody.innerHTML = '';
                 const todaysLogs = attendanceLogs.filter(log => log.date === selectedDate);
+                
+                // Helper to force ANY database string into strict HH:MM 24-hour format
+                const force24H = (timeStr) => {
+                    if (!timeStr || timeStr === "-") return "-";
+                    if (timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) {
+                        const parts = timeStr.trim().split(/\s+/);
+                        let [h, m] = parts[0].split(':');
+                        h = parseInt(h, 10);
+                        if (parts[1].toUpperCase() === 'PM' && h < 12) h += 12;
+                        if (parts[1].toUpperCase() === 'AM' && h === 12) h = 0;
+                        return String(h).padStart(2, '0') + ':' + String(m || '00').padStart(2, '0');
+                    }
+                    if (timeStr.includes(':')) {
+                        let [h, m] = timeStr.split(':');
+                        return String(parseInt(h, 10)).padStart(2, '0') + ':' + String(parseInt(m || 0, 10)).padStart(2, '0');
+                    }
+                    return timeStr;
+                };
+
                 employees.forEach(emp => {
                     
                     if (window.currentUserRole === "Client" && emp.dutyPost !== window.currentUserSite) return;
@@ -1496,14 +1529,27 @@
                     const dutyStatus = emp.status || 'Active';
                     const isOffDuty = dutyStatus === 'Off Duty';
                     
-                    let timeIn = "-", timeOut = "-", statusBadge = isOffDuty ? `<span class="badge absent-badge" style="background: rgba(113, 128, 150, 0.2);"><i class="fa-solid fa-power-off"></i> Off Duty</span>` : `<span class="badge absent-badge">Absent</span>`;
+                    let timeIn = "-", timeOut = "-", inGps = "-", outGps = "-";
+                    let statusBadge = isOffDuty ? `<span class="badge absent-badge" style="background: rgba(113, 128, 150, 0.2);"><i class="fa-solid fa-power-off"></i> Off Duty</span>` : `<span class="badge absent-badge">Absent</span>`;
                     let actionHtml = isOffDuty ? "" : `<button class="btn-primary btn-clock-in" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock In</button>`;
                     let photoInHtml = "", photoOutHtml = "";
                     
                     if (record) { 
-                        timeIn = record.clockIn; if(record.photoIn) photoInHtml = `<br><span onclick="viewGuardPhoto('${record.photoIn}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Photo</span>`;
+                        // Separate GPS Map Links
+                        inGps = (record.clockInGps && record.clockInGps !== 'N/A') ? `<a href="https://maps.google.com/?q=${record.clockInGps}" target="_blank" style="font-size: 0.75rem; color: var(--info-color); text-decoration: none; white-space: nowrap;"><i class="fa-solid fa-location-dot"></i> Map</a>` : '<span style="font-size: 0.75rem; color: var(--gray-color);">N/A</span>';
+                        
+                        // Pass the database string through the 24H sanitizer
+                        timeIn = force24H(record.clockIn); 
+                        
+                        if(record.photoIn) photoInHtml = `<br><span onclick="viewGuardPhoto('${record.photoIn}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> Photo</span>`;
+                        
                         if (record.clockOut) { 
-                            timeOut = record.clockOut; if(record.photoOut) photoOutHtml = `<br><span onclick="viewGuardPhoto('${record.photoOut}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Photo</span>`;
+                            outGps = (record.clockOutGps && record.clockOutGps !== 'N/A') ? `<a href="https://maps.google.com/?q=${record.clockOutGps}" target="_blank" style="font-size: 0.75rem; color: var(--info-color); text-decoration: none; white-space: nowrap;"><i class="fa-solid fa-location-dot"></i> Map</a>` : '<span style="font-size: 0.75rem; color: var(--gray-color);">N/A</span>';
+                            
+                            // Pass the database string through the 24H sanitizer
+                            timeOut = force24H(record.clockOut); 
+                            
+                            if(record.photoOut) photoOutHtml = `<br><span onclick="viewGuardPhoto('${record.photoOut}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline;"><i class="fa-solid fa-image"></i> Photo</span>`;
                             statusBadge = `<span class="badge success-badge"><i class="fa-solid fa-check"></i> Completed</span>`; actionHtml = `<span style="color: var(--success-color); font-weight: bold; font-size: 0.85rem;">Shift Done</span>`; 
                         } else { 
                             statusBadge = `<span class="badge warning-badge"><i class="fa-solid fa-spinner"></i> On Duty</span>`; actionHtml = `<button class="btn-primary alert-bg btn-clock-out" data-empid="${emp.id}" data-date="${selectedDate}" style="font-size: 0.8rem; padding: 5px 10px;">Clock Out</button>`; 
@@ -1519,7 +1565,7 @@
                     }
 
                     const newRow = document.createElement("tr");
-                    newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td style="font-family: monospace; font-weight: bold; color: var(--primary-color);">${timeIn}${photoInHtml}</td><td style="font-family: monospace; font-weight: bold; color: var(--danger-color);">${timeOut}${photoOutHtml}</td><td>${statusBadge}</td><td>${actionHtml}</td>`;
+                    newRow.innerHTML = `<td>${emp.id}</td><td><strong>${emp.name}</strong></td><td>${emp.dutyPost}</td><td><span class="badge ${emp.shift === 'Day' ? 'active-badge' : 'night-badge'}">${emp.shift}</span></td><td style="font-family: monospace; font-weight: bold; color: var(--primary-color);">${timeIn}${photoInHtml}</td><td>${inGps}</td><td style="font-family: monospace; font-weight: bold; color: var(--danger-color);">${timeOut}${photoOutHtml}</td><td>${outGps}</td><td>${statusBadge}</td><td>${actionHtml}</td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1546,7 +1592,7 @@
                     const d = new Date(obs.date); let photoHtml = obs.photo ? `<br><span onclick="viewGuardPhoto('${obs.photo}')" style="font-size: 0.75rem; color: var(--info-color); cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;"><i class="fa-solid fa-image"></i> View Photo</span>` : "";
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${obs.id}"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${obs.site}</strong></td><td>${obs.observer}</td><td style="max-width: 300px;"><div title="${obs.description}">${obs.description.length > 50 ? obs.description.substring(0, 50) + '...' : obs.description}</div>${photoHtml}</td><td><select class="inline-input update-obs-status" data-id="${obs.id}" style="width: 140px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending Review" ${obs.status === 'Pending Review' ? 'selected' : ''}>Pending Review</option><option value="Reviewed" ${obs.status === 'Reviewed' ? 'selected' : ''}>Reviewed</option><option value="Addressed" ${obs.status === 'Addressed' ? 'selected' : ''}>Addressed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${obs.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${obs.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${getTime24(d)}</td><td><strong>${obs.site}</strong></td><td>${obs.observer}</td><td style="max-width: 300px;"><div title="${obs.description}">${obs.description.length > 50 ? obs.description.substring(0, 50) + '...' : obs.description}</div>${photoHtml}</td><td><select class="inline-input update-obs-status" data-id="${obs.id}" style="width: 140px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending Review" ${obs.status === 'Pending Review' ? 'selected' : ''}>Pending Review</option><option value="Reviewed" ${obs.status === 'Reviewed' ? 'selected' : ''}>Reviewed</option><option value="Addressed" ${obs.status === 'Addressed' ? 'selected' : ''}>Addressed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${obs.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${obs.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1573,7 +1619,7 @@
                     const d = new Date(inc.date); let photoHtml = inc.photo ? `<br><span onclick="viewGuardPhoto('${inc.photo}')" style="font-size: 0.75rem; color: var(--danger-color); font-weight: bold; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;"><i class="fa-solid fa-camera"></i> View Evidence</span>` : "";
                     const newRow = document.createElement("tr");
                     const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${inc.id}"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${inc.location}</strong></td><td>${inc.category}${photoHtml}</td><td>${inc.reporter}</td><td><select class="inline-input update-inc-status" data-id="${inc.id}" style="width: 130px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending" ${inc.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Investigating" ${inc.status === 'Investigating' ? 'selected' : ''}>Investigating</option><option value="Closed" ${inc.status === 'Closed' ? 'selected' : ''}>Closed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${inc.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${inc.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                    newRow.innerHTML = `<td>${d.toLocaleDateString()} ${getTime24(d)}</td><td><strong>${inc.location}</strong></td><td>${inc.category}${photoHtml}</td><td>${inc.reporter}</td><td><select class="inline-input update-inc-status" data-id="${inc.id}" style="width: 130px; padding: 5px; color: ${selectColor}; border-color: ${selectColor};"><option value="Pending" ${inc.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Investigating" ${inc.status === 'Investigating' ? 'selected' : ''}>Investigating</option><option value="Closed" ${inc.status === 'Closed' ? 'selected' : ''}>Closed</option></select></td><td><div class="action-buttons"><button class="btn-action view" data-id="${inc.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${inc.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1651,7 +1697,7 @@
                 const d = new Date(parseInt(email.receivedTime));
                 const newRow = document.createElement("tr");
                 newRow.innerHTML = `
-                    <td>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${d.toLocaleDateString()} ${getTime24(d)}</td>
                     <td><strong>${email.sender}</strong></td>
                     <td>info@dkbanchorsecurity.com</td>
                     <td><strong>${email.subject}</strong><br><span style="font-size:0.85rem; color: var(--gray-color);">${email.summary || "No preview available"}</span></td>
@@ -1707,6 +1753,7 @@
                     tbody.innerHTML = '';
                     msgs.sort((a, b) => b.timestamp - a.timestamp).forEach(msg => {
                         const newRow = document.createElement("tr");
+                        const d = new Date(msg.timestamp);
                         
                         let badgeHTML = `<span class="badge info-badge">Read</span>`;
                         if(msg.status === "Unread") {
@@ -1716,7 +1763,7 @@
                         }
                         
                         newRow.innerHTML = `
-                            <td>${new Date(msg.timestamp).toLocaleDateString()} ${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td>${d.toLocaleDateString()} ${getTime24(d)}</td>
                             <td><strong>${msg.sender || "System"}</strong></td>
                             <td>${msg.recipient}</td>
                             <td>${msg.subject}</td>
@@ -1739,7 +1786,8 @@
                 let filtered = sel !== "All" ? logs.filter(log => log.module === sel) : logs;
                 filtered.sort((a, b) => b.timestamp - a.timestamp).forEach(log => {
                     const newRow = document.createElement("tr");
-                    newRow.innerHTML = `<td style="font-family: monospace; font-size: 0.9rem;">${new Date(log.timestamp).toLocaleDateString()} ${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><strong>${log.user}</strong></td><td><span class="badge module-badge">${log.module}</span></td><td>${log.action}</td>`;
+                    const d = new Date(log.timestamp);
+                    newRow.innerHTML = `<td style="font-family: monospace; font-size: 0.9rem;">${d.toLocaleDateString()} ${getTime24(d)}</td><td><strong>${log.user}</strong></td><td><span class="badge module-badge">${log.module}</span></td><td>${log.action}</td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1851,6 +1899,31 @@
                     btn.disabled = false;
                     logAction("Compliance", "Generated SSNIT Contribution Report");
                 }, 1500);
+            });
+            
+            document.getElementById("exportAttendanceBtn")?.addEventListener("click", function() {
+                const monthVal = document.getElementById("attendanceMonthExport").value;
+                if (!monthVal) return alert("Please select a month to export.");
+                
+                Promise.all([getAllEmployees(), getAllAttendance()]).then(([emps, logs]) => {
+                    const monthLogs = logs.filter(l => l.date.startsWith(monthVal));
+                    
+                    if (monthLogs.length === 0) return alert(`No attendance data found for ${monthVal}`);
+                    
+                    let csv = "Date,Emp ID,Name,Duty Post,Shift,Clock In Time,Clock In GPS,Clock Out Time,Clock Out GPS\n";
+                    
+                    // Sort chronologically
+                    monthLogs.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(log => {
+                        const emp = emps.find(e => e.id === log.empId) || {name: 'Unknown', dutyPost: 'Unknown', shift: 'Unknown'};
+                        csv += `"${log.date}","${log.empId}","${emp.name}","${emp.dutyPost}","${emp.shift}","${log.clockIn || ''}","${log.clockInGps || ''}","${log.clockOut || ''}","${log.clockOutGps || ''}"\n`;
+                    });
+                    
+                    const link = document.createElement("a"); 
+                    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); 
+                    link.download = `DKB_Attendance_${monthVal}.csv`; 
+                    link.click();
+                    logAction("Attendance", `Exported Monthly Attendance for ${monthVal}`);
+                });
             });
         });
 
@@ -2408,15 +2481,51 @@
                   outBtn = e.target.closest('.btn-clock-out'),
                   toggleBtn = e.target.closest('.btn-toggle-duty'); 
                   
-            if (inBtn) { 
-                saveAttendanceRecord({ id: `${inBtn.getAttribute("data-empid")}_${inBtn.getAttribute("data-date")}`, empId: inBtn.getAttribute("data-empid"), date: inBtn.getAttribute("data-date"), clockIn: new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }), clockOut: null }).then(() => { renderAttendanceTable(); }); 
+            const getTime24 = () => {
+                const d = new Date();
+                return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            };
+            
+            // Reusable GPS locator Promise
+            const getGPS = () => new Promise(resolve => {
+                if (!navigator.geolocation) return resolve('N/A');
+                navigator.geolocation.getCurrentPosition(
+                    pos => resolve(`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`),
+                    err => resolve('N/A')
+                );
+            });
+
+            if (inBtn) {
+                // UI feedback while extracting location
+                const originalText = inBtn.innerHTML;
+                inBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...';
+                inBtn.disabled = true;
+                
+                getGPS().then(gpsLoc => {
+                    saveAttendanceRecord({ 
+                        id: `${inBtn.getAttribute("data-empid")}_${inBtn.getAttribute("data-date")}`, 
+                        empId: inBtn.getAttribute("data-empid"), 
+                        date: inBtn.getAttribute("data-date"), 
+                        clockIn: getTime24(), 
+                        clockInGps: gpsLoc,
+                        clockOut: null,
+                        clockOutGps: null 
+                    }).then(() => { renderAttendanceTable(); }); 
+                });
             } else if (outBtn) { 
-                getAttendanceRecord(`${outBtn.getAttribute("data-empid")}_${outBtn.getAttribute("data-date")}`).then(rec => { 
-                    if(rec) { 
-                        rec.clockOut = new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' }); 
-                        saveAttendanceRecord(rec).then(() => renderAttendanceTable()); 
-                    } 
-                }); 
+                const originalText = outBtn.innerHTML;
+                outBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...';
+                outBtn.disabled = true;
+                
+                getGPS().then(gpsLoc => {
+                    getAttendanceRecord(`${outBtn.getAttribute("data-empid")}_${outBtn.getAttribute("data-date")}`).then(rec => { 
+                        if(rec) { 
+                            rec.clockOut = getTime24(); 
+                            rec.clockOutGps = gpsLoc;
+                            saveAttendanceRecord(rec).then(() => renderAttendanceTable()); 
+                        } 
+                    }); 
+                });
             } else if (toggleBtn) {
                 const id = toggleBtn.getAttribute("data-id");
                 getEmployee(id).then(emp => { 
