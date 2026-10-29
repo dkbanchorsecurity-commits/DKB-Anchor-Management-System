@@ -1186,6 +1186,39 @@
             } 
         });
 
+        document.getElementById("exportPayrollBtn")?.addEventListener("click", function() {
+    const monthVal = document.getElementById("payrollMonth").value;
+    const yearVal = document.getElementById("year-filter").value;
+    const periodKey = `${monthVal}_${yearVal}`;
+
+    getAllEmployees().then(emps => {
+        // Create CSV Headers
+        let csv = "Emp ID,Name,Role,Basic Salary (GH₵),Risk Allowance (GH₵),Transport Allowance (GH₵),SSNIT Deduction (GH₵),PAYE (GH₵),Net Pay (GH₵),Status\n";
+        
+        emps.forEach(emp => {
+            // Fetch the specific payroll record for the selected month/year
+            const record = (emp.payrollData && emp.payrollData[periodKey]) ? emp.payrollData[periodKey] : { riskAllowance: 0, transportAllowance: 0, status: "Pending" };
+            const riskAmount = record.riskAllowance !== undefined ? record.riskAllowance : (record.overtime || 0);
+            const transportAmount = record.transportAllowance !== undefined ? record.transportAllowance : (record.bonus || 0);
+            
+            // Run the exact same calculation used in the UI
+            const fin = calculateFinancials(emp, riskAmount, transportAmount);
+            
+            // Append row to CSV
+            csv += `"${emp.id}","${emp.name}","${emp.role}",${fin.basic.toFixed(2)},${fin.riskAllowance.toFixed(2)},${fin.transportAllowance.toFixed(2)},${fin.ssnitDeduction.toFixed(2)},${fin.payeDeduction.toFixed(2)},${fin.netPay.toFixed(2)},"${record.status}"\n`;
+        });
+
+        // Trigger the download
+        const link = document.createElement("a"); 
+        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); 
+        link.download = `DKB_Payroll_${monthVal}_${yearVal}.csv`; 
+        link.click();
+        
+        // Log the action in the Audit Trail
+        logAction("Payroll", `Exported Payroll for ${monthVal} ${yearVal}`);
+    });
+});
+
         function renderExpenditureTable() {
             getAllExpenditures().then(expenses => {
                 const tbody = document.querySelector("#expenditureTable tbody"); tbody.innerHTML = ''; const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
