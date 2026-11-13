@@ -568,7 +568,20 @@
                                     </div>
                                     <small style="color: var(--gray-color); font-size: 0.8rem; margin-top: 5px; display: block;">*Must be a public URL so PDF documents can load the image.</small>
                                 </div>
-                                <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Save Branding</button>
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label>Authorized Signatory Name & Title</label>
+                                    <input type="text" id="settingSignatoryName" placeholder="e.g., Operations / Finance Director" value="Authorized Management">
+                                </div>
+                                <div class="form-group" style="margin-top: 15px;">
+                                    <label>Digital Signature / Stamp Image (URL or Upload)</label>
+                                    <div style="display: flex; gap: 15px; align-items: center; background: var(--bg-light); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                        <img id="settingSigPreview" src="https://via.placeholder.com/150x60/FFFFFF/0A2540?text=SIGNED" alt="Signature Preview" style="max-height: 45px; background: #fff; padding: 2px; border-radius: 4px; border: 1px dashed var(--border-color);">
+                                        <input type="text" id="settingSigUrl" placeholder="Paste image URL or upload PNG below" style="flex: 1; border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; outline: none;">
+                                    </div>
+                                    <input type="file" id="settingSigUpload" accept="image/png, image/jpeg" style="margin-top: 8px; font-size: 0.85rem;">
+                                    <small style="color: var(--gray-color); font-size: 0.8rem; margin-top: 4px; display: block;">*Transparent PNG of your signature/stamp works best for PDFs.</small>
+                                </div>
+                                <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%;">Save Branding & Signature</button>
                             </form>
                         </div>
                     </div>
@@ -664,10 +677,15 @@
         <div class="modal-content" style="max-width: 850px;"><span class="close-modal">&times;</span><h2 class="modal-header">Create Invoice</h2>
             <form id="invoiceForm">
                 <div class="form-section"><div class="form-grid">
-                    <div class="form-group"><label>Client Name</label><input type="text" id="invClientName" required></div>
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <select id="invClientName" required>
+                            <option value="" disabled selected>Select Onboarded Client</option>
+                        </select>
+                    </div>
                     <div class="form-group"><label>Invoice Date</label><input type="date" id="invDate" required></div>
                     <div class="form-group"><label>Billing Month</label><input type="month" id="invBillingMonth" required></div>
-                    <div class="form-group"><label>Client Address</label><input type="text" id="invClientAddress" required></div>
+                    <div class="form-group"><label>Client Address</label><input type="text" id="invClientAddress" required placeholder="Auto-populates on client selection"></div>
                 </div></div>
                 <div class="form-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -1159,14 +1177,61 @@
         }
 
         function applySystemSettings(data = null) {
-            if(!data) return;
-            document.getElementById("sidebarLogo").src = data.logo; document.getElementById("sidebarCompanyName").innerText = data.companyName; document.getElementById("settingLogoPreview").src = data.logo; document.getElementById("settingCompanyName").value = data.companyName;
-            const urlInput = document.getElementById("settingLogoUrl"); if (urlInput) urlInput.value = data.logo;
-            let link = document.querySelector("link[rel~='icon']"); if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); } link.href = data.logo;
-            const themeToggle = document.getElementById("themeToggleBtn"); if (data.theme === "dark") { document.body.classList.add("dark-theme"); themeToggle.checked = true; } else { document.body.classList.remove("dark-theme"); themeToggle.checked = false; }
+            if (!data) return;
+            document.getElementById("sidebarLogo").src = data.logo;
+            document.getElementById("sidebarCompanyName").innerText = data.companyName;
+            document.getElementById("settingLogoPreview").src = data.logo;
+            document.getElementById("settingCompanyName").value = data.companyName;
+            const urlInput = document.getElementById("settingLogoUrl");
+            if (urlInput) urlInput.value = data.logo;
+
+            if (document.getElementById("settingSignatoryName")) {
+                document.getElementById("settingSignatoryName").value = data.signatoryName || "Authorized Management";
+            }
+            if (document.getElementById("settingSigUrl")) {
+                document.getElementById("settingSigUrl").value = data.signatureImage || "";
+                document.getElementById("settingSigPreview").src = data.signatureImage || "https://via.placeholder.com/150x60/FFFFFF/0A2540?text=SIGNED";
+            }
+
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+            link.href = data.logo;
+            const themeToggle = document.getElementById("themeToggleBtn");
+            if (data.theme === "dark") { document.body.classList.add("dark-theme"); themeToggle.checked = true; }
+            else { document.body.classList.remove("dark-theme"); themeToggle.checked = false; }
         }
 
-        document.getElementById("brandingForm").addEventListener("submit", function(e) { e.preventDefault(); getSetting("system").then(data => { data.companyName = document.getElementById("settingCompanyName").value; data.logo = document.getElementById("settingLogoUrl").value; saveSetting(data).then(() => { applySystemSettings(data); logAction("Settings", "Updated Company Branding"); alert("Branding Settings Saved!"); }); }); });
+        document.getElementById("settingSigUpload")?.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById("settingSigUrl").value = evt.target.result;
+                document.getElementById("settingSigPreview").src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById("settingSigUrl")?.addEventListener("input", function(e) {
+            document.getElementById("settingSigPreview").src = e.target.value;
+        });
+
+        document.getElementById("brandingForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            getSetting("system").then(data => {
+                if (!data) data = { id: "system" };
+                data.companyName = document.getElementById("settingCompanyName").value;
+                data.logo = document.getElementById("settingLogoUrl").value;
+                data.signatoryName = document.getElementById("settingSignatoryName")?.value || "Authorized Management";
+                data.signatureImage = document.getElementById("settingSigUrl")?.value || "";
+                saveSetting(data).then(() => {
+                    applySystemSettings(data);
+                    logAction("Settings", "Updated Company Branding & Digital Signature");
+                    alert("Branding & Signature Settings Saved!");
+                });
+            });
+        });
+
         document.getElementById("settingLogoUrl")?.addEventListener("input", function(e) { document.getElementById("settingLogoPreview").src = e.target.value; });
         document.getElementById("themeToggleBtn").addEventListener("change", function(e) { const newTheme = e.target.checked ? "dark" : "light"; if (e.target.checked) document.body.classList.add("dark-theme"); else document.body.classList.remove("dark-theme"); getSetting("system").then(data => { data.theme = newTheme; saveSetting(data).then(() => logAction("Settings", `Toggled theme to ${newTheme}`)); }); });
 
@@ -1206,8 +1271,34 @@
         function renderClientTable() {
             getAllClients().then(clients => {
                 const tbody = document.querySelector("#clientTable tbody"); tbody.innerHTML = ''; const canDelete = window.currentUserRole === "Super Admin";
+                
+                // Sync Employee Duty Post Dropdown
                 const dutyPostSelect = document.getElementById("empDutyPost");
-                if (dutyPostSelect) { const currentVal = dutyPostSelect.value; dutyPostSelect.innerHTML = '<option value="" disabled selected>Select Duty Post</option>'; clients.forEach(cl => { const opt = document.createElement("option"); opt.value = cl.name; opt.innerText = cl.name; dutyPostSelect.appendChild(opt); }); if (currentVal && Array.from(dutyPostSelect.options).some(o => o.value === currentVal)) { dutyPostSelect.value = currentVal; } }
+                if (dutyPostSelect) {
+                    const currentVal = dutyPostSelect.value;
+                    dutyPostSelect.innerHTML = '<option value="" disabled selected>Select Duty Post</option>';
+                    clients.forEach(cl => { const opt = document.createElement("option"); opt.value = cl.name; opt.innerText = cl.name; dutyPostSelect.appendChild(opt); });
+                    if (currentVal && Array.from(dutyPostSelect.options).some(o => o.value === currentVal)) { dutyPostSelect.value = currentVal; }
+                }
+
+                // Sync Invoice Client Dropdown
+                const invClientSelect = document.getElementById("invClientName");
+                if (invClientSelect) {
+                    const currentInvClient = invClientSelect.value;
+                    invClientSelect.innerHTML = '<option value="" disabled selected>Select Onboarded Client</option>';
+                    clients.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(cl => {
+                        const opt = document.createElement("option");
+                        opt.value = cl.name;
+                        opt.dataset.address = cl.address || "";
+                        opt.dataset.rate = cl.rate || 0;
+                        opt.innerText = cl.name;
+                        invClientSelect.appendChild(opt);
+                    });
+                    if (currentInvClient && Array.from(invClientSelect.options).some(o => o.value === currentInvClient)) {
+                        invClientSelect.value = currentInvClient;
+                    }
+                }
+
                 clients.forEach(cl => {
                     const newRow = document.createElement("tr"); const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${cl.id}"><i class="fa-solid fa-trash"></i></button>` : '';
                     let statusClass = cl.status === 'Active' ? 'success-badge' : (cl.status === 'Inactive' ? 'absent-badge' : 'warning-badge');
@@ -1299,13 +1390,50 @@
 
         function renderInvoiceTable() {
             getAllInvoices().then(invoices => {
-                if (window.currentUserRole === "Client") { invoices = invoices.filter(inv => inv.clientName === window.currentUserSite); document.getElementById("openCreateInvoiceBtn").style.display = "none"; }
-                const tbody = document.querySelector("#invoiceTable tbody"); tbody.innerHTML = ''; const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
+                if (window.currentUserRole === "Client") {
+                    invoices = invoices.filter(inv => inv.clientName === window.currentUserSite);
+                    document.getElementById("openCreateInvoiceBtn").style.display = "none";
+                }
+                const tbody = document.querySelector("#invoiceTable tbody");
+                tbody.innerHTML = '';
+                const canManage = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
+
                 invoices.sort((a, b) => b.timestamp - a.timestamp).forEach(inv => {
                     let displayMonth = inv.billingMonth ? new Date(inv.billingMonth + "-01").toLocaleString('default', { month: 'short', year: 'numeric' }) : "-";
-                    const newRow = document.createElement("tr"); const deleteHtml = canDelete ? `<button class="btn-action delete btn-del-inv" data-id="${inv.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>` : '';
-                    const receiptHtml = inv.status === 'Paid' ? `<button class="btn-action view btn-download-receipt" style="color: var(--success-color);" data-id="${inv.id}" title="Download Receipt"><i class="fa-solid fa-receipt"></i></button>` : '';
-                    newRow.innerHTML = `<td><strong>${inv.id}</strong><br><span style="font-size: 0.75rem; color: var(--accent-color); font-weight: bold;">${displayMonth}</span></td><td>${new Date(inv.date).toLocaleDateString()}</td><td>${inv.clientName}</td><td style="font-weight: bold; color: var(--primary-color);">GH₵ ${parseFloat(inv.total).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td><select class="inline-input update-inv-status" data-id="${inv.id}" style="width: 100px; padding: 5px;"><option value="Draft" ${inv.status === 'Draft' ? 'selected' : ''}>Draft</option><option value="Sent" ${inv.status === 'Sent' ? 'selected' : ''}>Sent</option><option value="Paid" ${inv.status === 'Paid' ? 'selected' : ''}>Paid</option></select></td><td><div class="action-buttons"><button class="btn-action view btn-print-inv" data-id="${inv.id}" title="Print Invoice"><i class="fa-solid fa-print"></i></button><button class="btn-action edit btn-download-inv" data-id="${inv.id}" title="Download Invoice PDF"><i class="fa-solid fa-file-pdf"></i></button>${receiptHtml}${deleteHtml}</div></td>`;
+                    const newRow = document.createElement("tr");
+                    
+                    const editHtml = (canManage && inv.status !== 'Paid') 
+                        ? `<button class="btn-action edit btn-edit-inv" data-id="${inv.id}" title="Edit Invoice"><i class="fa-solid fa-pen"></i></button>` 
+                        : '';
+                    const deleteHtml = canManage 
+                        ? `<button class="btn-action delete btn-del-inv" data-id="${inv.id}" title="Delete"><i class="fa-solid fa-trash"></i></button>` 
+                        : '';
+                    const receiptHtml = inv.status === 'Paid' 
+                        ? `<button class="btn-action view btn-download-receipt" style="color: var(--success-color);" data-id="${inv.id}" title="Download Receipt"><i class="fa-solid fa-receipt"></i></button>` 
+                        : '';
+
+                    newRow.innerHTML = `
+                        <td><strong>${inv.id}</strong><br><span style="font-size: 0.75rem; color: var(--accent-color); font-weight: bold;">${displayMonth}</span></td>
+                        <td>${new Date(inv.date).toLocaleDateString()}</td>
+                        <td>${inv.clientName}</td>
+                        <td style="font-weight: bold; color: var(--primary-color);">GH₵ ${parseFloat(inv.total).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td>
+                            <select class="inline-input update-inv-status" data-id="${inv.id}" style="width: 100px; padding: 5px;">
+                                <option value="Draft" ${inv.status === 'Draft' ? 'selected' : ''}>Draft</option>
+                                <option value="Sent" ${inv.status === 'Sent' ? 'selected' : ''}>Sent</option>
+                                <option value="Paid" ${inv.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action view btn-print-inv" data-id="${inv.id}" title="Print Invoice"><i class="fa-solid fa-print"></i></button>
+                                <button class="btn-action view btn-download-inv" style="color: var(--info-color);" data-id="${inv.id}" title="Download Invoice PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                                ${editHtml}
+                                ${receiptHtml}
+                                ${deleteHtml}
+                            </div>
+                        </td>
+                    `;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1449,7 +1577,6 @@
                 });
             });
 
-            // Export Field Observations to CSV
             document.getElementById("exportObservationsBtn")?.addEventListener("click", function() {
                 getAllObservations().then(observations => {
                     if (window.currentUserRole === "Client") {
@@ -1469,7 +1596,6 @@
                 });
             });
 
-            // Export Audit Trail Logs to CSV
             document.getElementById("exportAuditBtn")?.addEventListener("click", function() {
                 getAllAuditLogs().then(logs => {
                     const sel = document.getElementById("auditModuleFilter").value;
@@ -1493,7 +1619,7 @@
 
         async function checkAndSeedInitialData(user) {
             const usersSnap = await getDocs(collection(firestore, "users"));
-            if (usersSnap.empty) { const adminUser = { id: user.uid, name: "Admin User", email: user.email, role: "Super Admin", created: new Date().getTime() }; await setDoc(doc(firestore, "users", user.uid), adminUser); const sysSettings = { id: "system", companyName: "DKB ANCHOR", theme: "light", logo: "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO" }; await setDoc(doc(firestore, "settings", "system"), sysSettings); logAction("Authentication", "Initial Database Seeded and Admin Created."); return adminUser; }
+            if (usersSnap.empty) { const adminUser = { id: user.uid, name: "Admin User", email: user.email, role: "Super Admin", created: new Date().getTime() }; await setDoc(doc(firestore, "users", user.uid), adminUser); const sysSettings = { id: "system", companyName: "DKB ANCHOR", theme: "light", logo: "https://via.placeholder.com/150x50/051424/D4AF37?text=LOGO", signatoryName: "Authorized Management", signatureImage: "" }; await setDoc(doc(firestore, "settings", "system"), sysSettings); logAction("Authentication", "Initial Database Seeded and Admin Created."); return adminUser; }
             const userDocSnap = await getDoc(doc(firestore, "users", user.uid)); if (userDocSnap.exists()) return { id: userDocSnap.id, ...userDocSnap.data() };
             const querySnapshot = await getDocs(query(collection(firestore, "users"), where("email", "==", user.email))); if (!querySnapshot.empty) return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() }; return null;
         }
@@ -1531,9 +1657,83 @@
 
         const modals = [document.getElementById("addEmployeeModal"), document.getElementById("viewEmployeeModal"), document.getElementById("logIncidentModal"), document.getElementById("logObservationModal"), document.getElementById("logExpenditureModal"), document.getElementById("composeMessageModal"), document.getElementById("viewMessageModal"), document.getElementById("userAccountModal"), document.getElementById("createInvoiceModal"), document.getElementById("onboardClientModal")];
         const forms = [document.getElementById("addEmployeeForm"), document.getElementById("incidentForm"), document.getElementById("observationForm"), document.getElementById("expenditureForm"), document.getElementById("composeMsgForm"), document.getElementById("userAccountForm"), document.getElementById("invoiceForm"), document.getElementById("clientForm")];
-        let editId = null, editIncId = null, editObsId = null, editExpId = null, editUserId = null, editClientId = null;
+        let editId = null, editIncId = null, editObsId = null, editExpId = null, editUserId = null, editClientId = null, editInvId = null;
 
-        document.getElementById("openCreateInvoiceBtn").onclick = () => { document.getElementById("invoiceForm").reset(); document.getElementById("invoiceItemsBody").innerHTML = ''; document.getElementById("invDate").value = new Date().toISOString().split('T')[0]; const d = new Date(); document.getElementById("invBillingMonth").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; addInvoiceRow(); calculateInvoiceTotal(); document.getElementById("createInvoiceModal").style.display = "block"; };
+        document.getElementById("openCreateInvoiceBtn").onclick = () => {
+            editInvId = null;
+            document.querySelector("#createInvoiceModal .modal-header").innerText = "Create Invoice";
+            document.getElementById("saveInvoiceActionBtn").innerText = "Save Invoice";
+            document.getElementById("invoiceForm").reset();
+            document.getElementById("invoiceItemsBody").innerHTML = '';
+            document.getElementById("invDate").value = new Date().toISOString().split('T')[0];
+            const d = new Date();
+            document.getElementById("invBillingMonth").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+            const clientSelect = document.getElementById("invClientName");
+            clientSelect.innerHTML = '<option value="" disabled selected>Select Onboarded Client</option>';
+            getAllClients().then(clients => {
+                clients
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .forEach(cl => {
+                        const opt = document.createElement("option");
+                        opt.value = cl.name;
+                        opt.dataset.address = cl.address || "";
+                        opt.dataset.rate = cl.rate || 0;
+                        opt.innerText = cl.name;
+                        clientSelect.appendChild(opt);
+                    });
+            });
+
+            addInvoiceRow();
+            calculateInvoiceTotal();
+            document.getElementById("createInvoiceModal").style.display = "block";
+        };
+
+        document.getElementById("invClientName").addEventListener("change", function() {
+            const selectedOpt = this.options[this.selectedIndex];
+            if (!selectedOpt) return;
+
+            const clientName = this.value;
+            const defaultClientRate = parseFloat(selectedOpt.dataset.rate) || 0;
+
+            document.getElementById("invClientAddress").value = selectedOpt.dataset.address || "";
+
+            getAllEmployees().then(employees => {
+                const deployedGuards = employees.filter(emp => 
+                    emp.dutyPost === clientName && 
+                    emp.status !== "Off Duty" && 
+                    emp.role && emp.role.toLowerCase().includes("guard")
+                );
+
+                const tbody = document.getElementById("invoiceItemsBody");
+                tbody.innerHTML = '';
+
+                if (deployedGuards.length > 0) {
+                    const rateGroups = {};
+                    deployedGuards.forEach(guard => {
+                        const shift = guard.shift || "Standard";
+                        const rate = parseFloat(guard.clientRate) || defaultClientRate || 0;
+                        const key = `${shift}_${rate.toFixed(2)}`;
+                        if (!rateGroups[key]) {
+                            rateGroups[key] = { shift, rate, count: 0 };
+                        }
+                        rateGroups[key].count++;
+                    });
+
+                    Object.values(rateGroups).forEach(group => {
+                        const desc = `Security Guard Services (${group.shift} Shift) - ${clientName}`;
+                        addInvoiceRow(desc, group.count, group.rate);
+                    });
+                } else {
+                    const desc = defaultClientRate > 0 ? `Monthly Security Services - ${clientName}` : "";
+                    addInvoiceRow(desc, 1, defaultClientRate);
+                }
+
+                calculateInvoiceTotal();
+            });
+        });
+
         document.getElementById("openAddEmployeeModal").onclick = () => { editId = null; document.getElementById("addEmployeeForm").reset(); document.getElementById("modalTitle").innerText = "Add New Employee Profile"; document.getElementById("saveEmployeeBtn").innerText = "Save Profile"; document.getElementById("empStatus").value = "Active"; modals[0].style.display = "block"; };
         document.getElementById("openLogIncidentBtn").onclick = () => document.getElementById("logIncidentModal").style.display = "block";
         document.getElementById("openLogObservationBtn").onclick = () => document.getElementById("logObservationModal").style.display = "block";
@@ -1542,7 +1742,7 @@
         document.getElementById("openOnboardClientBtn").onclick = () => { editClientId = null; document.getElementById("clientForm").reset(); document.getElementById("clientModalTitle").innerText = "Onboard New Client"; document.getElementById("saveClientBtn").innerText = "Save Client"; document.getElementById("onboardClientModal").style.display = "block"; };
         document.getElementById("openUserModalBtn").onclick = () => { editUserId = null; document.getElementById("userAccountForm").reset(); document.getElementById("userModalTitle").innerText = "Create User Account"; document.getElementById("saveUserBtn").innerText = "Create Account"; document.getElementById("pwdGroup").style.display = "block"; document.getElementById("pwdGroup").querySelector("label").innerText = "Temporary Password"; document.getElementById("uPassword").required = true; document.getElementById("uRole").dispatchEvent(new Event('change')); document.getElementById("userAccountModal").style.display = "block"; };
         
-        function closeModals() { modals.forEach(m => { if (m) m.style.display = "none"; }); forms.forEach(f => { if (f) f.reset(); }); editId = editIncId = editObsId = editExpId = editUserId = editClientId = null; }
+        function closeModals() { modals.forEach(m => { if (m) m.style.display = "none"; }); forms.forEach(f => { if (f) f.reset(); }); editId = editIncId = editObsId = editExpId = editUserId = editClientId = editInvId = null; }
         document.querySelectorAll(".close-modal, .btn-secondary").forEach(el => el.addEventListener('click', closeModals)); window.onclick = function(e) { if (modals.includes(e.target)) closeModals(); }
 
         document.getElementById("clientForm").addEventListener("submit", function(e) {
@@ -1640,8 +1840,25 @@
         
         document.getElementById("imageUpload").addEventListener("change", function(e) { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = function(event) { document.getElementById("viewProfilePic").src = event.target.result; const id = document.getElementById("viewProfilePic").dataset.currentId; if(id) { getEmployee(id).then(emp => { emp.profilePic = event.target.result; saveEmployee(emp); }); } }; reader.readAsDataURL(file); } });
 
-        function addInvoiceRow() { const tr = document.createElement("tr"); tr.innerHTML = `<td><input type="text" class="inv-desc" placeholder="Service Description" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td><td><input type="number" class="inv-qty" value="1" min="1" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td><td><input type="number" class="inv-rate" step="0.01" value="0.00" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td><td class="inv-amt" style="font-weight: bold; padding: 12px 15px;">0.00</td><td><button type="button" class="btn-action delete remove-inv-row"><i class="fa-solid fa-trash"></i></button></td>`; document.getElementById("invoiceItemsBody").appendChild(tr); tr.querySelectorAll('input').forEach(input => input.addEventListener('input', calculateInvoiceTotal)); tr.querySelector('.remove-inv-row').addEventListener('click', function() { tr.remove(); calculateInvoiceTotal(); }); }
-        document.getElementById("addInvoiceItemBtn").addEventListener("click", addInvoiceRow);
+        function addInvoiceRow(desc = "", qty = 1, rate = 0) {
+            const tr = document.createElement("tr");
+            const amt = (parseFloat(qty) || 0) * (parseFloat(rate) || 0);
+            tr.innerHTML = `
+                <td><input type="text" class="inv-desc" value="${desc}" placeholder="Service Description" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td>
+                <td><input type="number" class="inv-qty" value="${qty}" min="1" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td>
+                <td><input type="number" class="inv-rate" step="0.01" value="${parseFloat(rate).toFixed(2)}" required style="width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px;"></td>
+                <td class="inv-amt" style="font-weight: bold; padding: 12px 15px;">${amt.toFixed(2)}</td>
+                <td><button type="button" class="btn-action delete remove-inv-row"><i class="fa-solid fa-trash"></i></button></td>
+            `;
+            document.getElementById("invoiceItemsBody").appendChild(tr);
+            tr.querySelectorAll('input').forEach(input => input.addEventListener('input', calculateInvoiceTotal));
+            tr.querySelector('.remove-inv-row').addEventListener('click', function() {
+                tr.remove();
+                calculateInvoiceTotal();
+            });
+        }
+
+        document.getElementById("addInvoiceItemBtn").addEventListener("click", () => addInvoiceRow());
         
         function calculateInvoiceTotal() {
             let subtotal = 0;
@@ -1669,13 +1886,150 @@
             if (saveBtn) saveBtn.disabled = (total <= 0);
         }
 
-        document.getElementById("invoiceForm").addEventListener("submit", function(e) { e.preventDefault(); const items = []; document.getElementById("invoiceItemsBody").querySelectorAll('tr').forEach(tr => { items.push({ desc: tr.querySelector('.inv-desc').value, qty: parseFloat(tr.querySelector('.inv-qty').value), rate: parseFloat(tr.querySelector('.inv-rate').value), amt: parseFloat(tr.querySelector('.inv-amt').innerText) }); }); const subtotal = parseFloat(document.getElementById("invSubtotalText").innerText); const gefl = parseFloat(document.getElementById("invGeflText").innerText); const nhil = parseFloat(document.getElementById("invNhilText").innerText); const vat = parseFloat(document.getElementById("invVatText").innerText); const total = parseFloat(document.getElementById("invTotalText").innerText); const invId = "INV-" + new Date().getTime().toString().slice(-5); const invoiceData = { id: invId, date: document.getElementById("invDate").value, billingMonth: document.getElementById("invBillingMonth").value, clientName: document.getElementById("invClientName").value, clientAddress: document.getElementById("invClientAddress").value, items: items, subtotal: subtotal, gefl: gefl, nhil: nhil, vat: vat, total: total, status: "Draft", timestamp: new Date().getTime() }; saveInvoice(invoiceData).then(() => { logAction("Invoices", `Created Invoice ${invId} for ${invoiceData.clientName}`); renderInvoiceTable(); document.getElementById("createInvoiceModal").style.display = "none"; }); });
+        document.getElementById("invoiceForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const items = [];
+            document.getElementById("invoiceItemsBody").querySelectorAll('tr').forEach(tr => {
+                items.push({
+                    desc: tr.querySelector('.inv-desc').value,
+                    qty: parseFloat(tr.querySelector('.inv-qty').value),
+                    rate: parseFloat(tr.querySelector('.inv-rate').value),
+                    amt: parseFloat(tr.querySelector('.inv-amt').innerText)
+                });
+            });
+
+            const subtotal = parseFloat(document.getElementById("invSubtotalText").innerText);
+            const gefl = parseFloat(document.getElementById("invGeflText").innerText);
+            const nhil = parseFloat(document.getElementById("invNhilText").innerText);
+            const vat = parseFloat(document.getElementById("invVatText").innerText);
+            const total = parseFloat(document.getElementById("invTotalText").innerText);
+
+            const saveInvoiceRecord = (invId, statusVal, timestampVal) => {
+                const invoiceData = {
+                    id: invId,
+                    date: document.getElementById("invDate").value,
+                    billingMonth: document.getElementById("invBillingMonth").value,
+                    clientName: document.getElementById("invClientName").value,
+                    clientAddress: document.getElementById("invClientAddress").value,
+                    items: items,
+                    subtotal: subtotal,
+                    gefl: gefl,
+                    nhil: nhil,
+                    vat: vat,
+                    total: total,
+                    status: statusVal,
+                    timestamp: timestampVal
+                };
+
+                saveInvoice(invoiceData).then(() => {
+                    logAction("Invoices", `${editInvId ? 'Updated' : 'Created'} Invoice ${invId} for ${invoiceData.clientName}`);
+                    renderInvoiceTable();
+                    closeModals();
+                });
+            };
+
+            if (editInvId) {
+                getInvoice(editInvId).then(existingInv => {
+                    saveInvoiceRecord(
+                        editInvId,
+                        existingInv ? existingInv.status : "Draft",
+                        existingInv ? existingInv.timestamp : new Date().getTime()
+                    );
+                });
+            } else {
+                const newInvId = "INV-" + new Date().getTime().toString().slice(-5);
+                saveInvoiceRecord(newInvId, "Draft", new Date().getTime());
+            }
+        });
+
         document.getElementById("invoiceTable").addEventListener("change", function(e) { if (e.target.classList.contains("update-inv-status")) { getInvoice(e.target.getAttribute("data-id")).then(inv => { inv.status = e.target.value; saveInvoice(inv).then(() => renderInvoiceTable()); }); } });
+
+        function buildSignatureStampBlock(sys, docType = "INVOICE", dateStr = "") {
+            const compName = (sys && sys.companyName) ? sys.companyName : "DKB ANCHOR SECURITY SERVICES LTD";
+            const signatory = (sys && sys.signatoryName) ? sys.signatoryName : "Authorized Signatory";
+            const sigImg = (sys && sys.signatureImage) ? sys.signatureImage : "";
+            const formattedDate = dateStr ? new Date(dateStr).toLocaleDateString() : new Date().toLocaleDateString();
+
+            const sigVisual = sigImg
+                ? `<img src="${sigImg}" crossorigin="anonymous" alt="Authorized Signature" style="max-height: 65px; max-width: 200px; object-fit: contain; display: block; margin: 0 auto 5px auto;">`
+                : `<div style="height: 55px;"></div>`;
+
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 35px; padding-top: 15px; page-break-inside: avoid;">
+                    <div style="text-align: center;">
+                        <div style="border: 2px double #0A2540; color: #0A2540; padding: 8px 18px; border-radius: 6px; display: inline-block; transform: rotate(-2deg); background: rgba(10, 37, 64, 0.03);">
+                            <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">${compName}</div>
+                            <div style="font-size: 0.9rem; font-weight: 900; color: ${docType === 'RECEIPT' ? '#38A169' : '#D4AF37'}; letter-spacing: 2px; margin: 3px 0; border-top: 1px solid #0A2540; border-bottom: 1px solid #0A2540; padding: 2px 0;">
+                                ${docType === 'RECEIPT' ? 'OFFICIAL PAID STAMP' : 'OFFICIAL ISSUED STAMP'}
+                            </div>
+                            <div style="font-size: 0.7rem; font-family: monospace; color: #4A5568;">DATE: ${formattedDate}</div>
+                        </div>
+                    </div>
+                    <div style="width: 250px; text-align: center;">
+                        ${sigVisual}
+                        <div style="border-top: 1.5px solid #0A2540; padding-top: 6px; font-weight: bold; color: #0A2540; font-size: 0.9rem;">
+                            ${signatory}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #718096; text-transform: uppercase; letter-spacing: 0.5px;">
+                            For: ${compName}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
         
         document.getElementById("invoiceTable").addEventListener("click", function(e) { 
-            const printBtn = e.target.closest('.btn-print-inv'); const downloadBtn = e.target.closest('.btn-download-inv'); const delBtn = e.target.closest('.btn-del-inv'); const receiptBtn = e.target.closest('.btn-download-receipt'); 
-            if (delBtn) { if (confirm(`Delete Invoice?`)) deleteInvoice(delBtn.getAttribute("data-id")).then(() => renderInvoiceTable()); } 
-            else if (printBtn || downloadBtn) { 
+            const printBtn = e.target.closest('.btn-print-inv');
+            const downloadBtn = e.target.closest('.btn-download-inv');
+            const editBtn = e.target.closest('.btn-edit-inv');
+            const delBtn = e.target.closest('.btn-del-inv');
+            const receiptBtn = e.target.closest('.btn-download-receipt'); 
+            
+            if (delBtn) {
+                if (confirm(`Delete Invoice?`)) deleteInvoice(delBtn.getAttribute("data-id")).then(() => renderInvoiceTable());
+            } else if (editBtn) {
+                const id = editBtn.getAttribute("data-id");
+                Promise.all([getInvoice(id), getAllClients()]).then(([inv, clients]) => {
+                    if (!inv) return;
+                    editInvId = inv.id;
+                    document.querySelector("#createInvoiceModal .modal-header").innerText = `Edit Invoice #${inv.id}`;
+                    document.getElementById("saveInvoiceActionBtn").innerText = "Update Invoice";
+
+                    const clientSelect = document.getElementById("invClientName");
+                    clientSelect.innerHTML = '<option value="" disabled>Select Onboarded Client</option>';
+                    clients.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(cl => {
+                        const opt = document.createElement("option");
+                        opt.value = cl.name;
+                        opt.dataset.address = cl.address || "";
+                        opt.dataset.rate = cl.rate || 0;
+                        opt.innerText = cl.name;
+                        clientSelect.appendChild(opt);
+                    });
+
+                    if (inv.clientName && !Array.from(clientSelect.options).some(o => o.value === inv.clientName)) {
+                        const fallbackOpt = document.createElement("option");
+                        fallbackOpt.value = inv.clientName;
+                        fallbackOpt.innerText = `${inv.clientName} (Unregistered)`;
+                        clientSelect.appendChild(fallbackOpt);
+                    }
+
+                    clientSelect.value = inv.clientName;
+                    document.getElementById("invDate").value = inv.date || "";
+                    document.getElementById("invBillingMonth").value = inv.billingMonth || "";
+                    document.getElementById("invClientAddress").value = inv.clientAddress || "";
+
+                    const tbody = document.getElementById("invoiceItemsBody");
+                    tbody.innerHTML = '';
+                    if (inv.items && inv.items.length > 0) {
+                        inv.items.forEach(item => addInvoiceRow(item.desc, item.qty, item.rate));
+                    } else {
+                        addInvoiceRow();
+                    }
+
+                    calculateInvoiceTotal();
+                    document.getElementById("createInvoiceModal").style.display = "block";
+                });
+            } else if (printBtn || downloadBtn) { 
                 const actionBtn = printBtn || downloadBtn; const isDownload = !!downloadBtn; 
                 Promise.all([getInvoice(actionBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { 
                     let itemsHtml = ""; inv.items.forEach(item => { itemsHtml += `<tr><td style="padding: 10px; border-bottom: 1px solid #E2E8F0;">${item.desc}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${item.qty}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.rate.toFixed(2)}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.amt.toFixed(2)}</td></tr>`; }); 
@@ -1699,8 +2053,9 @@
                                 <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> 
                             </div> 
                         </div> 
-                        <div style="margin-top: 30px; padding: 15px; background-color: #F4F6F8; border-left: 4px solid #D4AF37; font-size: 0.95rem; color: #2D3748; line-height: 1.5;"><strong>Note:</strong> all payments should be made to Bank: Guaranty Trust Bank Ghana, Account Name: DKB Anchor Security Services Ltd, Account number: <strong>3211001003568</strong></div> 
-                        <div style="margin-top: 30px; padding-top: 20px; padding-bottom: 40px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 1rem; font-weight: bold;">Thank you for your business!</div> 
+                        <div style="margin-top: 25px; padding: 15px; background-color: #F4F6F8; border-left: 4px solid #D4AF37; font-size: 0.95rem; color: #2D3748; line-height: 1.5;"><strong>Note:</strong> all payments should be made to Bank: Guaranty Trust Bank Ghana, Account Name: DKB Anchor Security Services Ltd, Account number: <strong>3211001003568</strong></div> 
+                        ${buildSignatureStampBlock(sys, 'INVOICE', inv.date)}
+                        <div style="margin-top: 25px; padding-top: 15px; padding-bottom: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 1rem; font-weight: bold;">Thank you for your business!</div> 
                     </div>`; 
                     if (isDownload) { html2pdf().set({ margin: 0.5, filename: `${inv.id}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } 
                     else { document.getElementById("printContainer").innerHTML = html; setTimeout(() => window.print(), 500); } 
@@ -1727,7 +2082,8 @@
                                 <div style="display: flex; justify-content: space-between; font-size: 1.3rem; color: #38A169; font-weight: bold;"><span>Amount Paid:</span><span>GH₵ ${amountPaid.toFixed(2)}</span></div> 
                             </div> 
                         </div> 
-                        <div style="margin-top: 50px; padding-top: 20px; padding-bottom: 40px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 1rem; font-weight: bold;">Payment successfully received. Thank you!</div> 
+                        ${buildSignatureStampBlock(sys, 'RECEIPT', new Date().toISOString())}
+                        <div style="margin-top: 30px; padding-top: 15px; padding-bottom: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 1rem; font-weight: bold;">Payment successfully received. Thank you!</div> 
                     </div>`; 
                     html2pdf().set({ margin: 0.5, filename: `Receipt_REC-${inv.id.replace('INV-', '')}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(receiptHtml).save(); 
                 }); 
