@@ -989,9 +989,10 @@
         document.getElementById("auditModuleFilter")?.addEventListener("change", renderAuditTable);
         window.dashboardCharts = { dep: null, inc: null, obs: null, fin: null };
 
-        const dashMonthFilter = document.getElementById("dash-month-filter");
+       const dashMonthFilter = document.getElementById("dash-month-filter");
 if (dashMonthFilter) {
     dashMonthFilter.value = String(new Date().getMonth() + 1).padStart(2, '0');
+    dashMonthFilter.addEventListener("change", renderDashboard);
 }
 
 document.getElementById("downloadPlReportBtn")?.addEventListener("click", function() {
@@ -1053,22 +1054,27 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
             invoiceRowsHtml = `<tr><td colspan="6" style="padding: 12px; text-align: center; color: #718096;">No formal invoices logged for ${monthName} ${yearVal}. Using active guard billing projection (${fmt(invSubtotalSum)}).</td></tr>`;
         }
 
-        // 2. Compute Payroll Summary for the period
-        let basicSum = 0, allowanceSum = 0, grossPayrollSum = 0, ssnitEmpSum = 0, payeSum = 0, netPaySum = 0, paidStaffCount = 0;
+        // 2. Compute Payroll Summary & 13% Employer SSNIT for the period
+        let basicSum = 0, allowanceSum = 0, grossPayrollSum = 0, ssnitEmpSum = 0, ssnitEmprSum = 0, payeSum = 0, netPaySum = 0, paidStaffCount = 0;
         employees.forEach(emp => {
             const rec = (emp.payrollData && emp.payrollData[periodKey]) ? emp.payrollData[periodKey] : { riskAllowance: 0, transportAllowance: 0, status: "Pending" };
             const rAmt = rec.riskAllowance !== undefined ? rec.riskAllowance : (rec.overtime || 0);
             const tAmt = rec.transportAllowance !== undefined ? rec.transportAllowance : (rec.bonus || 0);
             const fin = calculateFinancials(emp, rAmt, tAmt);
+            const emprSsnit = fin.basic * 0.13; // 13% Employer SSNIT Contribution
 
             basicSum += fin.basic;
             allowanceSum += (fin.riskAllowance + fin.transportAllowance);
             grossPayrollSum += fin.grossPay;
             ssnitEmpSum += fin.ssnitDeduction;
+            ssnitEmprSum += emprSsnit;
             payeSum += fin.payeDeduction;
             netPaySum += fin.netPay;
             if (rec.status === "Paid") paidStaffCount++;
         });
+
+        // Total Payroll Expense to the Company = Gross Pay (Net + 5.5% SSNIT + PAYE) + 13% Employer SSNIT
+        const totalPayrollCost = grossPayrollSum + ssnitEmprSum;
 
         // 3. Filter & Group Expenditures for the month
         const monthExpenses = expenditures.filter(exp => exp.date && exp.date.startsWith(ymPrefix));
@@ -1094,8 +1100,8 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
             expRowsHtml = `<tr><td colspan="2" style="padding: 12px; text-align: center; color: #718096;">No operational expenditures logged for ${monthName} ${yearVal}.</td></tr>`;
         }
 
-        // 4. Net Profit / Loss Calculation (Subtotal Revenue minus Net Salaries & Operational Expenses)
-        const totalOutflow = netPaySum + totalExpSum;
+        // 4. Net Profit / Loss Calculation (Subtotal Revenue minus Total Payroll Cost & Operational Expenses)
+        const totalOutflow = totalPayrollCost + totalExpSum;
         const netProfit = invSubtotalSum - totalOutflow;
         const profitMarginPct = invSubtotalSum > 0 ? ((netProfit / invSubtotalSum) * 100).toFixed(1) : "0.0";
         const isProfit = netProfit >= 0;
@@ -1129,8 +1135,8 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
                         <div style="font-size: 1.15rem; font-weight: 800; color: #0A2540; margin-top: 4px;">${fmt(invSubtotalSum)}</div>
                     </div>
                     <div style="flex: 1; background: #F4F6F8; padding: 12px; border-radius: 6px; border-left: 4px solid #D4AF37;">
-                        <div style="font-size: 0.72rem; text-transform: uppercase; color: #718096; font-weight: bold;">Payroll Outflow (Net)</div>
-                        <div style="font-size: 1.15rem; font-weight: 800; color: #2D3748; margin-top: 4px;">${fmt(netPaySum)}</div>
+                        <div style="font-size: 0.72rem; text-transform: uppercase; color: #718096; font-weight: bold;">Total Payroll Cost (Incl. 13% SSNIT)</div>
+                        <div style="font-size: 1.15rem; font-weight: 800; color: #2D3748; margin-top: 4px;">${fmt(totalPayrollCost)}</div>
                     </div>
                     <div style="flex: 1; background: #F4F6F8; padding: 12px; border-radius: 6px; border-left: 4px solid #E53E3E;">
                         <div style="font-size: 0.72rem; text-transform: uppercase; color: #718096; font-weight: bold;">Operating Expenses</div>
@@ -1169,14 +1175,16 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
                 <!-- 2. Payroll & Statutory Summary + 3. Expenditures Side-by-Side -->
                 <div style="display: flex; gap: 20px; margin-bottom: 20px;">
                     <div style="flex: 1;">
-                        <h3 style="background: #0A2540; color: #D4AF37; padding: 8px 12px; margin: 0; font-size: 0.9rem; text-transform: uppercase;">2. Payroll Summary (${employees.length} Staff)</h3>
+                        <h3 style="background: #0A2540; color: #D4AF37; padding: 8px 12px; margin: 0; font-size: 0.9rem; text-transform: uppercase;">2. Payroll &amp; Statutory Summary (${employees.length} Staff)</h3>
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; border: 1px solid #E2E8F0;">
                             <tbody>
-                                <tr><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">Total Basic Salaries</td><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(basicSum)}</td></tr>
-                                <tr><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">Risk &amp; Transport Allowances</td><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(allowanceSum)}</td></tr>
-                                <tr><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">SSNIT Employee (5.5%)</td><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; color: #718096;">${fmt(ssnitEmpSum)}</td></tr>
-                                <tr><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">GRA PAYE Tax Deducted</td><td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; color: #718096;">${fmt(payeSum)}</td></tr>
-                                <tr style="background: #F4F6F8; font-weight: bold;"><td style="padding: 9px 10px;">Net Salaries Disbursed (${paidStaffCount}/${employees.length} Paid)</td><td style="padding: 9px 10px; text-align: right; color: #0A2540;">${fmt(netPaySum)}</td></tr>
+                                <tr><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0;">Total Basic Salaries</td><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(basicSum)}</td></tr>
+                                <tr><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0;">Risk &amp; Transport Allowances</td><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; font-weight: bold;">${fmt(allowanceSum)}</td></tr>
+                                <tr><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; color: #4A5568;">Net Take-Home Pay (${paidStaffCount}/${employees.length} Paid)</td><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; color: #4A5568;">${fmt(netPaySum)}</td></tr>
+                                <tr><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; color: #718096;">SSNIT Employee Deduction (5.5%)</td><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; color: #718096;">${fmt(ssnitEmpSum)}</td></tr>
+                                <tr><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; color: #718096;">GRA PAYE Tax Remittance</td><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; color: #718096;">${fmt(payeSum)}</td></tr>
+                                <tr><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; color: #D4AF37; font-weight: bold;">SSNIT Employer Contribution (13%)</td><td style="padding: 7px 10px; border-bottom: 1px solid #E2E8F0; text-align: right; color: #D4AF37; font-weight: bold;">${fmt(ssnitEmprSum)}</td></tr>
+                                <tr style="background: #F4F6F8; font-weight: bold;"><td style="padding: 9px 10px;">Total Company Payroll Expense</td><td style="padding: 9px 10px; text-align: right; color: #0A2540;">${fmt(totalPayrollCost)}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1295,136 +1303,158 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
             window.internalUnreadCount = currentInternalCount; previousUnreadCount = currentInternalCount; updateTotalMessageBadge();
         }
 
-        function renderDashboard() {
-            Promise.all([
-                getAllEmployees(),
-                getAllIncidents(),
-                getAllObservations(),
-                getAllExpenditures(),
-                getAllClients(),
-                getAllInvoices()
-            ]).then(([employees, incidents, observations, expenditures, clients, invoices]) => {
-                if (window.currentUserRole === "Client") {
-                    employees = employees.filter(e => e.dutyPost === window.currentUserSite);
-                    incidents = incidents.filter(i => i.location === window.currentUserSite);
-                    observations = observations.filter(o => o.site === window.currentUserSite);
-                    invoices = invoices.filter(inv => inv.clientName === window.currentUserSite);
-                    expenditures = [];
-                }
-
-                const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard') && e.status !== 'Off Duty').length;
-                const monthlyRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
-                const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
-                const currentYearVal = document.getElementById("year-filter") ? parseInt(document.getElementById("year-filter").value) : new Date().getFullYear();
-                const periodKey = `${currentMonthName}_${currentYearVal}`;
-
-                const monthlySalaries = employees.reduce((sum, emp) => {
-                    const record = (emp.payrollData && emp.payrollData[periodKey]) ? emp.payrollData[periodKey] : { riskAllowance: 0, transportAllowance: 0 };
-                    const riskAmount = record.riskAllowance !== undefined ? record.riskAllowance : (record.overtime || 0);
-                    const transportAmount = record.transportAllowance !== undefined ? record.transportAllowance : (record.bonus || 0);
-                    const fin = calculateFinancials(emp, riskAmount, transportAmount);
-                    return sum + fin.netPay;
-                }, 0);
-
-                const totalExpenses = expenditures.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-                const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
-                const totalClients = clients.length;
-
-                document.getElementById('dashTotalEmp').innerText = employees.length;
-                document.getElementById('dashActiveGuards').innerText = activeGuards;
-                document.getElementById('dashTotalClients').innerText = totalClients;
-                document.getElementById('dashTotalInc').innerText = incidents.length;
-                document.getElementById('dashTotalObs').innerText = observations.length;
-                document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
-
-                const fullMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                const currentMonth = new Date().getMonth();
-                const startIdx = Math.max(0, currentMonth - 5);
-                const monthLabels = shortMonthNames.slice(startIdx, currentMonth + 1);
-
-                let incData = new Array(monthLabels.length).fill(0);
-                incidents.forEach(inc => {
-                    const d = new Date(inc.date);
-                    if (d.getFullYear() === currentYearVal) {
-                        const mIdx = d.getMonth() - startIdx;
-                        if (mIdx >= 0 && mIdx < monthLabels.length) incData[mIdx]++;
-                    }
-                });
-
-                let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 };
-                observations.forEach(obs => { if (obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
-
-                let revData = [];
-                let profData = [];
-                let depData = [];
-
-                for (let m = startIdx; m <= currentMonth; m++) {
-                    const ymPrefix = `${currentYearVal}-${String(m + 1).padStart(2, '0')}`;
-                    const mKey = `${fullMonthNames[m]}_${currentYearVal}`;
-
-                    const guardsEnrolledByMonth = employees.filter(e => {
-                        if (!e.role || !e.role.toLowerCase().includes('guard') || e.status === 'Off Duty') return false;
-                        if (!e.enrolmentDate) return true;
-                        return e.enrolmentDate.slice(0, 7) <= ymPrefix;
-                    }).length;
-                    depData.push(m === currentMonth ? activeGuards : guardsEnrolledByMonth);
-
-                    const monthInvRev = invoices
-                        .filter(inv => (inv.billingMonth && inv.billingMonth === ymPrefix) || (!inv.billingMonth && inv.date && inv.date.startsWith(ymPrefix)))
-                        .reduce((sum, inv) => sum + (parseFloat(inv.subtotal) || parseFloat(inv.total) || 0), 0);
-                    const mRev = (m === currentMonth && monthInvRev === 0) ? monthlyRevenue : monthInvRev;
-                    revData.push(mRev);
-
-                    const mSal = employees.reduce((sum, emp) => {
-                        if (emp.payrollData && emp.payrollData[mKey]) {
-                            const rec = emp.payrollData[mKey];
-                            const rAmt = rec.riskAllowance !== undefined ? rec.riskAllowance : (rec.overtime || 0);
-                            const tAmt = rec.transportAllowance !== undefined ? rec.transportAllowance : (rec.bonus || 0);
-                            return sum + calculateFinancials(emp, rAmt, tAmt).netPay;
-                        }
-                        return m === currentMonth ? sum + calculateFinancials(emp, 0, 0).netPay : sum;
-                    }, 0);
-
-                    const mExp = expenditures
-                        .filter(exp => exp.date && exp.date.startsWith(ymPrefix))
-                        .reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-
-                    profData.push(m === currentMonth && monthInvRev === 0 ? liveProfit : (mRev - mSal - mExp));
-                }
-
-                const cDB = window.dashboardCharts;
-                if (cDB.dep) cDB.dep.destroy();
-                cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), {
-                    type: 'line',
-                    data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-                if (cDB.inc) cDB.inc.destroy();
-                cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), {
-                    type: 'bar',
-                    data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-                if (cDB.obs) cDB.obs.destroy();
-                cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), {
-                    type: 'doughnut',
-                    data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
-                });
-                if (cDB.fin) cDB.fin.destroy();
-                cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), {
-                    type: 'bar',
-                    data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-            });
+       function renderDashboard() {
+    Promise.all([
+        getAllEmployees(),
+        getAllIncidents(),
+        getAllObservations(),
+        getAllExpenditures(),
+        getAllClients(),
+        getAllInvoices()
+    ]).then(([employees, incidents, observations, expenditures, clients, invoices]) => {
+        if (window.currentUserRole === "Client") {
+            employees = employees.filter(e => e.dutyPost === window.currentUserSite);
+            incidents = incidents.filter(i => i.location === window.currentUserSite);
+            observations = observations.filter(o => o.site === window.currentUserSite);
+            invoices = invoices.filter(inv => inv.clientName === window.currentUserSite);
+            expenditures = [];
         }
 
+        const fullMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        const selectedMonthNum = document.getElementById("dash-month-filter")?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+        const selectedMonthIdx = parseInt(selectedMonthNum, 10) - 1;
+        const selectedMonthName = fullMonthNames[selectedMonthIdx];
+        const currentYearVal = document.getElementById("year-filter") ? parseInt(document.getElementById("year-filter").value) : new Date().getFullYear();
+        const selectedYmPrefix = `${currentYearVal}-${selectedMonthNum}`;
+        const periodKey = `${selectedMonthName}_${currentYearVal}`;
+
+        const activeGuards = employees.filter(e => e.role && e.role.toLowerCase().includes('guard') && e.status !== 'Off Duty').length;
+
+        // Calculate Revenue for selected month (use invoiced subtotal if available, otherwise fallback to active guard rates)
+        const monthInvoicedRevenue = invoices
+            .filter(inv => (inv.billingMonth && inv.billingMonth === selectedYmPrefix) || (!inv.billingMonth && inv.date && inv.date.startsWith(selectedYmPrefix)))
+            .reduce((sum, inv) => sum + (parseFloat(inv.subtotal) || parseFloat(inv.total) || 0), 0);
+        const projectedGuardRevenue = employees.reduce((sum, e) => sum + (parseFloat(e.clientRate) || 0), 0);
+        const monthlyRevenue = monthInvoicedRevenue > 0 ? monthInvoicedRevenue : projectedGuardRevenue;
+
+        // Calculate Total Company Payroll Cost (Gross Pay + 13% Employer SSNIT)
+        const monthlySalaries = employees.reduce((sum, emp) => {
+            const record = (emp.payrollData && emp.payrollData[periodKey]) ? emp.payrollData[periodKey] : { riskAllowance: 0, transportAllowance: 0 };
+            const riskAmount = record.riskAllowance !== undefined ? record.riskAllowance : (record.overtime || 0);
+            const transportAmount = record.transportAllowance !== undefined ? record.transportAllowance : (record.bonus || 0);
+            const fin = calculateFinancials(emp, riskAmount, transportAmount);
+            const employerSsnit = fin.basic * 0.13;
+            return sum + fin.grossPay + employerSsnit;
+        }, 0);
+
+        // Calculate Operational Expenses for the selected month
+        const totalExpenses = expenditures
+            .filter(exp => exp.date && exp.date.startsWith(selectedYmPrefix))
+            .reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+
+        const liveProfit = monthlyRevenue - monthlySalaries - totalExpenses;
+        const totalClients = clients.length;
+
+        document.getElementById('dashTotalEmp').innerText = employees.length;
+        document.getElementById('dashActiveGuards').innerText = activeGuards;
+        document.getElementById('dashTotalClients').innerText = totalClients;
+        document.getElementById('dashTotalInc').innerText = incidents.length;
+        document.getElementById('dashTotalObs').innerText = observations.length;
+        document.getElementById('dashRevenue').innerText = `GH₵ ${monthlyRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('dashSalaries').innerText = `GH₵ ${monthlySalaries.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('dashTotalExp').innerText = `GH₵ ${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('dashTotalProfit').innerText = `GH₵ ${liveProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('dashTotalProfit').className = liveProfit >= 0 ? "stat success" : "stat alert";
+
+        const currentMonth = new Date().getMonth();
+        const startIdx = Math.max(0, currentMonth - 5);
+        const monthLabels = shortMonthNames.slice(startIdx, currentMonth + 1);
+
+        let incData = new Array(monthLabels.length).fill(0);
+        incidents.forEach(inc => {
+            const d = new Date(inc.date);
+            if (d.getFullYear() === currentYearVal) {
+                const mIdx = d.getMonth() - startIdx;
+                if (mIdx >= 0 && mIdx < monthLabels.length) incData[mIdx]++;
+            }
+        });
+
+        let obsCounts = { 'Pending Review': 0, 'Reviewed': 0, 'Addressed': 0 };
+        observations.forEach(obs => { if (obsCounts[obs.status] !== undefined) obsCounts[obs.status]++; });
+
+        let revData = [];
+        let profData = [];
+        let depData = [];
+
+        for (let m = startIdx; m <= currentMonth; m++) {
+            const ymPrefix = `${currentYearVal}-${String(m + 1).padStart(2, '0')}`;
+            const mKey = `${fullMonthNames[m]}_${currentYearVal}`;
+
+            const guardsEnrolledByMonth = employees.filter(e => {
+                if (!e.role || !e.role.toLowerCase().includes('guard') || e.status === 'Off Duty') return false;
+                if (!e.enrolmentDate) return true;
+                return e.enrolmentDate.slice(0, 7) <= ymPrefix;
+            }).length;
+            depData.push(m === currentMonth ? activeGuards : guardsEnrolledByMonth);
+
+            const monthInvRev = invoices
+                .filter(inv => (inv.billingMonth && inv.billingMonth === ymPrefix) || (!inv.billingMonth && inv.date && inv.date.startsWith(ymPrefix)))
+                .reduce((sum, inv) => sum + (parseFloat(inv.subtotal) || parseFloat(inv.total) || 0), 0);
+            const mRev = (m === currentMonth && monthInvRev === 0) ? projectedGuardRevenue : monthInvRev;
+            revData.push(mRev);
+
+            // Chart Payroll Outflow: Gross Pay + 13% Employer SSNIT
+            const mSal = employees.reduce((sum, emp) => {
+                if (emp.payrollData && emp.payrollData[mKey]) {
+                    const rec = emp.payrollData[mKey];
+                    const rAmt = rec.riskAllowance !== undefined ? rec.riskAllowance : (rec.overtime || 0);
+                    const tAmt = rec.transportAllowance !== undefined ? rec.transportAllowance : (rec.bonus || 0);
+                    const fin = calculateFinancials(emp, rAmt, tAmt);
+                    return sum + fin.grossPay + (fin.basic * 0.13);
+                }
+                if (m === currentMonth) {
+                    const fin = calculateFinancials(emp, 0, 0);
+                    return sum + fin.grossPay + (fin.basic * 0.13);
+                }
+                return sum;
+            }, 0);
+
+            const mExp = expenditures
+                .filter(exp => exp.date && exp.date.startsWith(ymPrefix))
+                .reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+
+            profData.push(mRev - mSal - mExp);
+        }
+
+        const cDB = window.dashboardCharts;
+        if (cDB.dep) cDB.dep.destroy();
+        cDB.dep = new Chart(document.getElementById('deploymentChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: monthLabels, datasets: [{ label: 'Active Guards', data: depData, borderColor: '#0A2540', backgroundColor: 'rgba(10, 37, 64, 0.1)', fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+        if (cDB.inc) cDB.inc.destroy();
+        cDB.inc = new Chart(document.getElementById('incidentChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: monthLabels, datasets: [{ label: 'Incidents', data: incData, backgroundColor: '#E53E3E', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+        if (cDB.obs) cDB.obs.destroy();
+        cDB.obs = new Chart(document.getElementById('observationsChart').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(obsCounts), datasets: [{ data: Object.values(obsCounts), backgroundColor: ['#D4AF37', '#0A2540', '#38A169'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+        });
+        if (cDB.fin) cDB.fin.destroy();
+        cDB.fin = new Chart(document.getElementById('financeChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: monthLabels, datasets: [{ label: 'Revenue (GH₵)', data: revData, backgroundColor: '#0A2540', borderRadius: 4 }, { label: 'Profit (GH₵)', data: profData, backgroundColor: '#D4AF37', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    });
+}
         function applySystemSettings(data = null) {
             if (!data) return;
             document.getElementById("sidebarLogo").src = data.logo;
