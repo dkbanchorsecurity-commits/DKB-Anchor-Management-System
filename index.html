@@ -2376,7 +2376,7 @@ function renderExpenditureTable() {
                     calculateInvoiceTotal();
                     document.getElementById("createInvoiceModal").style.display = "block";
                 });
-            } else if (printBtn || downloadBtn) { 
+           } else if (printBtn || downloadBtn) { 
                 const actionBtn = printBtn || downloadBtn; const isDownload = !!downloadBtn; 
                 Promise.all([getInvoice(actionBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { 
                     let itemsHtml = ""; inv.items.forEach(item => { itemsHtml += `<tr><td style="padding: 10px; border-bottom: 1px solid #E2E8F0;">${item.desc}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: center;">${item.qty}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.rate.toFixed(2)}</td><td style="padding: 10px; border-bottom: 1px solid #E2E8F0; text-align: right;">${item.amt.toFixed(2)}</td></tr>`; }); 
@@ -2400,13 +2400,19 @@ function renderExpenditureTable() {
                                 <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 1.3rem; color: #0A2540; font-weight: bold;"><span>Total:</span><span>GH₵ ${inv.total.toFixed(2)}</span></div> 
                             </div> 
                         </div> 
-                        <div style="margin-top: 25px; padding: 15px; background-color: #F4F6F8; border-left: 4px solid #D4AF37; font-size: 0.95rem; color: #2D3748; line-height: 1.5;"><strong>Note:</strong> all payments should be made to Bank: Guaranty Trust Bank Ghana, Account Name: DKB Anchor Security Services Ltd, Account number: <strong>3211001003568</strong></div> 
+                        <div style="margin-top: 25px; padding: 15px; background-color: #F4F6F8; border-left: 4px solid #D4AF37; font-size: 0.9rem; color: #2D3748; line-height: 1.6;">
+                            <strong style="color: #0A2540; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Approved Payment Channels:</strong>
+                            <div><strong>1. Bank Transfer:</strong> Guaranty Trust Bank Ghana &bull; Account Name: <strong>DKB Anchor Security Services Ltd</strong> &bull; Account No.: <strong>3211001003568 , Achimota Branch</strong></div>
+                            <div><strong>2. Mobile Money (MoMo):</strong> <strong>0247071531</strong> (DKB Anchor Security Services Ltd)</div>
+                            <div><strong>3. Cash:</strong> Official cash payment at our office or to an authorized company representative (Official Receipt issued upon payment).</div>
+                        </div> 
                         ${buildSignatureStampBlock(sys, 'INVOICE', inv.date)}
                         <div style="margin-top: 25px; padding-top: 15px; padding-bottom: 20px; border-top: 1px solid #E2E8F0; text-align: center; color: #718096; font-size: 1rem; font-weight: bold;">Thank you for your business!</div> 
                     </div>`; 
                     if (isDownload) { html2pdf().set({ margin: 0.5, filename: `${inv.id}_${inv.clientName.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(html).save(); } 
                     else { document.getElementById("printContainer").innerHTML = html; setTimeout(() => window.print(), 500); } 
                 }); 
+        
             } else if (receiptBtn) { 
                 Promise.all([getInvoice(receiptBtn.getAttribute("data-id")), getSetting("system")]).then(([inv, sys]) => { 
                     const defaultAmount = inv.total.toFixed(2); const amountInput = prompt(`Enter the exact amount received for Invoice #${inv.id} (GH₵):`, defaultAmount);
