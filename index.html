@@ -359,13 +359,19 @@
                 </div>
             </section>
 
-            <section id="expenditure" class="content-section hidden">
+          <section id="expenditure" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Expenditure Management</h1></div></header>
                 <div class="panel">
                     <div class="panel-controls controls-row">
                         <button id="openLogExpenditureBtn" class="btn-primary"><i class="fa-solid fa-plus"></i> Log New Expense</button>
                         <div class="controls-group">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label style="font-size: 0.8rem; color: var(--gray-color); white-space: nowrap;">Period:</label>
+                                <input type="month" id="expenditureMonthFilter" class="year-selector" title="Filter by Month & Year">
+                                <button type="button" id="clearExpFilterBtn" class="btn-small" title="Show All Months">All</button>
+                            </div>
                             <div class="search-container"><i class="fa-solid fa-search"></i><input type="text" id="expenditureSearchInput" placeholder="Search expenses..."></div>
+                            <button id="exportExpenditureBtn" class="btn-primary"><i class="fa-solid fa-file-csv"></i> Download CSV</button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -984,7 +990,18 @@
         document.getElementById("year-filter").addEventListener("change", () => { renderPayrollTable(); renderDashboard(); });
         const attDateFilter = document.getElementById("attendanceDateFilter"); 
         if (attDateFilter) { attDateFilter.value = new Date().toISOString().split('T')[0]; attDateFilter.addEventListener('change', renderAttendanceTable); }
-        const attMonthExport = document.getElementById("attendanceMonthExport"); 
+        const attMonthExport = document.getElementById("attendanceMonthExport");
+        const expMonthFilter = document.getElementById("expenditureMonthFilter");
+        if (expMonthFilter) {
+            expMonthFilter.value = new Date().toISOString().slice(0, 7);
+            expMonthFilter.addEventListener("change", renderExpenditureTable);
+        }
+        document.getElementById("clearExpFilterBtn")?.addEventListener("click", function() {
+            if (expMonthFilter) {
+                expMonthFilter.value = "";
+                renderExpenditureTable();
+            }
+        }); 
         if (attMonthExport) attMonthExport.value = new Date().toISOString().slice(0, 7);
         document.getElementById("auditModuleFilter")?.addEventListener("change", renderAuditTable);
         window.dashboardCharts = { dep: null, inc: null, obs: null, fin: null };
@@ -1656,12 +1673,39 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
             });
         });
 
-        function renderExpenditureTable() {
+function renderExpenditureTable() {
             getAllExpenditures().then(expenses => {
-                const tbody = document.querySelector("#expenditureTable tbody"); tbody.innerHTML = ''; const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
-                expenses.sort((a, b) => b.timestamp - a.timestamp).forEach(exp => {
-                    const newRow = document.createElement("tr"); const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${exp.id}"><i class="fa-solid fa-trash"></i></button>` : '';
-                    newRow.innerHTML = `<td>${new Date(exp.date).toLocaleDateString()}</td><td>${exp.category}</td><td>${exp.description}</td><td style="font-weight: bold; color: var(--danger-color);">GH₵ ${parseFloat(exp.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td>${exp.loggedBy}</td><td><div class="action-buttons"><button class="btn-action view" data-id="${exp.id}"><i class="fa-solid fa-eye"></i></button><button class="btn-action edit" data-id="${exp.id}"><i class="fa-solid fa-pen"></i></button>${deleteHtml}</div></td>`;
+                const tbody = document.querySelector("#expenditureTable tbody");
+                tbody.innerHTML = '';
+                const canDelete = ["Super Admin", "Finance Manager"].includes(window.currentUserRole);
+                const selectedMonth = document.getElementById("expenditureMonthFilter")?.value;
+
+                let filteredExpenses = expenses;
+                if (selectedMonth) {
+                    filteredExpenses = expenses.filter(exp => exp.date && exp.date.startsWith(selectedMonth));
+                }
+
+                if (filteredExpenses.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--gray-color); padding: 20px;">No expenditure records found for ${selectedMonth || 'this period'}.</td></tr>`;
+                    return;
+                }
+
+                filteredExpenses.sort((a, b) => b.timestamp - a.timestamp).forEach(exp => {
+                    const newRow = document.createElement("tr");
+                    const deleteHtml = canDelete ? `<button class="btn-action delete" data-id="${exp.id}"><i class="fa-solid fa-trash"></i></button>` : '';
+                    newRow.innerHTML = `
+                        <td>${new Date(exp.date).toLocaleDateString()}</td>
+                        <td>${exp.category}</td>
+                        <td>${exp.description}</td>
+                        <td style="font-weight: bold; color: var(--danger-color);">GH₵ ${parseFloat(exp.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td>${exp.loggedBy}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action view" data-id="${exp.id}"><i class="fa-solid fa-eye"></i></button>
+                                <button class="btn-action edit" data-id="${exp.id}"><i class="fa-solid fa-pen"></i></button>
+                                ${deleteHtml}
+                            </div>
+                        </td>`;
                     tbody.appendChild(newRow);
                 });
             });
@@ -1872,6 +1916,26 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
                     link.download = `DKB_Observations_${new Date().toISOString().slice(0,10)}.csv`;
                     link.click();
                     logAction("Observations", "Exported Field Observations to CSV");
+                });
+            });
+
+            document.getElementById("exportExpenditureBtn")?.addEventListener("click", function() {
+                getAllExpenditures().then(expenses => {
+                    if (expenses.length === 0) return alert("No expenditure records available to export.");
+                    
+                    let csv = "Expense ID,Date,Category,Description,Amount (GH₵),Logged By\n";
+                    expenses.sort((a, b) => b.timestamp - a.timestamp).forEach(exp => {
+                        const cleanDesc = (exp.description || "").replace(/"/g, '""').replace(/\n/g, ' ');
+                        const amt = parseFloat(exp.amount || 0).toFixed(2);
+                        csv += `"${exp.id}","${exp.date}","${exp.category}","${cleanDesc}",${amt},"${exp.loggedBy}"\n`;
+                    });
+                    
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                    link.download = `DKB_Expenditures_${new Date().toISOString().slice(0, 10)}.csv`;
+                    link.click();
+                    
+                    logAction("Expenditure", "Exported Expenditure Records to CSV");
                 });
             });
 
