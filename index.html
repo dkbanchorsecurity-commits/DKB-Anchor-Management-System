@@ -15,10 +15,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+   
+   <style>
         :root {
             --primary-color: #0A2540;   
             --secondary-color: #051424; 
@@ -200,6 +203,144 @@
         @media (max-width: 480px) { .dashboard-cards { grid-template-columns: 1fr; } }
         #printContainer { display: none; }
         @media print { body * { visibility: hidden !important; } #printContainer, #printContainer * { visibility: visible !important; } #printContainer { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; } }
+
+        /* Employee ID Generator Scoped Styles */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+
+        #employee-id-generator {
+            --id-primary-blue: #0A192F;
+            --id-primary-gold: #C59B48;
+            --id-card-bg: #FFFFFF;
+            --id-text-dark: #000000;
+            --id-text-light: #FFFFFF;
+        }
+        #employee-id-generator .cards-wrapper {
+            display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;
+            padding: 25px; background: rgba(10, 37, 64, 0.04); border-radius: 8px;
+        }
+        #employee-id-generator .id-card {
+            width: 340px; height: 538px; background: var(--id-card-bg);
+            border-radius: 15px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; align-items: center;
+            box-sizing: border-box; font-family: 'Roboto', sans-serif; color: #000;
+        }
+        #employee-id-generator .front-top-bg-gold {
+            position: absolute; top: -60px; left: -30px; width: 420px; height: 280px;
+            background: var(--id-primary-gold); border-radius: 0 0 40% 60% / 0 0 50% 50%; z-index: 1;
+        }
+        #employee-id-generator .front-top-bg-blue {
+            position: absolute; top: -65px; left: -30px; width: 420px; height: 275px;
+            background: var(--id-primary-blue); border-radius: 0 0 40% 60% / 0 0 50% 50%; z-index: 2;
+        }
+        #employee-id-generator .front-bottom-bg-gold {
+            position: absolute; bottom: -40px; left: -20px; width: 400px; height: 120px;
+            background: var(--id-primary-gold); border-radius: 50% 50% 0 0 / 100% 100% 0 0; z-index: 1;
+        }
+        #employee-id-generator .front-bottom-bg-blue {
+            position: absolute; bottom: -45px; left: -20px; width: 400px; height: 120px;
+            background: var(--id-primary-blue); border-radius: 50% 50% 0 0 / 100% 100% 0 0; z-index: 2;
+        }
+        #employee-id-generator .header-content {
+            position: relative; z-index: 3; display: flex; align-items: center; width: 100%;
+            padding: 30px 20px 10px 20px; box-sizing: border-box;
+        }
+        #employee-id-generator .logo-placeholder {
+            width: 70px; height: 80px; margin-right: 15px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        #employee-id-generator .logo-placeholder:hover { opacity: 0.8; }
+        #employee-id-generator .logo-placeholder img { width: 100%; height: 100%; object-fit: contain; }
+        #employee-id-generator .company-titles { display: flex; flex-direction: column; text-align: left; }
+        #employee-id-generator .company-name { color: var(--id-text-light); font-size: 22px; font-weight: 900; line-height: 1.1; letter-spacing: 0.5px; }
+        #employee-id-generator .company-sub { color: var(--id-primary-gold); font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+        #employee-id-generator .tagline { color: var(--id-text-light); font-size: 10px; font-weight: 400; line-height: 1.3; }
+        #employee-id-generator .photo-wrapper {
+            position: relative; z-index: 3; margin-top: 15px; width: 130px; height: 150px;
+            border: 3px solid var(--id-primary-gold); border-radius: 8px; overflow: hidden; background: #4a90e2;
+            cursor: pointer; transition: 0.2s;
+        }
+        #employee-id-generator .photo-wrapper:hover { opacity: 0.8; }
+        #employee-id-generator .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        #employee-id-generator .employee-name {
+            position: relative; z-index: 3; font-size: 22px; font-weight: 900; color: var(--id-primary-blue);
+            margin: 15px 0 2px 0; letter-spacing: 1px; outline: none; text-align: center; min-width: 150px; text-transform: uppercase;
+        }
+        #employee-id-generator .employee-name:focus,
+        #employee-id-generator .employee-role:focus,
+        #employee-id-generator .details-table td:focus,
+        #employee-id-generator .contact-item div:focus {
+            border-bottom: 1px dashed var(--id-primary-gold); background-color: rgba(197, 155, 72, 0.1);
+        }
+        #employee-id-generator .employee-role {
+            position: relative; z-index: 3; font-size: 15px; font-weight: 700; color: var(--id-primary-gold);
+            margin: 0 0 15px 0; outline: none; text-align: center; text-transform: uppercase;
+        }
+        #employee-id-generator .details-table {
+            position: relative; z-index: 3; width: 82%; font-size: 11px; font-weight: 700;
+            color: var(--id-text-dark); border-top: 1px solid rgba(197, 155, 72, 0.5); padding-top: 15px;
+        }
+        #employee-id-generator .details-table table { width: 100%; border-collapse: collapse; }
+        #employee-id-generator .details-table td { padding: 4px 0; outline: none; border: none; color: #000; }
+        #employee-id-generator .details-table td:nth-child(1) { width: 45%; text-align: left; }
+        #employee-id-generator .details-table td:nth-child(2) { width: 55%; text-align: left; font-weight: 500; }
+        #employee-id-generator .signature-area {
+            position: absolute; bottom: 15px; z-index: 3; width: 100%; text-align: center; color: var(--id-text-light);
+        }
+        #employee-id-generator .signature-text-placeholder {
+            font-family: 'Brush Script MT', 'Lucida Handwriting', cursive; font-size: 28px;
+            margin-bottom: 2px; height: 48px; display: flex; align-items: flex-end; justify-content: center;
+        }
+        #employee-id-generator .signature-line { width: 150px; height: 1px; background: var(--id-text-light); margin: 0 auto 5px auto; }
+        #employee-id-generator .signature-text { font-size: 10px; letter-spacing: 0.5px; }
+        #employee-id-generator .back-top-bg-gold {
+            position: absolute; top: -120px; left: -50px; width: 500px; height: 300px;
+            background: var(--id-primary-gold); border-radius: 0 0 50% 50%; z-index: 1;
+        }
+        #employee-id-generator .back-top-bg-blue {
+            position: absolute; top: -125px; left: -50px; width: 500px; height: 295px;
+            background: var(--id-primary-blue); border-radius: 0 0 50% 50%; z-index: 2;
+        }
+        #employee-id-generator .back-header-content {
+            position: relative; z-index: 3; display: flex; align-items: center; justify-content: center;
+            width: 100%; padding: 30px 20px 20px 20px; box-sizing: border-box;
+        }
+        #employee-id-generator .back-header-content .logo-placeholder { width: 50px; height: 50px; margin-right: 15px; }
+        #employee-id-generator .divider-line { width: 1px; height: 40px; background: var(--id-primary-gold); margin-right: 15px; }
+        #employee-id-generator .back-title {
+            position: relative; z-index: 3; font-size: 18px; font-weight: 900; color: var(--id-primary-blue);
+            margin: 30px 0 15px 0; display: flex; align-items: center; letter-spacing: 1px;
+        }
+        #employee-id-generator .back-title::before, #employee-id-generator .back-title::after {
+            content: ''; display: inline-block; width: 40px; height: 1px; background: var(--id-primary-gold); margin: 0 10px;
+        }
+        #employee-id-generator .back-text {
+            position: relative; z-index: 3; font-size: 12px; line-height: 1.5; text-align: center;
+            color: var(--id-text-dark); padding: 0 30px; margin-bottom: 15px;
+        }
+        #employee-id-generator .back-text-divider {
+            width: 80%; height: 1px; background: rgba(197, 155, 72, 0.5); margin: 10px auto; position: relative; z-index: 3;
+        }
+        #employee-id-generator .emergency-section {
+            position: relative; z-index: 3; width: 100%; padding: 0 30px; box-sizing: border-box; text-align: left;
+        }
+        #employee-id-generator .emergency-title { font-size: 11px; font-weight: 900; color: var(--id-text-dark); margin-bottom: 10px; }
+        #employee-id-generator .contact-item { display: flex; align-items: flex-start; margin-bottom: 8px; font-size: 11px; color: #000; }
+        #employee-id-generator .contact-icon {
+            width: 16px; height: 16px; background: var(--id-primary-gold); border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; margin-right: 10px; color: white; font-size: 10px; flex-shrink: 0;
+        }
+        #employee-id-generator .watermark {
+            position: absolute; bottom: 50px; right: -30px; width: 200px; height: 200px; opacity: 0.05; z-index: 1;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 10 L50 90 M30 80 Q50 100 70 80 M20 40 L80 40" stroke="%230A192F" stroke-width="10" fill="none"/><circle cx="50" cy="15" r="8" stroke="%230A192F" stroke-width="8" fill="none"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+        #employee-id-generator .back-footer {
+            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--id-primary-blue); height: 50px;
+            display: flex; justify-content: space-around; align-items: center; z-index: 3; border-radius: 0 0 15px 15px;
+        }
+        #employee-id-generator .footer-item { display: flex; flex-direction: column; align-items: center; color: var(--id-text-light); font-size: 9px; }
+        #employee-id-generator .footer-icon { width: 18px; height: 18px; margin-bottom: 3px; fill: var(--id-primary-gold); }
     </style>
 </head>
 <body>
@@ -238,6 +379,7 @@
             <ul class="nav-links">
                 <li class="nav-item-dashboard"><a href="#" class="active" data-target="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
                 <li class="nav-item-employee-management"><a href="#" data-target="employee-management"><i class="fa-solid fa-users"></i> Employee Mgt</a></li>
+                <li class="nav-item-id-generator"><a href="#" data-target="employee-id-generator"><i class="fa-solid fa-id-card"></i> Employee ID Generator</a></li> 
                 <li class="nav-item-clients"><a href="#" data-target="clients"><i class="fa-solid fa-handshake"></i> Clients</a></li>
                 <li class="nav-item-payroll"><a href="#" data-target="payroll"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a></li>
                 <li class="nav-item-expenditure"><a href="#" data-target="expenditure"><i class="fa-solid fa-file-invoice-dollar"></i> Expenditure</a></li>
@@ -316,6 +458,131 @@
                 </div>
             </section>
 
+            <section id="employee-id-generator" class="content-section hidden">
+                <header>
+                    <div class="header-left">
+                        <button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+                        <h1>Employee ID Card Generator</h1>
+                    </div>
+                </header>
+                <div class="panel">
+                    <div class="panel-controls controls-row">
+                        <p class="controls-desc">Select an existing employee to auto-fill details, or click directly on any card text/photo to customize before downloading.</p>
+                        <div class="controls-group">
+                            <select id="idCardEmpSelect" class="year-selector" style="min-width: 240px;">
+                                <option value="">-- Select Employee to Auto-Fill --</option>
+                            </select>
+                            <button type="button" class="btn-primary" onclick="downloadCards()">
+                                <i class="fa-solid fa-download"></i> Download ID Cards as PNG
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden file inputs for photos and logos -->
+                    <input type="file" id="photo-upload" style="display: none;" accept="image/*" onchange="loadPhoto(event)">
+                    <input type="file" id="logo-upload" style="display: none;" accept="image/*" onchange="loadLogo(event)">
+
+                    <div class="cards-wrapper" id="id-cards-container">
+                        <!-- FRONT OF ID CARD -->
+                        <div class="id-card" id="card-front">
+                            <div class="front-top-bg-gold"></div>
+                            <div class="front-top-bg-blue"></div>
+
+                            <div class="header-content">
+                                <div class="logo-placeholder" onclick="document.getElementById('logo-upload').click()" title="Click to upload Logo">
+                                    <img id="logo-front" crossorigin="anonymous" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z' fill='none' stroke='%23C59B48' stroke-width='4'/><text x='50' y='55' font-size='18' text-anchor='middle' fill='%23C59B48'>LOGO</text></svg>" alt="Logo">
+                                </div>
+                                <div class="company-titles">
+                                    <div class="company-name">DKB ANCHOR</div>
+                                    <div class="company-sub">SECURITY SERVICES LTD</div>
+                                    <div class="tagline">YOUR SAFETY,<br>OUR PRIORITY</div>
+                                </div>
+                            </div>
+
+                            <div class="photo-wrapper" onclick="document.getElementById('photo-upload').click()" title="Click to upload employee photo">
+                                <img id="employee-photo" crossorigin="anonymous" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 130 150'><rect width='130' height='150' fill='%234a90e2'/><text x='65' y='75' font-size='14' text-anchor='middle' fill='white'>Upload Photo</text></svg>" alt="Employee Photo">
+                            </div>
+
+                            <div class="employee-name" id="idCardEmpName" contenteditable="true">FULL NAME</div>
+                            <div class="employee-role" id="idCardEmpRole" contenteditable="true">GUARD</div>
+
+                            <div class="details-table">
+                                <table>
+                                    <tr><td>EMPLOYEE ID</td><td id="idCardEmpId" contenteditable="true">: DKB-GH-000000</td></tr>
+                                    <tr><td>DEPARTMENT</td><td id="idCardEmpDept" contenteditable="true">: OPERATIONS</td></tr>
+                                    <tr><td>DATE OF ISSUE</td><td id="idCardIssueDate" contenteditable="true">: </td></tr>
+                                </table>
+                            </div>
+
+                            <div class="front-bottom-bg-gold"></div>
+                            <div class="front-bottom-bg-blue"></div>
+
+                            <div class="signature-area">
+                                <div class="signature-text-placeholder" id="idCardSigArea">Signed</div>
+                                <div class="signature-line"></div>
+                                <div class="signature-text">AUTHORIZED SIGNATURE</div>
+                            </div>
+                        </div>
+
+                        <!-- BACK OF ID CARD -->
+                        <div class="id-card" id="card-back">
+                            <div class="back-top-bg-gold"></div>
+                            <div class="back-top-bg-blue"></div>
+
+                            <div class="back-header-content">
+                                <div class="logo-placeholder" onclick="document.getElementById('logo-upload').click()">
+                                    <img id="logo-back" crossorigin="anonymous" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z' fill='none' stroke='%23C59B48' stroke-width='4'/></svg>" alt="Logo">
+                                </div>
+                                <div class="divider-line"></div>
+                                <div class="company-titles">
+                                    <div class="company-name" style="font-size: 18px;">DKB ANCHOR</div>
+                                    <div class="company-sub" style="font-size: 10px;">SECURITY SERVICES LTD</div>
+                                </div>
+                            </div>
+
+                            <div class="back-title">IDENTIFICATION</div>
+
+                            <div class="back-text">
+                                This is to certify that the person whose<br>
+                                photograph and details appear on the<br>
+                                front of this card is an employee of<br>
+                                DKB Anchor Security Services Ltd.
+                            </div>
+
+                            <div class="back-text-divider"></div>
+
+                            <div class="back-text" style="font-size: 11px;">
+                                This card is the property of<br>
+                                DKB Anchor Security Services Ltd.<br>
+                                If found, please return to the<br>
+                                nearest office.
+                            </div>
+
+                            <div class="emergency-section">
+                                <div class="emergency-title">IN CASE OF EMERGENCY, PLEASE CONTACT:</div>
+                                <div class="contact-item"><div class="contact-icon">&#9990;</div><div contenteditable="true">0247071531 / 0592610876</div></div>
+                                <div class="contact-item"><div class="contact-icon">&#9993;</div><div contenteditable="true">info@dkbanchorsecurity.com</div></div>
+                                <div class="contact-item"><div class="contact-icon">&#10092;</div><div contenteditable="true">NEAR MILE 7 POLICE STATION,<br>ACHIMOTA ACCRA GHANA</div></div>
+                            </div>
+
+                            <div class="watermark"></div>
+
+                            <div class="back-footer">
+                                <div class="footer-item">
+                                    <svg class="footer-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>INTEGRITY
+                                </div>
+                                <div class="footer-item">
+                                    <svg class="footer-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.03-4.57l-1.42-1.42C14.47 13.1 15 11.61 15 10c0-2.76-2.24-5-5-5S5 7.24 5 10s2.24 5 5 5c1.61 0 3.1-.53 4.01-1.41l1.42 1.42c-1.14 1.13-2.69 1.83-4.43 1.83-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7c0 1.74-.7 3.29-1.83 4.43a6.96 6.96 0 011.86.16z"/></svg>PROFESSIONALISM
+                                </div>
+                                <div class="footer-item">
+                                    <svg class="footer-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>VIGILANCE
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
             <section id="clients" class="content-section hidden">
                 <header><div class="header-left"><button class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button><h1>Client Management</h1></div></header>
                 <div class="panel">
@@ -905,9 +1172,9 @@
             }
         }
         
-        const RBAC_CONFIG = {
-            "Super Admin": ["dashboard", "employee-management", "clients", "payroll", "expenditure", "invoices", "guard-deployment", "incident-reporting", "observations", "attendance", "messages", "audit-trail", "settings", "gra-portal", "ssnit-portal"],
-            "Operations Manager": ["dashboard", "employee-management", "clients", "guard-deployment", "incident-reporting", "observations", "attendance", "messages"],
+       const RBAC_CONFIG = {
+            "Super Admin": ["dashboard", "employee-management", "employee-id-generator", "clients", "payroll", "expenditure", "invoices", "guard-deployment", "incident-reporting", "observations", "attendance", "messages", "audit-trail", "settings", "gra-portal", "ssnit-portal"],
+            "Operations Manager": ["dashboard", "employee-management", "employee-id-generator", "clients", "guard-deployment", "incident-reporting", "observations", "attendance", "messages"],
             "Finance Manager": ["dashboard", "clients", "payroll", "expenditure", "invoices", "messages", "gra-portal", "ssnit-portal"],
             "Standard User": ["dashboard", "incident-reporting", "observations", "attendance", "messages"],
             "Client": ["dashboard", "guard-deployment", "incident-reporting", "observations", "attendance", "invoices", "messages"]
@@ -952,7 +1219,7 @@
                 { col: "attendance", render: () => renderAttendanceTable() },
                 { col: "observations", render: () => { renderObservationTable(); renderDashboard(); } },
                 { col: "incidents", render: () => { renderIncidentTable(); renderDashboard(); } },
-                { col: "employees", render: () => { renderTable(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); renderGraDashboard(); renderSsnitDashboard(); renderAttendanceTable(); } },
+                { col: "employees", render: () => { renderTable(); renderIdGeneratorSection(); renderPayrollTable(); renderDeploymentTable(); renderDashboard(); renderGraDashboard(); renderSsnitDashboard(); renderAttendanceTable(); } },
                 { col: "clients", render: () => renderClientTable() },
                 { col: "expenditures", render: () => { renderExpenditureTable(); renderDashboard(); } },
                 { col: "invoices", render: () => { renderInvoiceTable(); renderGraDashboard(); renderDashboard(); } },
@@ -1564,6 +1831,106 @@ document.getElementById("downloadPlReportBtn")?.addEventListener("click", functi
             });
         }
 
+        function renderIdGeneratorSection() {
+            const issueEl = document.getElementById("idCardIssueDate");
+            if (issueEl && issueEl.innerText.trim() === ":") {
+                issueEl.innerText = ": " + new Date().toLocaleDateString('en-GB');
+            }
+
+            // Sync Company Logo & Digital Signature if configured in Settings
+            getSetting("system").then(sys => {
+                if (sys && sys.logo && !sys.logo.includes("via.placeholder.com")) {
+                    document.getElementById("logo-front").src = sys.logo;
+                    document.getElementById("logo-back").src = sys.logo;
+                }
+                if (sys && sys.signatureImage) {
+                    document.getElementById("idCardSigArea").innerHTML = `<img src="${sys.signatureImage}" crossorigin="anonymous" style="max-height: 44px; max-width: 140px; object-fit: contain; filter: brightness(0) invert(1);">`;
+                }
+            });
+
+            // Populate Employee Dropdown
+            getAllEmployees().then(employees => {
+                const select = document.getElementById("idCardEmpSelect");
+                if (!select) return;
+                const currentVal = select.value;
+                select.innerHTML = '<option value="">-- Select Employee to Auto-Fill --</option>';
+                employees.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(emp => {
+                    const opt = document.createElement("option");
+                    opt.value = emp.id;
+                    opt.innerText = `${emp.name} (${emp.id})`;
+                    select.appendChild(opt);
+                });
+                if (currentVal) select.value = currentVal;
+            });
+        }
+
+        document.getElementById("idCardEmpSelect")?.addEventListener("change", function() {
+            const empId = this.value;
+            if (!empId) return;
+            getEmployee(empId).then(emp => {
+                if (!emp) return;
+                document.getElementById("idCardEmpName").innerText = (emp.name || "").toUpperCase();
+                document.getElementById("idCardEmpRole").innerText = (emp.role || "GUARD").toUpperCase();
+                document.getElementById("idCardEmpId").innerText = `: ${emp.id}`;
+                const dept = emp.role && emp.role.toLowerCase().includes("finance") ? "FINANCE" : (emp.role && emp.role.toLowerCase().includes("admin") ? "ADMINISTRATION" : "OPERATIONS");
+                document.getElementById("idCardEmpDept").innerText = `: ${dept}`;
+                const issueDate = emp.enrolmentDate ? new Date(emp.enrolmentDate).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+                document.getElementById("idCardIssueDate").innerText = `: ${issueDate}`;
+                if (emp.profilePic && !emp.profilePic.includes("via.placeholder.com")) {
+                    document.getElementById("employee-photo").src = emp.profilePic;
+                }
+            });
+        });
+
+        window.loadPhoto = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('employee-photo').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.loadLogo = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logo-front').src = e.target.result;
+                document.getElementById('logo-back').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.downloadCards = function() {
+            const empNameRaw = (document.getElementById('idCardEmpName')?.innerText || 'Employee').trim().replace(/\s+/g, '_');
+            html2canvas(document.getElementById('card-front'), {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `ID_Card_Front_${empNameRaw}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+
+            setTimeout(() => {
+                html2canvas(document.getElementById('card-back'), {
+                    scale: 2,
+                    backgroundColor: null,
+                    useCORS: true
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `ID_Card_Back_${empNameRaw}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    logAction("Employee Management", `Generated & Downloaded ID Cards for ${empNameRaw}`);
+                });
+            }, 500);
+        };
+
         function renderClientTable() {
             getAllClients().then(clients => {
                 const tbody = document.querySelector("#clientTable tbody"); tbody.innerHTML = ''; const canDelete = window.currentUserRole === "Super Admin";
@@ -1985,14 +2352,29 @@ function renderExpenditureTable() {
         document.getElementById('loginForm').addEventListener('submit', (e) => { e.preventDefault(); const btn = document.getElementById('loginBtn'); const errDiv = document.getElementById('loginError'); btn.disabled = true; btn.innerText = "Authenticating..."; errDiv.style.display = 'none'; signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(err => { btn.disabled = false; btn.innerText = "Secure Login"; errDiv.innerText = "Error: " + err.message; errDiv.style.display = 'block'; }); });
         document.getElementById('navLogoutBtn').addEventListener('click', (e) => { e.preventDefault(); signOut(auth); });
 
-        const navLinks = document.querySelectorAll(".nav-links a"), sections = document.querySelectorAll(".content-section");
+       const navLinks = document.querySelectorAll(".nav-links a"), sections = document.querySelectorAll(".content-section");
         navLinks.forEach(link => { link.addEventListener("click", function(e) { 
             if(this.id === 'navLogoutBtn') return; e.preventDefault(); const targetId = this.getAttribute("data-target"); if (!window.currentUserRole) return; const allowed = RBAC_CONFIG[window.currentUserRole] || RBAC_CONFIG["Standard User"]; if (!allowed.includes(targetId)) return alert("Access Denied: You do not have permission to view this module.");
             navLinks.forEach(nav => nav.classList.remove("active")); this.classList.add("active"); 
             if (targetId === "incident-reporting") { localStorage.setItem(INC_TIME_KEY, Date.now()); if(document.getElementById("incCounter")) document.getElementById("incCounter").style.display = "none"; previousIncCount = 0; }
             if (targetId === "observations") { localStorage.setItem(OBS_TIME_KEY, Date.now()); if(document.getElementById("obsCounter")) document.getElementById("obsCounter").style.display = "none"; previousObsCount = 0; }
             sections.forEach(section => { if (section.id === targetId) { section.classList.remove("hidden"); section.classList.add("active"); } else { section.classList.add("hidden"); section.classList.remove("active"); } }); 
-            if(targetId === "dashboard") renderDashboard(); else if(targetId === "employee-management") renderTable(); else if(targetId === "clients") renderClientTable(); else if(targetId === "payroll") renderPayrollTable(); else if(targetId === "expenditure") renderExpenditureTable(); else if(targetId === "invoices") renderInvoiceTable(); else if(targetId === "guard-deployment") renderDeploymentTable(); else if(targetId === "incident-reporting") renderIncidentTable(); else if(targetId === "observations") renderObservationTable(); else if(targetId === "attendance") renderAttendanceTable(); else if(targetId === "messages") renderMessageTable(); else if(targetId === "audit-trail") renderAuditTable(); else if(targetId === "settings") { renderUsersTable(); getSetting("system").then(data => { if(data) applySystemSettings(data); }); } else if(targetId === "gra-portal") renderGraDashboard(); else if(targetId === "ssnit-portal") renderSsnitDashboard();
+            if(targetId === "dashboard") renderDashboard();
+            else if(targetId === "employee-management") renderTable();
+            else if(targetId === "employee-id-generator") renderIdGeneratorSection();
+            else if(targetId === "clients") renderClientTable();
+            else if(targetId === "payroll") renderPayrollTable();
+            else if(targetId === "expenditure") renderExpenditureTable();
+            else if(targetId === "invoices") renderInvoiceTable();
+            else if(targetId === "guard-deployment") renderDeploymentTable();
+            else if(targetId === "incident-reporting") renderIncidentTable();
+            else if(targetId === "observations") renderObservationTable();
+            else if(targetId === "attendance") renderAttendanceTable();
+            else if(targetId === "messages") renderMessageTable();
+            else if(targetId === "audit-trail") renderAuditTable();
+            else if(targetId === "settings") { renderUsersTable(); getSetting("system").then(data => { if(data) applySystemSettings(data); }); }
+            else if(targetId === "gra-portal") renderGraDashboard();
+            else if(targetId === "ssnit-portal") renderSsnitDashboard();
         }); });
 
         function attachSearch(inputId, tableId) { const input = document.getElementById(inputId); if(input) { input.addEventListener("keyup", function() { const filter = this.value.toLowerCase(); document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => { row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none"; }); }); } }
